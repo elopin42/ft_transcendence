@@ -1,0 +1,8 @@
+// frontend/app/layout.tsx
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return <html><body>{children}</body></html>;
+}
+
+a l'avenir utiliser sa pour pas recoder tout les page entierement
+
+faire en sorte que le / simple redirige sur login si le user es pas log sinon on redirige vers la dashboard
