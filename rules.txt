@@ -10,3 +10,5 @@ les .md ne doivent pas etre trop long !!!!!!!!!
 ya un makefile pour compiler tout
 
 mettre a jours le todo et a l'avenir ameliorer la syntax pour que chaque personne sache ce que il dois faire
+
+regarder launcher.txt pour comment lancer le site
