@@ -1,6 +1,6 @@
 # 🏓 ft_transcendence — Roadmap Officielle (14 Points)
 
-> **Projet** : Web Application Multijoueur en ligne
+> **Projet** : Jeu de survie type "Sims" multijoueur en ligne
 > **Équipe** : 4 personnes | **Stack** : Next.js · NestJS · PostgreSQL · Docker · Nginx
 
 ---
@@ -87,13 +87,13 @@ Le sujet impose d'accumuler **14 points**. Voici notre sélection 100% conforme 
 ---
 
 ### 🟢 Bloc de travail 3 — Game / Logique de jeu
-**Objectif** : Le cœur du projet, le jeu temps réel.
+**Objectif** : Le moteur de jeu, les besoins et l'interaction temps réel.
 
-- [ ] Logique Pong (ball, paddles, collisions, score) — `[Obligatoire]`
-- [ ] **WebSockets Gateway** (synchro des rooms serveur) — `[Majeur #2]` (2 pts)
-- [ ] **Multijoueur en ligne** (gestion latence/reconnexion) — `[Majeur #4]` (2 pts)
-- [ ] **IA adversaire** (comportement humain, peut gagner) — `[Majeur #5]` (2 pts)
-- [ ] **Tournois** : Gérer les brackets et les matchs — `[Mineur #8]` (1 pt)
+- [ ] Logique Sims (besoins, faim, état du personnage, monde) — `[Obligatoire]`
+- [ ] **WebSockets Gateway** (synchro des positions/états serveur) — `[Majeur #2]` (2 pts)
+- [ ] **Multijoueur en ligne** (gestion monde partagé) — `[Majeur #4]` (2 pts)
+- [ ] **AI Opponent** (PNJ autonomes simulant des besoins) — `[Majeur #5]` (2 pts)
+- [ ] **Tournois / Compétitions** : Gérer les classements de survie — `[Mineur #8]` (1 pt)
 
 ---
 
@@ -111,10 +111,10 @@ Le sujet impose d'accumuler **14 points**. Voici notre sélection 100% conforme 
 ## 📅 Timeline recommandée
 
 ```
-Semaine 1  → Docker + BDD + Login/Mdp + Pong local (Phase Alpha)
-Semaine 2  → WebSockets + Chat + OAuth 42 + Pages légales
-Semaine 3  → Multijoueur réseau + Reconnexion + API Amis
-Semaine 4  → Tournoi + IA + 2FA + Traduction (Phase Beta)
+Semaine 1  → Docker + BDD + Login/Mdp + Game Loop local (Phase Alpha)
+Semaine 2  → WebSockets + Synchro monde + OAuth 42 + Pages légales
+Semaine 3  → IA PNJ + Inventaire + API Amis
+Semaine 4  → Classements survie + 2FA + Traduction (Phase Beta)
 Semaine 5  → Sécurité, Correctifs bugs, Polish UI finale
 Semaine 6  → Préparation pour l'évaluation !
 ```
@@ -137,9 +137,9 @@ Semaine 6  → Préparation pour l'évaluation !
 ```sql
 -- users: id, username, email, password_hash, avatar, 2fa_secret, online_status
 -- friendships: user_id, friend_id, status (PENDING, ACCEPTED, BLOCKED)
--- games: id, p1_id, p2_id, score1, score2, winner_id, played_at
--- tournaments: id, name, created_by, status (WAITING, ONGOING, FINISHED)
--- tournament_participants: tournament_id, user_id, eliminated_at
+-- worlds: id, name, seed, last_state, created_at
+-- characters: user_id, world_id, health, hunger, energy, x, y, z
+-- character_history: user_id, event_type, value, timestamp
 ```
 
 ---
