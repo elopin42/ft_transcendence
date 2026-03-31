@@ -8,14 +8,16 @@ services:
     build: ./backend
     ports:
       - "4000:4000"
+    depends_on:
+      - db
   db:
-      image: postgres:15
-      environment:
-        POSTGRES_USER: user
-        POSTGRES_PASSWORD: password
-        POSTGRES_DB: transcendence
-      volumes:
-        - pgdata:/var/lib/postgresql/data
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: transcendence
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
 volumes:
   pgdata:
