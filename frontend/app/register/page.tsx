@@ -1,7 +1,8 @@
+
 'use client';
 import { useState } from 'react';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -10,7 +11,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    const response = await fetch('http://localhost:4000/auth/login', {
+    const response = await fetch('http://localhost:4000/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -20,7 +21,7 @@ export default function LoginPage() {
 
     if (response.ok) {
       localStorage.setItem('token', data.token);
-      window.location.href = '/dashboard';
+      window.location.href = '/login';
     } else {
       setError(data.message || 'Erreur de connexion');
     }
@@ -43,8 +44,7 @@ export default function LoginPage() {
         required
       />
       {error && <p>{error}</p>}
-      <button type="submit">Se connecter</button>
-      <a href="/register">Register</a>
+      <button type="submit">Se enregistrer</button>
     </form>
   );
 }
