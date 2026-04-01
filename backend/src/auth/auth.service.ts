@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 
+
 @Injectable()
 export class AuthService {
   private readonly jwtSecret = process.env.JWT_SECRET ?? (() => {throw new Error('JWT_SECRET not set'); })();
