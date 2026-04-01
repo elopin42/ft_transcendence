@@ -1,9 +1,9 @@
-export default function DasboardPage() 
-{
-    return(
-        <main>
-            <h1>Dashboard</h1>
-            <p>Tu es connecté !</p>
-        </main>
-    )
+// charge le jeu mais pas cote serveur
+'use client';
+import dynamic from 'next/dynamic';
+
+const PhaserGame = dynamic(() => import('./PhaserGame'), { ssr: false });
+
+export default function DashboardPage() {
+    return <PhaserGame />;
 }
