@@ -7,6 +7,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     const adapter = new PrismaPg({
       connectionString: 'postgresql://user:password@db:5432/transcendence',
+    //a changer avec le .env!!!!!
     });
     super({ adapter });
   }

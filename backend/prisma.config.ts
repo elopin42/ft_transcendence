@@ -8,5 +8,6 @@ export default defineConfig({
   },
   datasource: {
     url: 'postgresql://user:password@db:5432/transcendence',
+    //a changer avec le .env!!!!!
   },
 });
