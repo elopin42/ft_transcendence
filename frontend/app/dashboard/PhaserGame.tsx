@@ -1,10 +1,13 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
+import { io } from 'socket.io-client';
 
 class GameScene extends Phaser.Scene {
     player!: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    socket!: any;
+
     preload(){
         this.load.image('map', '/map.png');
         this.load.spritesheet('nass-frame', '/character/nass/nass-allframe-right.png', {
@@ -17,6 +20,10 @@ class GameScene extends Phaser.Scene {
         const map = this.add.image(0, 0, 'map').setOrigin(0, 0);
         this.scale.resize(map.width, map.height);
         this.cursors = this.input.keyboard!.createCursorKeys();
+        this.socket = io('http://localhost:3001');
+        this.socket.on('players', (players: any) => { // any a modifier quand le backend est pres
+            console.log('joueurs connectés:', players);
+        });
         this.player = this.add.sprite(500, 1000, 'nass-front').setScale(0.35);
         this.anims.create({
             key: 'walk-right',
@@ -26,7 +33,7 @@ class GameScene extends Phaser.Scene {
         })
     }
     update() {
-        const speed = Phaser.Math.Linear(5, 15, (this.player.y - 280) / (1150 - 280));
+        const speed = Phaser.Math.Linear(3, 7, (this.player.y - 250) / (1150 - 250));
         if (this.cursors.left.isDown) {
             this.player.x -= speed;
             (this.player as Phaser.GameObjects.Sprite).setFlipX(true);
