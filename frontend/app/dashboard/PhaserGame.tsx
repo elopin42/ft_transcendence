@@ -50,7 +50,7 @@ class GameScene extends Phaser.Scene {
             (this.player as Phaser.GameObjects.Sprite).setTexture('nass-front');
 }
         this.player.x = Phaser.Math.Clamp(this.player.x, 50, 2680);
-        this.player.y = Phaser.Math.Clamp(this.player.y, 280, 1150);
+        this.player.y = Phaser.Math.Clamp(this.player.y, 225, 1150);
         const scale = Phaser.Math.Linear(0.15, 0.35, (this.player.y-280) / (1150 - 280));
         (this.player as Phaser.GameObjects.Sprite).setScale(scale);
     }
