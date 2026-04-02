@@ -5,10 +5,16 @@ import Phaser from 'phaser';
 class GameScene extends Phaser.Scene {
     preload(){
         this.load.image('map', '/map.png');
+        this.load.spritesheet('nass-frame', '/character/nass/nass-allframe-right.png', {
+            frameWidth: 1762,
+            frameHeight: 2414
+        });
+        this.load.image('nass-front', '/character/nass/nass-front.png');
     }
     create() {
         const map = this.add.image(0, 0, 'map').setOrigin(0, 0);
         this.scale.resize(map.width, map.height);
+        this.add.image(500, 1000, 'nass-front').setScale(0.35);
     }
 }
 
