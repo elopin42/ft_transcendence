@@ -3,18 +3,53 @@ import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 
 class GameScene extends Phaser.Scene {
+    player!: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+    cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     preload(){
         this.load.image('map', '/map.png');
         this.load.spritesheet('nass-frame', '/character/nass/nass-allframe-right.png', {
-            frameWidth: 1762,
-            frameHeight: 2414
+            frameWidth: 1760,
+            frameHeight: 2412
         });
         this.load.image('nass-front', '/character/nass/nass-front.png');
     }
     create() {
         const map = this.add.image(0, 0, 'map').setOrigin(0, 0);
         this.scale.resize(map.width, map.height);
-        this.add.image(500, 1000, 'nass-front').setScale(0.35);
+        this.cursors = this.input.keyboard!.createCursorKeys();
+        this.player = this.add.sprite(500, 1000, 'nass-front').setScale(0.35);
+        this.anims.create({
+            key: 'walk-right',
+            frames: this.anims.generateFrameNumbers('nass-frame', { start: 2, end: 0 }),
+            frameRate: 4,
+            repeat: -1
+        })
+    }
+    update() {
+        if (this.cursors.left.isDown) {
+            this.player.x -= 5;
+            (this.player as Phaser.GameObjects.Sprite).setFlipX(true);
+            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
+        }
+        if (this.cursors.right.isDown) {
+            this.player.x += 5;
+            (this.player as Phaser.GameObjects.Sprite).setFlipX(false);
+            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
+        }
+        if (this.cursors.up.isDown) {
+            this.player.y -= 5;
+            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
+        }
+        if (this.cursors.down.isDown) {
+            this.player.y += 5;
+            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
+        }
+        if (!this.cursors.left.isDown && !this.cursors.right.isDown && !this.cursors.up.isDown && !this.cursors.down.isDown) {
+            (this.player as Phaser.GameObjects.Sprite).stop();
+            (this.player as Phaser.GameObjects.Sprite).setTexture('nass-front');
+}
+        this.player.x = Phaser.Math.Clamp(this.player.x, 0, 2752);
+        this.player.y = Phaser.Math.Clamp(this.player.y, 0, 1536);
     }
 }
 
