@@ -26,30 +26,33 @@ class GameScene extends Phaser.Scene {
         })
     }
     update() {
+        const speed = Phaser.Math.Linear(5, 15, (this.player.y - 280) / (1150 - 280));
         if (this.cursors.left.isDown) {
-            this.player.x -= 5;
+            this.player.x -= speed;
             (this.player as Phaser.GameObjects.Sprite).setFlipX(true);
             (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
         }
         if (this.cursors.right.isDown) {
-            this.player.x += 5;
+            this.player.x += speed;
             (this.player as Phaser.GameObjects.Sprite).setFlipX(false);
             (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
         }
         if (this.cursors.up.isDown) {
-            this.player.y -= 5;
+            this.player.y -= speed;
             (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
         }
         if (this.cursors.down.isDown) {
-            this.player.y += 5;
+            this.player.y += speed;
             (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
         }
         if (!this.cursors.left.isDown && !this.cursors.right.isDown && !this.cursors.up.isDown && !this.cursors.down.isDown) {
             (this.player as Phaser.GameObjects.Sprite).stop();
             (this.player as Phaser.GameObjects.Sprite).setTexture('nass-front');
 }
-        this.player.x = Phaser.Math.Clamp(this.player.x, 0, 2752);
-        this.player.y = Phaser.Math.Clamp(this.player.y, 0, 1536);
+        this.player.x = Phaser.Math.Clamp(this.player.x, 50, 2680);
+        this.player.y = Phaser.Math.Clamp(this.player.y, 280, 1150);
+        const scale = Phaser.Math.Linear(0.15, 0.35, (this.player.y-280) / (1150 - 280));
+        (this.player as Phaser.GameObjects.Sprite).setScale(scale);
     }
 }
 
