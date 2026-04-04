@@ -1,5 +1,6 @@
 import "dotenv/config";
-import { defineConfig } from "prisma/config";
+// rajouté env pour lire les variables d'environnement de manière type-safe et lance une erreur si manque pluotot que undefined
+import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -7,7 +8,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: 'postgresql://user:password@db:5432/transcendence',
-    //a changer avec le .env!!!!!
+    url: env("DATABASE_URL"), // env lu par la cli de prisma
   },
 });

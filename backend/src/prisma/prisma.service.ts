@@ -6,8 +6,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     const adapter = new PrismaPg({
-      connectionString: 'postgresql://user:password@db:5432/transcendence',
-    //a changer avec le .env!!!!!
+      connectionString: process.env.DATABASE_URL as string, // env charger depuis Nestjs
     });
     super({ adapter });
   }
