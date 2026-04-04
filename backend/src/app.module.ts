@@ -3,6 +3,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { GameModule } from './game/game.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
     }),
     AuthModule,
     PrismaModule,
+    GameModule,
   ],
 })
 export class AppModule {
