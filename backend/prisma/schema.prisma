@@ -17,7 +17,7 @@ model user {
     login		String  @unique
     email		String  @unique
     password	String? // peu etre NULLABLE pour les utilisateurs qui se connectent avec 42
-	fortyTwoId	Int?	@unique
-	avatarUrl	String? // pour stocker l'url de l'avatar ( 42 ou uploadé par l'utilisateur )
+	// fortyTwoId	Int?	@unique
+	// avatarUrl	String? // pour stocker l'url de l'avatar ( 42 ou uploadé par l'utilisateur )
     createdAt	DateTime @default(now())
   }

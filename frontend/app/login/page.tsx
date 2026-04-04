@@ -17,7 +17,7 @@ export default function LoginPage() {
     });
     const data = await response.json();
     if (response.ok) {
-      localStorage.setItem('token', data.token);
+      document.cookie = `token=${data.token}; path=/`;
       window.location.href = '/dashboard';
     } else {
       setError(data.message || 'Erreur de connexion');

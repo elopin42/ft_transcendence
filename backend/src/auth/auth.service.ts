@@ -53,9 +53,20 @@ export class AuthService {
 	return { token };
 	}
 
+  async gamelogin(token: string): Promise<string> {
+    try {
+      const payload = await this.validateToken(token)
+	    const user = await this.prisma.user.findUnique({ where: { id: payload.userId } });
+      if (!user) throw new UnauthorizedException('User not found');
+      return (user.login);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async validateToken(token: string): Promise<any> {
     try {
-      return this.jwt.verifyAsync(token); // pas besoin de spécifier le secret ici car il est déjà configuré dans JwtModule.registerAsync
+      return await this.jwt.verifyAsync(token); // pas besoin de spécifier le secret ici car il est déjà configuré dans JwtModule.registerAsync
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired token');
     }

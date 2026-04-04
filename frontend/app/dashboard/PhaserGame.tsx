@@ -8,6 +8,8 @@ class GameScene extends Phaser.Scene {
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     socket!: any;
 
+    otherPlayers = new Map<string, Phaser.GameObjects.Sprite>();
+
     preload(){
         this.load.image('map', '/map.png');
         this.load.spritesheet('nass-frame', '/character/nass/nass-allframe-right.png', {
@@ -20,9 +22,23 @@ class GameScene extends Phaser.Scene {
         const map = this.add.image(0, 0, 'map').setOrigin(0, 0);
         this.scale.resize(map.width, map.height);
         this.cursors = this.input.keyboard!.createCursorKeys();
-        this.socket = io('http://localhost:3001');
-        this.socket.on('players', (players: any) => { // any a modifier quand le backend est pres
+        this.socket = io('http://localhost:4000', {
+            withCredentials: true
+        });
+        this.socket.on('players', (players: any) => { 
             console.log('joueurs connectés:', players);
+        });
+        this.socket.on('players', (players: { id: string, pseudo: string, x: number, y: number }[]) => {
+            players.forEach(p => {
+              if (p.id === this.socket.id) return;
+
+              if (!this.otherPlayers.has(p.id)) {
+                  const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
+                  this.otherPlayers.set(p.id, sprite);
+              } else {
+                  this.otherPlayers.get(p.id)!.setPosition(p.x, p.y);
+              }
+            });
         });
         this.player = this.add.sprite(500, 1000, 'nass-front').setScale(0.35);
         this.anims.create({
@@ -58,6 +74,7 @@ class GameScene extends Phaser.Scene {
 }
         this.player.x = Phaser.Math.Clamp(this.player.x, 50, 2680);
         this.player.y = Phaser.Math.Clamp(this.player.y, 225, 1150);
+        this.socket.emit('move', { x: this.player.x, y: this.player.y });
         const scale = Phaser.Math.Linear(0.15, 0.35, (this.player.y-280) / (1150 - 280));
         (this.player as Phaser.GameObjects.Sprite).setScale(scale);
     }

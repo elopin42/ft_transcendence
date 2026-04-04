@@ -6,25 +6,50 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
+import { JwtService } from '@nestjs/jwt';
+import { AuthModule } from '../auth/auth.module';
+import { AuthService } from '../auth/auth.service';
 
-@WebSocketGateway({ cors: { origin: '*' } })
+
+@WebSocketGateway({
+    cors: {
+        origin: 'http://localhost:3000',
+        credentials: true
+    },
+})
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
+  constructor(
+      private authService: AuthService
+  ) {}
+
   players = new Map<string, { pseudo: string; x: number; y: number }>();
 
-  handleConnection(client: any) {
-    const pseudo = client.handshake.query.pseudo || 'Anon';
-    this.players.set(client.id, { pseudo, x: 0, y: 0 });
-    console.log('Joueurs connectés :', Array.from(this.players.values()));
-    this.server.emit('players', Array.from(this.players.values()));
+  async handleConnection(client: any) {
+     const cookie = client.handshake.headers.cookie;
+     console.log(cookie);
+     const token = cookie?.split(';')
+         .find((c: string) => c.trim().startsWith('token='))
+         ?.split('=')[1];
+  
+       try {
+          const login = await this.authService.gamelogin(token);
+          console.log(login)
+          this.players.set(client.id, { pseudo: login, x: 0, y: 0 });
+          console.log("connect");
+      } catch (error) {
+          console.log("disconnect");
+          console.log(error);
+          client.disconnect();
+      }
   }
 
   handleDisconnect(client: any) {
     if (this.players.has(client.id)) {
       this.players.delete(client.id);
-      this.server.emit('players', Array.from(this.players.values()));
+      this.server.emit('players', Array.from(this.players.entries()).map(([id, p]) => ({ id, ...p })));
     }
   }
 
@@ -34,7 +59,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (player) {
       player.x = payload.x;
       player.y = payload.y;
-      this.server.emit('players', Array.from(this.players.values()));
+      this.server.emit('players', Array.from(this.players.entries()).map(([id, p]) => ({ id, ...p })));
     }
   }
 }

@@ -4,6 +4,9 @@ all:
 	docker-compose up --build
 
 run:
+	docker-compose up
+
+rund:
 	docker-compose up -d
 
 logs:
@@ -15,6 +18,7 @@ clean:
 fclean:
 	docker-compose down -v
 
-re: clean all
+re: clean run
 
-rme: fclean all
+rme: fclean run
+rvme: fclean all

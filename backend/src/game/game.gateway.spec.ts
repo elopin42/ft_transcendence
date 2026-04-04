@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GameGateway } from './game.gateway';
+import { JwtService } from '@nestjs/jwt';
 
 describe('GameGateway', () => {
   let gateway: GameGateway;
