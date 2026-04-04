@@ -1,0 +1,26 @@
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt'; // Importation de JWT plutot que de jsonwebtoken pour bénéficier de l'intégration avec NestJS et ainsi faciliter la gestion des tokens JWT
+import { ConfigModule, ConfigService } from '@nestjs/config'; // Pour l'importation de l'env
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { PrismaModule } from '../prisma/prisma.module';
+
+@Module({
+  imports: [
+    PrismaModule,
+    JwtModule.registerAsync({ // Utilisation de registerAsync pour permettre l'injection de ConfigService et ainsi récupérer les valeurs de JWT_SECRET et JWT_EXPIRATION depuis les variables d'environnement de manière dynamique
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({ // configuration de JWT avec les valeurs récupérées depuis l'env
+        secret: config.getOrThrow<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: config.get<string>('JWT_EXPIRATION', '3h') as any,
+        },
+      }),
+    }),
+  ],
+  providers: [AuthService],
+  controllers: [AuthController],
+  exports: [AuthService]
+})
+export class AuthModule {}

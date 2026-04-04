@@ -10,8 +10,13 @@ services:
       - "4000:4000"
     depends_on:
       - db
+    env_file:
+      - ./backend/.env
+    command: sh -c "npx prisma migrate deploy && node dist/main"
   db:
     image: postgres:15
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password

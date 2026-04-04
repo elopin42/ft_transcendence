@@ -1,0 +1,2 @@
+dans /backend ya un fichier env.example il faut le edit et le rename en .env pour pouvoir faire tourner le site
+(bonne pratique)
