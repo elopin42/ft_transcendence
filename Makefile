@@ -19,6 +19,6 @@ fclean:
 	docker-compose down -v
 
 re: clean run
-
+ra: clean all
 rme: fclean run
 rvme: fclean all
