@@ -25,19 +25,34 @@ class GameScene extends Phaser.Scene {
         this.socket = io('http://localhost:4000', {
             withCredentials: true
         });
-        this.socket.on('players', (players: any) => { 
-            console.log('joueurs connectés:', players);
-        });
         this.socket.on('players', (players: { id: string, pseudo: string, x: number, y: number }[]) => {
+            console.log('joueurs connectés:', players);
             players.forEach(p => {
               if (p.id === this.socket.id) return;
 
               if (!this.otherPlayers.has(p.id)) {
-                  const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
-                  this.otherPlayers.set(p.id, sprite);
-              } else {
-                  this.otherPlayers.get(p.id)!.setPosition(p.x, p.y);
+                  const newSprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
+                  this.otherPlayers.set(p.id, newSprite);
               }
+              else {
+                  const sprite = this.otherPlayers.get(p.id);
+                  if (!sprite) return;
+                  const oldX = sprite.x;
+                  const oldY = sprite.y;
+                  sprite.setPosition(p.x, p.y);
+                  if (p.x !== oldX || p.y !== oldY) {
+                      if (p.x < oldX)
+                        sprite.setFlipX(true);
+                      else
+                        sprite.setFlipX(false);
+                      sprite.play('walk-right', true);
+                  } else {
+                      sprite.stop();
+                      sprite.setTexture('nass-front');
+                  }
+                  const scale = Phaser.Math.Linear(0.15, 0.35, (sprite.y-280) / (1150 - 280));
+                  sprite.setScale(scale);
+                }
             });
         });
         this.player = this.add.sprite(500, 1000, 'nass-front').setScale(0.35);
