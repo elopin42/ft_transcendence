@@ -9,7 +9,7 @@ class GameScene extends Phaser.Scene {
     socket!: any;
 
     timep = 0;
-    otherPlayers = new Map<string, { sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
+    otherPlayers = new Map<string, { login: Phaser.GameObjects.Text, sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
 
     preload(){
         this.load.image('map', '/map.png');
@@ -33,13 +33,19 @@ class GameScene extends Phaser.Scene {
 
               if (!this.otherPlayers.has(p.id)) {
                   const sprite = this.add.sprite( p.x, p.y, 'nass-front').setScale(0.35);
-                  this.otherPlayers.set(p.id, { sprite, ox: p.x, oy: p.y });
+                  const login = this.add.text(p.x, p.y - 400, p.pseudo, {
+                      fontSize: '20px',
+                      color: '#ff0000',
+                      stroke: '#000000',
+                  }).setOrigin(0.5);
+                  this.otherPlayers.set(p.id, { login, sprite, ox: p.x, oy: p.y });
               }
               else {
                   const timeo = Date.now();
                   const sprite = this.otherPlayers.get(p.id);
                   if (!sprite) return;
                   sprite.sprite.setPosition(p.x, p.y);
+                  sprite.login.setPosition(p.x, p.y - 400);
                   const scale = Phaser.Math.Linear(0.15, 0.35, (p.y-280) / (1150 - 280));
                   sprite.sprite.setScale(scale);
                   if (timeo - this.timep < 50) return;
