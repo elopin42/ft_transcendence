@@ -9,7 +9,8 @@ services:
     ports:
       - "4000:4000"
     depends_on:
-      - db
+      db: # ajout du healthcheck
+        condition: service_healthy
     env_file:
       - ./backend/.env
     command: sh -c "npx prisma migrate deploy && node dist/main"
@@ -23,6 +24,13 @@ services:
       POSTGRES_DB: transcendence
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck: # ajout du healthcheck pour s'assurer que la base de données est prête avant de démarrer le backend
+      test: ["CMD-SHELL", "pg_isready -U user -d transcendence"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+
 
 volumes:
   pgdata:
