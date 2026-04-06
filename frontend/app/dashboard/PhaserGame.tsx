@@ -8,7 +8,8 @@ class GameScene extends Phaser.Scene {
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     socket!: any;
 
-    otherPlayers = new Map<string, Phaser.GameObjects.Sprite>();
+    timep = 0;
+    otherPlayers = new Map<string, { sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
 
     preload(){
         this.load.image('map', '/map.png');
@@ -31,27 +32,28 @@ class GameScene extends Phaser.Scene {
               if (p.id === this.socket.id) return;
 
               if (!this.otherPlayers.has(p.id)) {
-                  const newSprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
-                  this.otherPlayers.set(p.id, newSprite);
+                  const sprite = this.add.sprite( p.x, p.y, 'nass-front').setScale(0.35);
+                  this.otherPlayers.set(p.id, { sprite, ox: p.x, oy: p.y });
               }
               else {
+                  const timeo = Date.now();
                   const sprite = this.otherPlayers.get(p.id);
                   if (!sprite) return;
-                  const oldX = sprite.x;
-                  const oldY = sprite.y;
-                  sprite.setPosition(p.x, p.y);
-                  if (p.x !== oldX || p.y !== oldY) {
-                      if (p.x < oldX)
-                        sprite.setFlipX(true);
-                      else
-                        sprite.setFlipX(false);
-                      sprite.play('walk-right', true);
+                  sprite.sprite.setPosition(p.x, p.y);
+                  const scale = Phaser.Math.Linear(0.15, 0.35, (p.y-280) / (1150 - 280));
+                  sprite.sprite.setScale(scale);
+                  if (timeo - this.timep < 50) return;
+                  this.timep = timeo;
+                  if (p.x != sprite.ox || p.y != sprite.oy) {
+                      const movingleft = p.x < sprite.ox
+                      sprite.sprite.setFlipX(movingleft);
+                      sprite.sprite.play('walk-right', true);
                   } else {
-                      sprite.stop();
-                      sprite.setTexture('nass-front');
+                      sprite.sprite.stop();
+                      sprite.sprite.setTexture('nass-front');
                   }
-                  const scale = Phaser.Math.Linear(0.15, 0.35, (sprite.y-280) / (1150 - 280));
-                  sprite.setScale(scale);
+                  sprite.ox = p.x;
+                  sprite.oy = p.y;
                 }
             });
         });
