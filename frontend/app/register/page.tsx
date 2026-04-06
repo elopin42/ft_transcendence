@@ -20,8 +20,8 @@ export default function RegisterPage() {
     const data = await response.json();
 
     if (response.ok) {
-      localStorage.setItem('token', data.token);
-      window.location.href = '/login';
+      document.cookie = `token=${data.token}; path=/`; // claude help
+      window.location.href = '/dashboard'; // changement claude proposé ! ancien : window.location.href = '/login';
     } else {
       setError(data.message || 'Erreur de connexion');
     }

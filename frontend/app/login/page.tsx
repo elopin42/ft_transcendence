@@ -55,6 +55,9 @@ export default function LoginPage() {
           {error && <p>{error}</p>}
           <button className="submit-button" type="submit" >Log in</button>
           <a href="/register">Register</a>
+          <a href="http://localhost:4000/auth/42" className="submit-button">
+            Se connecter avec 42
+          </a>
         </form>
       </div>
 
