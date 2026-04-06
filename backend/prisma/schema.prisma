@@ -13,11 +13,11 @@ datasource db {
  }
 
 model user {
-    id			Int     @id @default(autoincrement())
-    login		String  @unique
-    email		String  @unique
-    password	String? // peu etre NULLABLE pour les utilisateurs qui se connectent avec 42
-	// fortyTwoId	Int?	@unique
+    id          Int     @id @default(autoincrement())
+    login       String  @unique
+    email       String  @unique
+    password    String? // peu etre NULLABLE pour les utilisateurs qui se connectent avec 42
+    fortyTwoId  Int?	@unique
 	// avatarUrl	String? // pour stocker l'url de l'avatar ( 42 ou uploadé par l'utilisateur )
     createdAt	DateTime @default(now())
   }
