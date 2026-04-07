@@ -7,8 +7,13 @@ import { Strategy } from 'passport-oauth2';
 // passport-oauth2 gère le flow : redirection → code → token → validate()
 @Injectable()
 export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
+	//Flag si l'api est configuré dans l'env
+	private isConfigured: boolean;
 	constructor(configService: ConfigService) {
 		// configuration des 2 endpoints OAuth2 de 42
+		const UID42 = configService.get<string>('FORTYTWO_CLIENT_ID') || 'disabled';
+		const Secret42 = configService.get<string>('FORTYTWO_CLIENT_SECRET') || 'disabled';
+		const callback42 = configService.get<string>('FORTYTWO_CALLBACK_URL') || 'http://localhost:4000/auth/42/callback';
 		super({
 			// URL ou l'utilisateur est redigirer pour autoriser l'application
 			// URL appelée serveur-à-serveur pour échanger le code contre un token
@@ -16,19 +21,23 @@ export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
 			tokenURL: 'https://api.intra.42.fr/oauth/token',
 
 			// UID & Secret 42 app intra
-			clientID: configService.get<string>('FORTYTWO_CLIENT_ID', ''),
-			clientSecret: configService.get<string>('FORTYTWO_CLIENT_SECRET', ''),
+			clientID: UID42,
+			clientSecret: Secret42,
 
 			// URL de redirection après autorisation corespond a celui mis dans l'intra
-			callbackURL: configService.get<string>('FORTYTWO_CALLBACK_URL', ''),
+			callbackURL: callback42,
 
 			// Scope public assez pour login email image
 			scope: ['public'],
 		});
+		this.isConfigured = !!(UID42 && Secret42);
+		if (!this.isConfigured) { console.warn('42 OAuth2 strategy is not configured. Please set FORTYTWO_CLIENT_ID and FORTYTWO_CLIENT_SECRET in the environment variables.'); }
 	}
 
 	// Appelée après l'échange code→token, accessToken permet d'appeler l'API 42
 	async validate(accessToken: string, refreshToken: string): Promise<any> {
+		// 42 pas configuré et que quelqu'un arrive quand même ici
+		if (!this.isConfigured) { throw new Error('42 OAuth2 strategy is not configured. Please set FORTYTWO_CLIENT_ID and FORTYTWO_CLIENT_SECRET in the environment variables.'); }
 		// /v2/me endpoint de 42 pour récupérer les infos de l'utilisateur
 		const response = await fetch('https://api.intra.42.fr/v2/me', {
 			headers: { Authorization: `Bearer ${accessToken}` },

@@ -24,10 +24,28 @@ export class AuthController {
     this.setTokenCookie(res, token); // utilisation des cookies
     res.json({ success: true });
   }
+
+  
+  @Post('logout') // route pour la déconnexion, supprime le cookie
+  async logout(@Res() res: Response) {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: 'lax',
+    });
+    res.json({ success: true });
+  }
+
   // route pour la connexion 42 redirect https://api.intra.42.fr/oauth/authorize
   @Get('42')
   @UseGuards(FortyTwoAuthGuard) // déclenche la redirection vers 42
   fortyTwoLogin() { /*le guard gère la redirection */ }
+
+  @Get('42/status') // verifie si l'api est configuré pour afficher ou non le bouton de login 42 sur le frontend ou une erreur personalisé
+  fortyTwoStatus() {
+    const UID42 = this.configService.get<string>('FORTYTWO_CLIENT_ID') || '';
+    return { available: !!(UID42 && UID42 !== 'disabled') };
+  }
 
   // route apres 42 appelle validate() qui appelle /v2/me, et met le profil dans req.user
   @Get('42/callback')
@@ -38,30 +56,15 @@ export class AuthController {
     // récuperation de validate() { fortyTwoId, login, email, imageUrl }
     const token = await this.authService.loginWith42(req.user);
 
-    // httpOnly = pas accessible en JS côté client (protection XSS)
-    // sameSite lax = envoyé sur navigation top-level (nécessaire pour redirect 42)
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'lax',
-      maxAge: parseExpiration(this.configService.get<string>('JWT_EXPIRATION', '3h')),
-    });
+    this.setTokenCookie(res, token); // utilisation des cookies pour stocker le token
 
     const frontendUrl = this.configService.get<string>('CORS_ORIGIN', 'http://localhost:3000');
     res.redirect(`${frontendUrl}/dashboard`); // redirection vers le frontend après login 42, à adapter selon la route d'accueil du frontend
   }
-
-  @Post('logout') // route pour la déconnexion, supprime le cookie
-  async logout(@Res() res: Response) {
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'lax',
-    });
-    res.json({ success: true });
-  }
   
   // helper privé pour éviter la duplication du code cookie
+  // httpOnly = pas accessible en JS côté client (protection XSS)
+  // sameSite lax = envoyé sur navigation top-level (nécessaire pour redirect 42)
   private setTokenCookie(res: Response, token: string) {
     res.cookie('token', token, {
       httpOnly: true,

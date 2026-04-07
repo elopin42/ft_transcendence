@@ -5,7 +5,10 @@ this is meant to be wide supported and it really depends on you browsers
 if i realize any way to stylize the eye it could be added in the future
 in other input type*/
 
+/* Fix : le formulaire doit être au-dessus des trackers du diamant */
 .container {
+  position: relative;
+  z-index: 200;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   font-style: italic;
   font-weight: bold;

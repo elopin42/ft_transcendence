@@ -24,6 +24,7 @@ export class AppModule {
         { path: 'auth/login', method: RequestMethod.POST },
         { path: 'auth/logout', method: RequestMethod.POST },
         { path: 'auth/42', method: RequestMethod.GET }, // autorise l'accès à la route de redirection vers 42 sans token pour permettre le login via 42
+        { path: 'auth/42/status', method: RequestMethod.GET }, // autorise l'accès à la route de vérification du statut 42 sans token
         { path: 'auth/42/callback', method: RequestMethod.GET }, // autorise l'accès au callback de 42 sans token pour permettre le traitement du callback après login via 42
       )
       .forRoutes('*');

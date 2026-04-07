@@ -56,9 +56,21 @@ export default function LoginPage() {
           {error && <p>{error}</p>}
           <button className="submit-button" type="submit" >Log in</button>
           <a href="/register">Register</a>
-          <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/42`} className="submit-button"> 
+          <button
+            className="submit-button"
+            type="button"
+            onClick={async () => {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/42/status`, { credentials: 'include' });
+              const data = await res.json();
+              if (data.available) {
+                window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/42`;
+              } else {
+                setError('Connexion 42 non disponible');
+              }
+            }}
+          >
             Se connecter avec 42
-          </a>
+          </button>
         </form>
       </div>
 
