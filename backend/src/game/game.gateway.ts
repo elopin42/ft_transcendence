@@ -13,13 +13,13 @@ import { AuthService } from '../auth/auth.service';
 
 @WebSocketGateway({
     cors: {
-        origin: 'http://localhost:3000',
+        origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
         credentials: true
     },
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server; // évité que typescript mette une erreur sait que ce sera initialisé
 
   constructor(
       private authService: AuthService
@@ -33,7 +33,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
      const token = cookie?.split(';')
          .find((c: string) => c.trim().startsWith('token='))
          ?.split('=')[1];
-  
+
+       if (!token) {
+           client.disconnect();
+           return;
+       }
        try {
           const login = await this.authService.gamelogin(token);
           console.log(login)
@@ -55,6 +59,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('move')
   handleMove(client: any, payload: { x: number; y: number }) {
+    // Valider le payload (par exemple, vérifier que x et y sont des nombres)
+    if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
     const player = this.players.get(client.id);
     if (player) {
       player.x = payload.x;

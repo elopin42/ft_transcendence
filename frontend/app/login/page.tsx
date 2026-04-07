@@ -10,14 +10,15 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    const response = await fetch('http://localhost:4000/auth/login', {
+    const response = await fetch('/api/auth/login', { // proxy Next.js, plus de localhost
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // pour envoyer les cookies (utile pour le login 42 qui utilise les cookies)
       body: JSON.stringify({ email, password }),
     });
     const data = await response.json();
     if (response.ok) {
-      document.cookie = `token=${data.token}; path=/`;
+      // Plus de document.cookie ! Le backend set le cookie httpOnly lui-même
       window.location.href = '/dashboard';
     } else {
       setError(data.message || 'Erreur de connexion');
@@ -55,7 +56,7 @@ export default function LoginPage() {
           {error && <p>{error}</p>}
           <button className="submit-button" type="submit" >Log in</button>
           <a href="/register">Register</a>
-          <a href="http://localhost:4000/auth/42" className="submit-button">
+          <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/42`} className="submit-button"> 
             Se connecter avec 42
           </a>
         </form>

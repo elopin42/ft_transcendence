@@ -12,13 +12,17 @@ export class AuthController {
   constructor(private authService: AuthService, private configService: ConfigService) { }
 
   @Post('register')
-  async register(@Body() dto: RegisterDto) { // ajout du registerDto pour bénéficier de la validation automatique des données d'entrée grâce au ValidationPipe global défini dans main.ts
-    return this.authService.register(dto.email, dto.password);
+  async register(@Body() dto: RegisterDto, @Res() res: Response) { // ajout du registerDto pour bénéficier de la validation automatique des données d'entrée grâce au ValidationPipe global défini dans main.ts
+    const { token } = await this.authService.register(dto.email, dto.password); // enregistrement de l'utilisateur et génération du token
+    this.setTokenCookie(res, token); // utilisation des cookies
+    res.json({ success: true });
   }
 
   @Post('login')
-  async login(@Body() dto: LoginDto) { // ajout du loginDto
-    return this.authService.login(dto.email, dto.password);
+  async login(@Body() dto: LoginDto, @Res() res: Response) { // ajout du loginDto
+    const { token } = await this.authService.login(dto.email, dto.password); // vérification des identifiants et génération du token
+    this.setTokenCookie(res, token); // utilisation des cookies
+    res.json({ success: true });
   }
   // route pour la connexion 42 redirect https://api.intra.42.fr/oauth/authorize
   @Get('42')
@@ -45,5 +49,25 @@ export class AuthController {
 
     const frontendUrl = this.configService.get<string>('CORS_ORIGIN', 'http://localhost:3000');
     res.redirect(`${frontendUrl}/dashboard`); // redirection vers le frontend après login 42, à adapter selon la route d'accueil du frontend
+  }
+
+  @Post('logout') // route pour la déconnexion, supprime le cookie
+  async logout(@Res() res: Response) {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: 'lax',
+    });
+    res.json({ success: true });
+  }
+  
+  // helper privé pour éviter la duplication du code cookie
+  private setTokenCookie(res: Response, token: string) {
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      maxAge: parseExpiration(this.configService.get<string>('JWT_EXPIRATION', '3h')),
+    });
   }
 }

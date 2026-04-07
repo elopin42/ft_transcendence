@@ -11,16 +11,17 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    const response = await fetch('http://localhost:4000/auth/register', {
+    const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // pour envoyer les cookies (utile pour le login 42 qui utilise les cookies)
       body: JSON.stringify({ email, password }),
     });
 
     const data = await response.json();
 
     if (response.ok) {
-      document.cookie = `token=${data.token}; path=/`; // claude help
+      // Plus de document.cookie ! Le backend set le cookie httpOnly lui-même
       window.location.href = '/dashboard'; // changement claude proposé ! ancien : window.location.href = '/login';
     } else {
       setError(data.message || 'Erreur de connexion');
