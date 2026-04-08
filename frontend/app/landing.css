@@ -1,0 +1,123 @@
+.logo-topleft {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 230px;
+  transform: rotate(-10deg);
+}
+
+.landing-wrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('/background_start.png');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 80px;
+}
+
+.title-container {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  height: 80px;
+}
+
+.title-container h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: 2.6em;
+  letter-spacing: 0.02em;
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.subtitle-backer {
+  color: white;
+  -webkit-text-stroke: 8px white;
+  filter: drop-shadow(rgba(26, 74, 102, 0.4) 1.5px 1.5px 0.08rem);
+  z-index: 1;
+}
+
+.subtitle-front {
+  color: rgb(241, 16, 134);
+  -webkit-text-stroke: 0px;
+  z-index: 2;
+}
+
+/* Conteneur du bouton */
+.button {
+  margin: 1.5vw;
+  position: relative;
+  background-size: 100% 100%;
+}
+
+.button:hover {
+  transform: scale(1.02);
+}
+
+/* Le lien principal */
+.main-btn-msp {
+  display: block;
+  min-height: 4vh;
+  text-decoration: none;
+  color: #ffffff;
+  padding: 0.2vw;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  text-shadow: rgba(77, 66, 68, 0.576) 3px 3px 0px;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Style rose/image de fond */
+.pink-button {
+  height: 6vw;
+  min-height: 60px;
+  line-height: 5.5vw;
+  background-image: url('/mspRedirectBtn.png');
+  background-size: 100% 100%;
+  font-size: 2vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.1em 2.6em;
+}
+
+@media only screen and (max-width: 1000px) {
+  .pink-button {
+    font-size: 1.2em;
+    padding: 0.5em 3em;
+  }
+}
+
+/* Étoiles + logo */
+.button-art {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+  top: 0px;
+}
+
+.button-art .bling {
+  position: absolute;
+  max-width: 30px;
+  width: 5%;
+}
+
+.button-art .logo {
+  position: absolute;
+  max-width: 100px;
+  width: 20%;
+}
