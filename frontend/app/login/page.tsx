@@ -60,10 +60,10 @@ export default function LoginPage() {
             className="submit-button"
             type="button"
             onClick={async () => {
-              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/42/status`, { credentials: 'include' });
+              const res = await fetch('/api/auth/42/status', { credentials: 'include' });
               const data = await res.json();
               if (data.available) {
-                window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/42`;
+                window.location.href = '/api/auth/42';
               } else {
                 setError('Connexion 42 non disponible');
               }

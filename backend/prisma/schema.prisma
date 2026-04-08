@@ -3,21 +3,57 @@
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
- }
+  provider = "postgresql"
+}
 
 model user {
-    id          Int     @id @default(autoincrement())
-    login       String  @unique
-    email       String  @unique
-    password    String? // peu etre NULLABLE pour les utilisateurs qui se connectent avec 42
-    fortyTwoId  Int?	@unique
-	// avatarUrl	String? // pour stocker l'url de l'avatar ( 42 ou uploadé par l'utilisateur )
-    createdAt	DateTime @default(now())
-  }
+  id         Int     @id @default(autoincrement())
+  login      String  @unique
+  email      String  @unique
+  password   String? // peu etre NULLABLE pour les utilisateurs qui se connectent avec 42
+  fortyTwoId Int?    @unique
+  // 0 = user gradiant pour avoir plusieur type d'utilisateur ( admin, modérateur, etc ) sans avoir a migrate a chaque nouveau role creer
+  //a voir si je met pas aussi dans bd les roles stoquer avec 0 user 1 admin par defaut mais pour le moment ca sera dans un fichier pourquoi pas admin -1 ou meme -1 banlist ?
+  // pour le moment auth/roles.ts pour la définition des permission
+
+  // au final grade = bitmask
+  grade    BigInt           @default(0)
+  roleId   Int? // role assigné (nullable = pas de role)
+  role     role?            @relation(fields: [roleId], references: [id]) // relation avec la table des roles pour savoir quel role a l'utilisateur ( admin, modérateur, etc )
+  channels channel_member[] // relation avec la table channel_member pour savoir dans quels channels est l'utilisateur et ses permissions dans ces channels
+
+  // avatarUrl	String? // pour stocker l'url de l'avatar ( 42 ou uploadé par l'utilisateur ) mais on as la photo de l'intra on pourrais stoquer les 2 celle de l'intra et celle du jeux
+
+  title String? // titre 42 je veux pouvoir les recup ca peux etre cool
+  createdAt DateTime @default(now())
+}
+
+model role {
+  id          Int    @id @default(autoincrement())
+  name        String @unique // nom du role ( admin, modérateur, etc )
+  permissions BigInt @default(0) // bitmask pour les permissions ( 1 = canBan, 2 = canKick, 4 = canMute, etc ) pour pouvoir faire des roles personnalisés avec des permissions différentes
+  users       user[] // relation avec la table des utilisateurs pour savoir quels utilisateurs ont ce role
+}
+
+// préparation de channel pour les groupe chat 
+model channel {
+  id      Int              @id @default(autoincrement())
+  name    String // nom du channel
+  members channel_member[] // relation avec la table channel_member pour savoir quels utilisateurs sont dans le channel et leurs permissions dans le channel
+}
+
+model channel_member {
+  id          Int     @id @default(autoincrement())
+  userId      Int // id de l'utilisateur dans la table user
+  channelId   Int // id du channel dans la table channel
+  permissions BigInt  @default(0) // bitmask pour les permissions dans le channel ( 1 = canBan, 2 = canKick, 4 = canMute, etc )
+  user        user    @relation(fields: [userId], references: [id]) // relation avec la table des utilisateurs pour savoir quel utilisateur est dans le channel
+  channel     channel @relation(fields: [channelId], references: [id]) // relation avec la table des channels pour savoir dans quel channel est l'utilisateur
+
+  @@unique([userId, channelId]) // un user = une entrée par channel
+}

@@ -30,7 +30,7 @@ export class AuthController {
   async logout(@Res() res: Response) {
     res.clearCookie('token', {
       httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      secure: true,
       sameSite: 'lax',
     });
     res.json({ success: true });
@@ -68,7 +68,7 @@ export class AuthController {
   private setTokenCookie(res: Response, token: string) {
     res.cookie('token', token, {
       httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      secure: true, // toujours sécurisé avec nginx en hhttps, et en dev on peut se permettre de forcer le secure pour éviter les erreurs de cookies non sécurisés
       sameSite: 'lax',
       maxAge: parseExpiration(this.configService.get<string>('JWT_EXPIRATION', '3h')),
     });
