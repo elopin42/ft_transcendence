@@ -1,12 +1,14 @@
 'use client';
 import './login.css';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  const router = useRouter();
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -19,7 +21,7 @@ export default function LoginPage() {
     const data = await response.json();
     if (response.ok) {
       // Plus de document.cookie ! Le backend set le cookie httpOnly lui-même
-      window.location.href = '/dashboard';
+      router.push('/dashboard');
     } else {
       setError(data.message || 'Erreur de connexion');
     }

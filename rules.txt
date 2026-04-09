@@ -3,12 +3,26 @@ pas de generation de code avec ia!!!!!(sauf front html/css/tailwinds)
 pour les commit on met prenom et :
 example --> git commit -m "ethan: fix de la page login"
 
+-------
 faire un .md pour toute les partis du project ecris a la main et remanier avec claude juste pour la syntaxe
 style le .md a la racine du project es global et plus on va dans les fichier plus on details.
 les .md ne doivent pas etre trop long !!!!!!!!!
 
+-------
+bon sa au final on le fait pas mais on se demerde bien sans 
+-------
+
 ya un makefile pour compiler tout
 
+-------
 mettre a jours le todo et a l'avenir ameliorer la syntax pour que chaque personne sache ce que il dois faire
+-------
+idem
+-------
 
 regarder launcher.txt pour comment lancer le site
+
+
+
+!!!!push que un truc qui fonctionne et compile sur le main 
+ave le code des autres

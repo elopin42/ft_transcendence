@@ -4,6 +4,7 @@ const PUBLIC_ROUTES = ['/', '/login', '/register'];
 
 export async function proxy(req: NextRequest) {
     const token = req.cookies.get('token')?.value;
+    console.log('token:', token);
     const path = req.nextUrl.pathname;
     const isPublic = PUBLIC_ROUTES.some(route => path === route);
 
@@ -12,21 +13,27 @@ export async function proxy(req: NextRequest) {
         try {
             const res = await fetch('/api/auth/validate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Cookie': `token=${token}`,
+                },
                 body: JSON.stringify({ token }),
             });
             valid = res.ok;
-        } catch {
+        } catch (error){
+            console.log(error)
             valid = false;
         }
     }
+    
+    console.log('valid: ', valid);
 
     if (!valid && !isPublic) {
         return NextResponse.redirect(new URL('/login', req.url));
     }
     // if (valid && isPublic && path !== '/') {
     //     return NextResponse.redirect(new URL('/dashboard', req.url));
-    }
+    // }
     return NextResponse.next();
 }
 export const config = {

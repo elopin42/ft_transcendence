@@ -9,22 +9,24 @@ export default function DashboardPage() {
     const [authorized, setAuthorized] = useState(false);
     const router = useRouter();
 
-    useEffect(() => {
-        fetch('/api/auth/validate', {
-            method: 'POST',
-            credentials: 'include',
-        })
-            .then(res => {
-                if (!res.ok) {
-                    router.push('/login');
-                } else {
-                    setAuthorized(true);
-                }
-            })
-            .catch(() => router.push('/login'));
-    }, []);
-
-    if (!authorized) return null;
+    // console.log('start function deashboard page')
+    // useEffect(() => {
+    //     fetch('/api/auth/validate', {
+    //         method: 'POST',
+    //         credentials: 'include',
+    //     })
+    //         .then(res => {
+    //             if (!res.ok) {
+    //                 console.log('re.ok false');
+    //                 router.push('/login');
+    //             } else {
+    //                 setAuthorized(true);
+    //             }
+    //         })
+    //         .catch(() => router.push('/login'));
+    // }, []);
+    //
+    // if (!authorized) return null;
 
     return <PhaserGame />;
 }

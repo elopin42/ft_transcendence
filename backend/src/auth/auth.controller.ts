@@ -27,7 +27,10 @@ export class AuthController {
 
   @Post('validate')
   async validate(@Req() req: Request, @Res() res: Response) {
+    // console.log('path:', req.nexturl.pathname);
+    console.log('test');
     const token = req.cookies['token'];
+    console.log('token:', token);  
     const result = await this.authService.validateToken(token);
     if (!result) {
         return res.status(401).json({ success: false });
@@ -76,7 +79,7 @@ export class AuthController {
   // sameSite lax = envoyé sur navigation top-level (nécessaire pour redirect 42)
   private setTokenCookie(res: Response, token: string) {
     res.cookie('token', token, {
-      httpOnly: true,
+      httpOnly: false,
       secure: true, // toujours sécurisé avec nginx en hhttps, et en dev on peut se permettre de forcer le secure pour éviter les erreurs de cookies non sécurisés
       sameSite: 'lax',
       maxAge: parseExpiration(this.configService.get<string>('JWT_EXPIRATION', '3h')),
