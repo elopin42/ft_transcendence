@@ -1,0 +1,20 @@
+# Fichiers a ignorer lors du build Docker
+# Reduit la taille du contexte de build
+
+# Documentation
+*.md
+README*
+
+# Fichiers temporaires
+*.tmp
+*.bak
+*~
+
+# Logs
+*.log
+
+*.pem
+
+# Git
+.git
+.gitignore
