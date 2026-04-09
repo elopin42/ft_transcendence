@@ -25,6 +25,15 @@ export class AuthController {
     res.json({ success: true });
   }
 
+  @Post('validate')
+  async validate(@Req() req: Request, @Res() res: Response) {
+    const token = req.cookies['token'];
+    const result = await this.authService.validateToken(token);
+    if (!result) {
+        return res.status(401).json({ success: false });
+    }
+    return res.json({ success: true });
+  }
   
   @Post('logout') // route pour la déconnexion, supprime le cookie
   async logout(@Res() res: Response) {
