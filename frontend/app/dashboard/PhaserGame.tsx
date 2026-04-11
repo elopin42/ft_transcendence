@@ -28,6 +28,14 @@ class GameScene extends Phaser.Scene {
         });
         this.socket.on('players', (players: { id: string, pseudo: string, x: number, y: number }[]) => {
             console.log('joueurs connectés:', players);
+          const activeIds = new Set(players.map(p => p.id));
+          this.otherPlayers.forEach((player, id) => {
+            if (!activeIds.has(id)) {
+              player.sprite.destroy();
+              player.login.destroy();
+              this.otherPlayers.delete(id);
+            }
+          });
             players.forEach(p => {
                 if (p.id === this.socket.id) return;
 
