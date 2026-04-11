@@ -15,7 +15,7 @@ export default function DebugPanel() {
     } catch (e) {
       // ignore — on redirige quand même
     }
-    router.push('/login');
+    router.push('/');
   };
 
   return (

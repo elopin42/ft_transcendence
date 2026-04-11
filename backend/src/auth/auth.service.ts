@@ -18,12 +18,13 @@ export class AuthService {
 		return this.jwt.signAsync({ userId }); // pas besoin de spécifier le secret et l'expiration ici car ils sont déjà configurés dans JwtModule.registerAsync
 	}
 
-	async register(email: string, password: string): Promise<{ token: string }> {
+	async register(email: string, password: string, login: string): Promise<{ token: string }> {
 		const hashedPassword = await this.hashPassword(password);
 
 		// Génère le login à partir de l'email, avec suffixe si conflit
-		let login = email.split('@')[0];
-		const loginExists = await this.prisma.user.findUnique({ where: { login } });
+		let loginExists = await this.prisma.user.findUnique({ where: { login } });
+		if (loginExists) { login = email.split('@')[0]; } // génère un suffixe court et unique basé sur le timestamp ex: "john_m3k9x2"
+		loginExists = await this.prisma.user.findUnique({ where: { login } });
 		if (loginExists) { login = `${login}_${Date.now().toString(36)}`; } // génère un suffixe court et unique basé sur le timestamp ex: "john_m3k9x2"
 
 		try { // capture l'errreur d'email

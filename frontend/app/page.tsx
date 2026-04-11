@@ -9,7 +9,7 @@ export default function Home() {
         <h1 className="subtitle-front">Friends, Fun, code &amp; Connect</h1>
       </div>
       <div className="button">
-        <a className="main-btn-msp pink-button" href="/login">
+        <a className="main-btn-msp pink-button" href="/register">
           Play MovieStarParis 42
         </a>
         <div className="button-art">
