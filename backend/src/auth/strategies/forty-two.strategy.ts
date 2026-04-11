@@ -14,6 +14,7 @@ export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
 		const UID42 = configService.get<string>('FORTYTWO_CLIENT_ID') || 'disabled';
 		const Secret42 = configService.get<string>('FORTYTWO_CLIENT_SECRET') || 'disabled';
 		const callback42 = configService.get<string>('FORTYTWO_CALLBACK_URL') || 'https://localhost/api/auth/42/callback'; // fallback HTTPS via nginx
+		super({
 			// URL ou l'utilisateur est redigirer pour autoriser l'application
 			// URL appelée serveur-à-serveur pour échanger le code contre un token
 			authorizationURL: 'https://api.intra.42.fr/oauth/authorize',
