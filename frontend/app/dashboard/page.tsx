@@ -1,32 +1,11 @@
+// la protection de cette page est gérée par proxy.ts (middleware Next.js)
+// pas besoin de vérification côté client — si le token est invalide,
+// le middleware redirige vers /login avant que cette page ne se charge
 'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 const PhaserGame = dynamic(() => import('./PhaserGame'), { ssr: false });
 
 export default function DashboardPage() {
-    const [authorized, setAuthorized] = useState(false);
-    const router = useRouter();
-
-    // console.log('start function deashboard page')
-    // useEffect(() => {
-    //     fetch('/api/auth/validate', {
-    //         method: 'POST',
-    //         credentials: 'include',
-    //     })
-    //         .then(res => {
-    //             if (!res.ok) {
-    //                 console.log('re.ok false');
-    //                 router.push('/login');
-    //             } else {
-    //                 setAuthorized(true);
-    //             }
-    //         })
-    //         .catch(() => router.push('/login'));
-    // }, []);
-    //
-    // if (!authorized) return null;
-
     return <PhaserGame />;
 }

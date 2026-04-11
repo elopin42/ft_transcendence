@@ -21,7 +21,6 @@ export class AppModule {
       .apply(AuthMiddleware)
       .exclude( // route accecible sans JWT
         { path: 'auth/register', method: RequestMethod.POST },
-        { path: 'auth/validate', method: RequestMethod.POST },
         { path: 'auth/login', method: RequestMethod.POST },
         { path: 'auth/logout', method: RequestMethod.POST },
         { path: 'auth/42', method: RequestMethod.GET }, // autorise l'accès à la route de redirection vers 42 sans token pour permettre le login via 42

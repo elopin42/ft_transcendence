@@ -25,19 +25,6 @@ export class AuthController {
     res.json({ success: true });
   }
 
-  @Post('validate')
-  async validate(@Req() req: Request, @Res() res: Response) {
-    // console.log('path:', req.nexturl.pathname);
-    console.log('test');
-    const token = req.cookies['token'];
-    console.log('token:', token);  
-    const result = await this.authService.validateToken(token);
-    if (!result) {
-        return res.status(401).json({ success: false });
-    }
-    return res.json({ success: true });
-  }
-  
   @Post('logout') // route pour la déconnexion, supprime le cookie
   async logout(@Res() res: Response) {
     res.clearCookie('token', {
@@ -73,13 +60,15 @@ export class AuthController {
     const frontendUrl = this.configService.get<string>('CORS_ORIGIN', 'http://localhost:3000');
     res.redirect(`${frontendUrl}/dashboard`); // redirection vers le frontend après login 42, à adapter selon la route d'accueil du frontend
   }
-  
+
   // helper privé pour éviter la duplication du code cookie
   // httpOnly = pas accessible en JS côté client (protection XSS)
   // sameSite lax = envoyé sur navigation top-level (nécessaire pour redirect 42)
+  // pour debug les cookies : DevTools > Application > Cookies (visible même en httpOnly)
+  // NE PAS passer httpOnly en false pour debug — ça retire la protection XSS
   private setTokenCookie(res: Response, token: string) {
     res.cookie('token', token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: true, // toujours sécurisé avec nginx en hhttps, et en dev on peut se permettre de forcer le secure pour éviter les erreurs de cookies non sécurisés
       sameSite: 'lax',
       maxAge: parseExpiration(this.configService.get<string>('JWT_EXPIRATION', '3h')),
