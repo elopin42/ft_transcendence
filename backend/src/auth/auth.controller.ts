@@ -57,7 +57,7 @@ export class AuthController {
 
     this.setTokenCookie(res, token); // utilisation des cookies pour stocker le token
 
-    const frontendUrl = this.configService.get<string>('CORS_ORIGIN', 'http://localhost:3000');
+    const frontendUrl = this.configService.get<string>('CORS_ORIGIN', 'https://localhost'); // fallback HTTPS car nginx gère le SSL
     res.redirect(`${frontendUrl}/dashboard`); // redirection vers le frontend après login 42, à adapter selon la route d'accueil du frontend
   }
 

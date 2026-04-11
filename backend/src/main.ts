@@ -17,7 +17,7 @@ async function bootstrap() {
 	); 
 
 	app.enableCors({
-		origin: process.env.CORS_ORIGIN || 'http://localhost:3000', // via env
+		origin: process.env.CORS_ORIGIN || 'https://localhost', // fallback HTTPS car nginx gère le SSL
 		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 		credentials: true,
 	});
