@@ -2,24 +2,31 @@
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { io } from 'socket.io-client';
+import { DEFAULT_CHARACTER, type CharacterConfig } from '../characters';
 
 class GameScene extends Phaser.Scene {
     player!: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     socket!: any;
+    character!: CharacterConfig;
 
     timep = 0;
     otherPlayers = new Map<string, { login: Phaser.GameObjects.Text, sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
 
     preload() {
         this.load.image('map', '/map.png');
-        this.load.spritesheet('nass-frame', '/character/nass/nass-allframe-right.png', {
-            frameWidth: 1760,
-            frameHeight: 2412
+        this.load.spritesheet(`${c.id}-frame`, c.assets.spritesheetRight, {
+            frameWidth: c.spritesheet.frameWidth,
+            frameHeight: c.spritesheet.frameHeight,
         });
-        this.load.image('nass-front', '/character/nass/nass-front.png');
+        this.load.image(`${c.id}-front`, c.assets.front);
     }
+
     create() {
+        const c = this.character;
+        const frontKey = `${c.id}-front`;
+        const frameKey = `${c.id}-frame`;
+
         const map = this.add.image(0, 0, 'map').setOrigin(0, 0);
         this.scale.resize(map.width, map.height);
         this.cursors = this.input.keyboard!.createCursorKeys();
@@ -66,33 +73,47 @@ class GameScene extends Phaser.Scene {
                 }
             });
         });
-        this.player = this.add.sprite(500, 1000, 'nass-front').setScale(0.35);
+
+        this.player = this.add.sprite(500, 1000, frontKey).setScale(0.35);
+
         this.anims.create({
             key: 'walk-right',
-            frames: this.anims.generateFrameNumbers('nass-frame', { start: 2, end: 0 }),
-            frameRate: 4,
-            repeat: -1
-        })
+            frames: this.anims.generateFrameNumbers(frameKey, {
+                start: c.spritesheet.walkFrames.start,
+                end: c.spritesheet.walkFrames.end,
+            }),
+            frameRate: c.spritesheet.frameRate,
+            repeat: -1,
+        });
     }
+
     update() {
+        const c = this.character;
+        const frontKey = `${c.id}-front`;
         const speed = Phaser.Math.Linear(3, 7, (this.player.y - 250) / (1150 - 250));
+        const sprite = this.player as Phaser.GameObjects.Sprite;
+        const moving =
+            this.cursors.left.isDown ||
+            this.cursors.right.isDown ||
+            this.cursors.up.isDown ||
+            this.cursors.down.isDown;
+
         if (this.cursors.left.isDown) {
             this.player.x -= speed;
-            (this.player as Phaser.GameObjects.Sprite).setFlipX(true);
-            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
+            sprite.setFlipX(true);
         }
         if (this.cursors.right.isDown) {
             this.player.x += speed;
-            (this.player as Phaser.GameObjects.Sprite).setFlipX(false);
-            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
+            sprite.setFlipX(false);
         }
-        if (this.cursors.up.isDown) {
-            this.player.y -= speed;
-            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
-        }
-        if (this.cursors.down.isDown) {
-            this.player.y += speed;
-            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
+        if (this.cursors.up.isDown) this.player.y -= speed;
+        if (this.cursors.down.isDown) this.player.y += speed;
+
+        if (moving) {
+            sprite.play('walk-right', true);
+        } else {
+            sprite.stop();
+            sprite.setTexture(frontKey);
         }
         if (!this.cursors.left.isDown && !this.cursors.right.isDown && !this.cursors.up.isDown && !this.cursors.down.isDown) {
             (this.player as Phaser.GameObjects.Sprite).stop();
@@ -107,7 +128,7 @@ class GameScene extends Phaser.Scene {
 }
 
 export default function PhaserGame() {
-    const ref = useRef<HTMLDivElement>(null); // creer ref vers une elements html
+    const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const game = new Phaser.Game({
