@@ -11,7 +11,7 @@ export async function proxy(req: NextRequest) {
     let valid = false;
     if (token) {
         try {
-            const res = await fetch('/api/auth/validate', {
+            const res = await fetch('http://backend:4000/auth/validate', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -31,9 +31,9 @@ export async function proxy(req: NextRequest) {
     if (!valid && !isPublic) {
         return NextResponse.redirect(new URL('/login', req.url));
     }
-    // if (valid && isPublic && path !== '/') {
-    //     return NextResponse.redirect(new URL('/dashboard', req.url));
-    // }
+    if (valid && isPublic && path !== '/') {
+        return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
     return NextResponse.next();
 }
 export const config = {
