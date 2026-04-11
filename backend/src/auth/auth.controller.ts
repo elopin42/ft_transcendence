@@ -13,7 +13,7 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() dto: RegisterDto, @Res() res: Response) { // ajout du registerDto pour bénéficier de la validation automatique des données d'entrée grâce au ValidationPipe global défini dans main.ts
-    const { token } = await this.authService.register(dto.email, dto.password); // enregistrement de l'utilisateur et génération du token
+    const { token } = await this.authService.register(dto.email, dto.password, dto.login); // enregistrement de l'utilisateur et génération du token
     this.setTokenCookie(res, token); // utilisation des cookies
     res.json({ success: true });
   }
