@@ -33,7 +33,9 @@ class GameScene extends Phaser.Scene {
 
                 if (!this.otherPlayers.has(p.id)) {
                     const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
-                    const login = this.add.text(p.x, p.y - 400, p.pseudo, {
+                    const scales = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
+                    const labelOffset = (2412 * scales) / 2 + 20;
+                    const login = this.add.text(p.x, p.y - labelOffset, p.pseudo, {
                         fontSize: '20px',
                         color: '#ff0000',
                         stroke: '#000000',
@@ -45,8 +47,9 @@ class GameScene extends Phaser.Scene {
                     const sprite = this.otherPlayers.get(p.id);
                     if (!sprite) return;
                     sprite.sprite.setPosition(p.x, p.y);
-                    sprite.login.setPosition(p.x, p.y - 400);
                     const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
+                    const labelOffset = (2412 * scale) / 2 + 20;
+                    sprite.login.setPosition(p.x, p.y - labelOffset);
                     sprite.sprite.setScale(scale);
                     if (timeo - this.timep < 50) return;
                     this.timep = timeo;

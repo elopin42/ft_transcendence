@@ -1,27 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Routes publiques — tout le reste est protégé
 const PUBLIC_ROUTES = ['/', '/login', '/register'];
 
-export function proxy(req: NextRequest) {
-  const token = req.cookies.get('token');
-  const path = req.nextUrl.pathname;
+export async function proxy(req: NextRequest) {
+    const token = req.cookies.get('token')?.value;
+    console.log('token:', token);
+    const path = req.nextUrl.pathname;
+    const isPublic = PUBLIC_ROUTES.some(route => path === route);
 
-  const isPublic = PUBLIC_ROUTES.some(route => path === route);
+    let valid = false;
+    if (token) {
+        try {
+            const res = await fetch('http://backend:4000/auth/validate', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Cookie': `token=${token}`,
+                },
+                body: JSON.stringify({ token }),
+            });
+            valid = res.ok;
+        } catch (error){
+            console.log(error)
+            valid = false;
+        }
+    }
+    
+    console.log('valid: ', valid);
 
-  // Pas connecté + route protégée → login
-  if (!token && !isPublic) {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
-
-  // Connecté + route publique (sauf /) → dashboard
-  if (token && isPublic && path !== '/') {
-    return NextResponse.redirect(new URL('/dashboard', req.url));
-  }
-
-  return NextResponse.next();
+    if (!valid && !isPublic) {
+        return NextResponse.redirect(new URL('/login', req.url));
+    }
+    if (valid && isPublic && path !== '/') {
+        return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
+    return NextResponse.next();
 }
-
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.css$|.*\\.js$).*)',
