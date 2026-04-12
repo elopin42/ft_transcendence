@@ -13,7 +13,7 @@ import { AuthService } from '../auth/auth.service';
 
 @WebSocketGateway({
     cors: {
-        origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+        origin: process.env.CORS_ORIGIN || 'https://localhost', // fallback HTTPS car nginx gère le SSL
         credentials: true
     },
 })
