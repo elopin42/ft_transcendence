@@ -1,2 +1,2 @@
-dans /backend ya un fichier env.example il faut le edit et le rename en .env pour pouvoir faire tourner le site
-(bonne pratique)
+ok pour lancer le serv  juste besoin de faire cette commande a la racine du project
+--> cp .env.example .env && cp .env backend/
