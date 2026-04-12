@@ -1,24 +1,27 @@
 'use client';
 import './login.css';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  const router = useRouter();
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    const response = await fetch('http://localhost:4000/auth/login', {
+    const response = await fetch('/api/auth/login', { // proxy Next.js, plus de localhost
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // pour envoyer les cookies (utile pour le login 42 qui utilise les cookies)
       body: JSON.stringify({ email, password }),
     });
     const data = await response.json();
     if (response.ok) {
-      document.cookie = `token=${data.token}; path=/`;
-      window.location.href = '/dashboard';
+      // Plus de document.cookie ! Le backend set le cookie httpOnly lui-même
+      router.push('/dashboard');
     } else {
       setError(data.message || 'Erreur de connexion');
     }
@@ -55,6 +58,21 @@ export default function LoginPage() {
           {error && <p>{error}</p>}
           <button className="submit-button" type="submit" >Log in</button>
           <a href="/register">Register</a>
+          <button
+            className="submit-button"
+            type="button"
+            onClick={async () => {
+              const res = await fetch('/api/auth/42/status', { credentials: 'include' });
+              const data = await res.json();
+              if (data.available) {
+                window.location.href = '/api/auth/42';
+              } else {
+                setError('Connexion 42 non disponible');
+              }
+            }}
+          >
+            Se connecter avec 42
+          </button>
         </form>
       </div>
 

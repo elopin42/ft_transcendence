@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common'; // Importation du ValidationPipe pour la validation des données d'entrée
+import cookieParser from 'cookie-parser'; // Importation de cookie-parser pour gérer les cookies
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
+	app.use(cookieParser()); // Utilisation de cookie-parser
 
 	// Application du ValidationPipe globalement pour valider les données d'entrée et sécurisées les endpoints se lie avec class-validator dans les DTOs (Data Transfer Objects)
 	app.useGlobalPipes(
@@ -15,7 +17,7 @@ async function bootstrap() {
 	); 
 
 	app.enableCors({
-		origin: process.env.CORS_ORIGIN || 'http://localhost:3000', // via env
+		origin: process.env.CORS_ORIGIN || 'https://localhost', // fallback HTTPS car nginx gère le SSL
 		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 		credentials: true,
 	});

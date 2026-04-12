@@ -2,125 +2,120 @@
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { io } from 'socket.io-client';
-import { DEFAULT_CHARACTER, type CharacterConfig } from '../characters';
 
 class GameScene extends Phaser.Scene {
     player!: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     socket!: any;
-    character!: CharacterConfig;
 
-    otherPlayers = new Map<string, Phaser.GameObjects.Sprite>();
-
-    constructor() {
-        super('GameScene');
-        this.character = DEFAULT_CHARACTER;
-    }
+    timep = 0;
+    otherPlayers = new Map<string, { login: Phaser.GameObjects.Text, sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
 
     preload() {
-        const c = this.character;
         this.load.image('map', '/map.png');
-        this.load.spritesheet(`${c.id}-frame`, c.assets.spritesheetRight, {
-            frameWidth: c.spritesheet.frameWidth,
-            frameHeight: c.spritesheet.frameHeight,
+        this.load.spritesheet('nass-frame', '/character/nass/nass-allframe-right.png', {
+            frameWidth: 1760,
+            frameHeight: 2412
         });
-        this.load.image(`${c.id}-front`, c.assets.front);
+        this.load.image('nass-front', '/character/nass/nass-front.png');
     }
-
     create() {
-        const c = this.character;
-        const frontKey = `${c.id}-front`;
-        const frameKey = `${c.id}-frame`;
-
         const map = this.add.image(0, 0, 'map').setOrigin(0, 0);
         this.scale.resize(map.width, map.height);
         this.cursors = this.input.keyboard!.createCursorKeys();
-
-        this.socket = io('http://localhost:4000', { withCredentials: true });
-
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        const self: GameScene = this;
-
-        this.socket.on('players', (players: { id: string; pseudo: string; x: number; y: number }[]) => {
+        this.socket = io({ // meme hote que la page pour Nginx route /socket.io/* vers le backend
+            withCredentials: true,
+        });
+        this.socket.on('players', (players: { id: string, pseudo: string, x: number, y: number }[]) => {
             console.log('joueurs connectés:', players);
-            players.forEach((p) => {
-                if (p.id === self.socket.id) return;
+          const activeIds = new Set(players.map(p => p.id));
+          this.otherPlayers.forEach((player, id) => {
+            if (!activeIds.has(id)) {
+              player.sprite.destroy();
+              player.login.destroy();
+              this.otherPlayers.delete(id);
+            }
+          });
+            players.forEach(p => {
+                if (p.id === this.socket.id) return;
 
-                if (!self.otherPlayers.has(p.id)) {
-                    const newSprite = self.add.sprite(p.x, p.y, frontKey).setScale(0.35);
-                    self.otherPlayers.set(p.id, newSprite);
-                } else {
-                    const sprite = self.otherPlayers.get(p.id);
+                if (!this.otherPlayers.has(p.id)) {
+                    const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
+                    const scales = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
+                    const labelOffset = (2412 * scales) / 2 + 20;
+                    const login = this.add.text(p.x, p.y - labelOffset, p.pseudo, {
+                        fontSize: '20px',
+                        color: '#ff0000',
+                        stroke: '#000000',
+                    }).setOrigin(0.5);
+                    this.otherPlayers.set(p.id, { login, sprite, ox: p.x, oy: p.y });
+                }
+                else {
+                    const timeo = Date.now();
+                    const sprite = this.otherPlayers.get(p.id);
                     if (!sprite) return;
-                    const oldX = sprite.x;
-                    const oldY = sprite.y;
-                    sprite.setPosition(p.x, p.y);
-                    if (p.x !== oldX || p.y !== oldY) {
-                        sprite.setFlipX(p.x < oldX);
-                        sprite.play('walk-right', true);
+                    sprite.sprite.setPosition(p.x, p.y);
+                    const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
+                    const labelOffset = (2412 * scale) / 2 + 20;
+                    sprite.login.setPosition(p.x, p.y - labelOffset);
+                    sprite.sprite.setScale(scale);
+                    if (timeo - this.timep < 50) return;
+                    this.timep = timeo;
+                    if (p.x != sprite.ox || p.y != sprite.oy) {
+                        const movingleft = p.x < sprite.ox
+                        sprite.sprite.setFlipX(movingleft);
+                        sprite.sprite.play('walk-right', true);
                     } else {
-                        sprite.stop();
-                        sprite.setTexture(frontKey);
+                        sprite.sprite.stop();
+                        sprite.sprite.setTexture('nass-front');
                     }
-                    const scale = Phaser.Math.Linear(0.15, 0.35, (sprite.y - 280) / (1150 - 280));
-                    sprite.setScale(scale);
+                    sprite.ox = p.x;
+                    sprite.oy = p.y;
                 }
             });
         });
-
-        this.player = this.add.sprite(500, 1000, frontKey).setScale(0.35);
-
+        this.player = this.add.sprite(500, 1000, 'nass-front').setScale(0.35);
         this.anims.create({
             key: 'walk-right',
-            frames: this.anims.generateFrameNumbers(frameKey, {
-                start: c.spritesheet.walkFrames.start,
-                end: c.spritesheet.walkFrames.end,
-            }),
-            frameRate: c.spritesheet.frameRate,
-            repeat: -1,
-        });
+            frames: this.anims.generateFrameNumbers('nass-frame', { start: 2, end: 0 }),
+            frameRate: 4,
+            repeat: -1
+        })
     }
-
     update() {
-        const c = this.character;
-        const frontKey = `${c.id}-front`;
         const speed = Phaser.Math.Linear(3, 7, (this.player.y - 250) / (1150 - 250));
-        const sprite = this.player as Phaser.GameObjects.Sprite;
-        const moving =
-            this.cursors.left.isDown ||
-            this.cursors.right.isDown ||
-            this.cursors.up.isDown ||
-            this.cursors.down.isDown;
-
         if (this.cursors.left.isDown) {
             this.player.x -= speed;
-            sprite.setFlipX(true);
+            (this.player as Phaser.GameObjects.Sprite).setFlipX(true);
+            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
         }
         if (this.cursors.right.isDown) {
             this.player.x += speed;
-            sprite.setFlipX(false);
+            (this.player as Phaser.GameObjects.Sprite).setFlipX(false);
+            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
         }
-        if (this.cursors.up.isDown) this.player.y -= speed;
-        if (this.cursors.down.isDown) this.player.y += speed;
-
-        if (moving) {
-            sprite.play('walk-right', true);
-        } else {
-            sprite.stop();
-            sprite.setTexture(frontKey);
+        if (this.cursors.up.isDown) {
+            this.player.y -= speed;
+            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
         }
-
+        if (this.cursors.down.isDown) {
+            this.player.y += speed;
+            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
+        }
+        if (!this.cursors.left.isDown && !this.cursors.right.isDown && !this.cursors.up.isDown && !this.cursors.down.isDown) {
+            (this.player as Phaser.GameObjects.Sprite).stop();
+            (this.player as Phaser.GameObjects.Sprite).setTexture('nass-front');
+        }
         this.player.x = Phaser.Math.Clamp(this.player.x, 50, 2680);
         this.player.y = Phaser.Math.Clamp(this.player.y, 225, 1150);
         this.socket.emit('move', { x: this.player.x, y: this.player.y });
-
         const scale = Phaser.Math.Linear(0.15, 0.35, (this.player.y - 280) / (1150 - 280));
-        sprite.setScale(scale);
+        (this.player as Phaser.GameObjects.Sprite).setScale(scale);
     }
 }
 
 export default function PhaserGame() {
-    const ref = useRef<HTMLDivElement>(null);
+    const ref = useRef<HTMLDivElement>(null); // creer ref vers une elements html
 
     useEffect(() => {
         const game = new Phaser.Game({
