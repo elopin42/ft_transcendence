@@ -19,7 +19,6 @@ services:
     expose:
       - "3000"
     env_file:
-      - ./frontend/.env
       - ./.env
     restart: always
     networks:
