@@ -4,11 +4,13 @@ import {
   SubscribeMessage,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  WsException,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
+import {  } from '@nestjs/websockets';
 
 
 @WebSocketGateway({
@@ -16,7 +18,7 @@ import { AuthService } from '../auth/auth.service';
         origin: process.env.CORS_ORIGIN || 'https://localhost', // fallback HTTPS car nginx gère le SSL
         credentials: true
     },
-    namespace: 'world'
+    namespace: 'gamefoot'
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -26,7 +28,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       private authService: AuthService
   ) {}
 
-  players = new Map<string, { pseudo: string; x: number; y: number }>();
+  players = new Map<string, { pnumber: number; pseudo: string; x: number; y: number }>();
 
   async handleConnection(client: any) {
      const cookie = client.handshake.headers.cookie;
@@ -42,11 +44,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
        try {
           const login = await this.authService.gamelogin(token);
           console.log(login)
-          this.players.set(client.id, { pseudo: login, x: 0, y: 0 });
+          const usedNumbers = new Set(Array.from(this.players.values()).map(p => p.pnumber));
+          let pnu: number;
+          if (!usedNumbers.has(1)) pnu = 1;
+          else if (!usedNumbers.has(2)) pnu = 2;
+          else throw new Error('trop de joueurs dans la partie');
+
+          this.players.set(client.id, { pnumber: pnu, pseudo: login, x: 0, y: 0 });
+          this.server.emit('players', Array.from(this.players.entries()).map(([id, p]) => ({ id, ...p })));
           console.log("connect");
       } catch (error) {
           console.log("disconnect");
           console.log(error);
+          client.emit('error', { message: error.message});
           client.disconnect();
       }
   }

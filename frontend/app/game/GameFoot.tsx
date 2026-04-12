@@ -4,10 +4,11 @@ import Phaser from 'phaser';
 import { io } from 'socket.io-client';
 
 class GameScene extends Phaser.Scene {
-    player!: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+    player: Phaser.GameObjects.Image |  null = null;
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     socket!: any;
 
+    myPnumber = 0;
     timep = 0;
     otherPlayers = new Map<string, { login: Phaser.GameObjects.Text, sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
 
@@ -21,13 +22,25 @@ class GameScene extends Phaser.Scene {
     }
     create() {
         const map = this.add.image(0, 0, 'map').setOrigin(0, 0);
+        let myPnumber = 0;
         this.scale.resize(map.width, map.height);
         this.cursors = this.input.keyboard!.createCursorKeys();
-        this.socket = io('/world', { // meme hote que la page pour Nginx route /socket.io/* vers le backend
+        this.socket = io('/gamefoot', { // meme hote que la page pour Nginx route /socket.io/* vers le backend
             withCredentials: true,
         });
-        this.socket.on('players', (players: { id: string, pseudo: string, x: number, y: number }[]) => {
+        this.player = null;
+        this.socket.on('players', (players: { id: string, pnumber: number, pseudo: string, x: number, y: number }[]) => {
             console.log('joueurs connectés:', players);
+            const me = players.find(p => p.id === this.socket.id);
+          if (me && !this.player) {  // première fois seulement
+            this.myPnumber = me.pnumber;
+            const mapWidth = this.scale.width; // largeur réelle de la map
+            const startX = me.pnumber === 1 ? mapWidth * 0.12 : mapWidth * 0.88; // 12% gauche / 88% droite
+            this.player = this.add.sprite(startX, 660, 'nass-front').setScale(0.35);
+            (this.player as Phaser.GameObjects.Sprite).setFlipX(me.pnumber === 2);
+          }
+            if (me && myPnumber === 0)
+              myPnumber = me.pnumber;
           const activeIds = new Set(players.map(p => p.id));
           this.otherPlayers.forEach((player, id) => {
             if (!activeIds.has(id)) {
@@ -62,7 +75,7 @@ class GameScene extends Phaser.Scene {
                     if (timeo - this.timep < 50) return;
                     this.timep = timeo;
                     if (p.x != sprite.ox || p.y != sprite.oy) {
-                        const movingleft = p.x < sprite.ox
+                        const movingleft = (p.pnumber == 1 ? false : true);
                         sprite.sprite.setFlipX(movingleft);
                         sprite.sprite.play('walk-right', true);
                     } else {
@@ -74,7 +87,6 @@ class GameScene extends Phaser.Scene {
                 }
             });
         });
-        this.player = this.add.sprite(500, 1000, 'nass-front').setScale(0.35);
         this.anims.create({
             key: 'walk-right',
             frames: this.anims.generateFrameNumbers('nass-frame', { start: 2, end: 0 }),
@@ -83,17 +95,8 @@ class GameScene extends Phaser.Scene {
         })
     }
     update() {
+        if (!this.player) return;
         const speed = Phaser.Math.Linear(3, 7, (this.player.y - 250) / (1150 - 250));
-        if (this.cursors.left.isDown) {
-            this.player.x -= speed;
-            (this.player as Phaser.GameObjects.Sprite).setFlipX(true);
-            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
-        }
-        if (this.cursors.right.isDown) {
-            this.player.x += speed;
-            (this.player as Phaser.GameObjects.Sprite).setFlipX(false);
-            (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
-        }
         if (this.cursors.up.isDown) {
             this.player.y -= speed;
             (this.player as Phaser.GameObjects.Sprite).play('walk-right', true);
@@ -114,7 +117,7 @@ class GameScene extends Phaser.Scene {
     }
 }
 
-export default function PhaserGame() {
+export default function GameFoot() {
     const ref = useRef<HTMLDivElement>(null); // creer ref vers une elements html
 
     useEffect(() => {
