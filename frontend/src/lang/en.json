@@ -1,0 +1,34 @@
+{
+  "common": {
+    "login": "Login",
+    "register": "Sign up",
+    "logout": "Logout",
+    "play": "Play",
+    "loading": "Loading..."
+  },
+  "landing": {
+    "subtitle": "Friends, Fun, code & Connect",
+    "play_button": "Play MovieStarParis 42"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "login_title": "Sign in",
+    "register_title": "Create account",
+    "login_42": "Sign in with 42",
+    "no_account": "No account?",
+    "has_account": "Already have an account?",
+    "error_login": "Login failed",
+    "error_42": "42 login not available",
+    "username": "Username",
+    "username_placeholder": "Enter your username",
+    "email_placeholder": "Enter your email",
+    "password_placeholder": "Enter your password",
+    "next": "Next",
+    "finish": "Finish",
+    "choose_character": "Who do you want to be?",
+    "choose_name": "Choose your star name!",
+    "create_account": "Create your account!",
+    "what_name": "What will your name be?"
+  }
+}

@@ -1,29 +1,32 @@
 'use client';
-import './login.css';
+import '@/styles/login.css';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl'; // pour les traductions
+import { useAuth } from '@/hooks/useAuth';
+import { api } from '@/lib/api';
+import { useRouter, Link } from '@/config/navigation';
+import { ROUTES } from '@/config/routes';
+
 
 export default function LoginPage() {
+  // ajout de la translation
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
+  const { login } = useAuth(); // on recupere la fonction login du provider
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
   const router = useRouter();
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    const response = await fetch('/api/auth/login', { // proxy Next.js, plus de localhost
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // pour envoyer les cookies (utile pour le login 42 qui utilise les cookies)
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await response.json();
-    if (response.ok) {
-      // Plus de document.cookie ! Le backend set le cookie httpOnly lui-même
-      router.push('/dashboard');
-    } else {
-      setError(data.message || 'Erreur de connexion');
+    try {
+      await login(email, password); // utilise le provider, plus de fetch ici
+      router.push(ROUTES.DASHBOARD);
+    } catch (err) {
+      // login() throw si erreur, le message vient du back via api.post
+      setError(err instanceof Error ? err.message : t('error_login'));
     }
   }
 
@@ -38,7 +41,7 @@ export default function LoginPage() {
                   <input
                     className="input-is"
                     type="email"
-                    placeholder="Email"
+                    placeholder={t('email')}
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
@@ -46,7 +49,7 @@ export default function LoginPage() {
                   <input
                     className="input-is"
                     type="password"
-                    placeholder="Password"
+                    placeholder={t('password')}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
@@ -56,22 +59,18 @@ export default function LoginPage() {
             </div>
           </div>
           {error && <p>{error}</p>}
-          <button className="submit-button" type="submit" >Log in</button>
-          <a href="/register">Register</a>
+          <button className="submit-button" type="submit" >{tCommon('login')}</button>
+          <Link href={ROUTES.REGISTER}>{tCommon('register')}</Link>
           <button
             className="submit-button"
             type="button"
             onClick={async () => {
-              const res = await fetch('/api/auth/42/status', { credentials: 'include' });
-              const data = await res.json();
+              const data = await api.get<{ available: boolean }>('/auth/42/status');
               if (data.available) {
-                window.location.href = '/api/auth/42';
-              } else {
-                setError('Connexion 42 non disponible');
+                window.location.href = '/api/auth/42'; // celui-la reste window.location, c'est OAuth
               }
-            }}
-          >
-            Se connecter avec 42
+            }}>
+            {t('login_42')}
           </button>
         </form>
       </div>

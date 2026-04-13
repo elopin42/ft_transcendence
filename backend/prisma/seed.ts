@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { resolveRoles } from '../src/auth/permissions/roles.helper';
+import { resolveRoles } from '@/auth/permissions/roles.helper';
 
 const prisma = new PrismaClient();
 

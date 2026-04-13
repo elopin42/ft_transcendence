@@ -1,21 +1,24 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from '@/config/navigation';
+import { ROUTES } from '@/config/routes';
+import { useTranslations } from 'next-intl';
+
 
 export default function DebugPanel() {
+  const t = useTranslations('common');
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await logout();
     } catch (e) {
       // ignore — on redirige quand même
     }
-    router.push('/');
+    router.push(ROUTES.HOME);
   };
 
   return (
@@ -35,8 +38,7 @@ export default function DebugPanel() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-        }}
-      >
+        }}>
         {open ? '✕' : '☰'}
       </button>
 
@@ -55,8 +57,7 @@ export default function DebugPanel() {
             display: 'flex',
             flexDirection: 'column',
             gap: 4,
-          }}
-        >
+          }}>
           <button
             onClick={handleLogout}
             style={{
@@ -67,9 +68,8 @@ export default function DebugPanel() {
               padding: '8px 12px',
               cursor: 'pointer',
               fontSize: 13,
-            }}
-          >
-            Déconnexion
+            }}>
+            {t('logout')}
           </button>
         </div>
       )}

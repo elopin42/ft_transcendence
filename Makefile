@@ -1,11 +1,14 @@
-.PHONY: all run logs clean fclean re db migrate migrate-docker seed
+#include build.mk
+#include init.mk
 
-all:
+.PHONY: all run logs clean fclean re db migrate seed init
+
+all: init
 	docker compose up --build -d
 	@echo ""
 	@echo "  App:     https://localhost"
 	@echo "  Logs:    make logs"
-	@echo "  Down:    make clean"
+	@echo "  Down:    make down"
 	@echo "  Reset:   make fclean"
 	@echo ""
 
@@ -15,16 +18,16 @@ run:
 logs:
 	docker compose logs -f
 
-down: clean
-
-clean:
+down:
 	docker compose down
 
-fclean:
+clean:
 	docker compose down -v
 
-ffclean:
+fclean:
 	docker compose down -v --rmi all
+
+ffclean: fclean
 	docker system prune -af --volumes
 	@echo "Docker entièrement nettoyé"
 
