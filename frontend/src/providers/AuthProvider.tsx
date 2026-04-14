@@ -16,7 +16,6 @@ interface User {
 	login: string;
 	email: string;
 	imageUrl?: string;
-	locale: string; // 'fr' ou 'en', utilisé pour la langue de l'interface a récuperer plus tard dans la db
 }
 
 
@@ -25,7 +24,6 @@ interface User {
 // et on vas pouvoir le partager dans toute l'app sans se soucier de la structure des données
 interface AuthContextType {
 	user: User | null;
-	locale: string;
 	isLoading: boolean;
 	isAuthenticated: boolean;
 	login: (email: string, password: string) => Promise<void>;
@@ -48,7 +46,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const fetchUser = async () => {
 		try {
 			const data = await api.get<User>('/auth/me');
-			data.locale = 'fr'; // TODO: retirer cette ligne quand la locale sera stockée en db et renvoyée par le back
 			setUser(data);
 		} catch {
 			// api.get throw si res.ok est false (401, 403, etc.)
@@ -88,7 +85,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	return (
 		<AuthContext.Provider value={{
 			user,
-			locale: user?.locale || currentLocale, // On donne la priorité à la pref en DB
 			isLoading,
 			isAuthenticated: !!user,
 			login,

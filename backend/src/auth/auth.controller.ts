@@ -93,9 +93,10 @@ export class AuthController {
     this.setTokenCookie(res, token); // utilisation des cookies pour stocker le token
 
     const frontendUrl = this.configService.get<string>('CORS_ORIGIN', 'https://localhost'); // fallback HTTPS car nginx gère le SSL
-    res.redirect(`${frontendUrl}/dashboard`); // redirection vers le frontend après login 42, à adapter selon la route d'accueil du frontend
+    // TODO: utiliser la locale du user quand elle sera en db
+    res.redirect(`${frontendUrl}/fr/dashboard`); // redirection vers le frontend après login 42, à adapter selon la route d'accueil du frontend
   }
-
+s
   // helper privé pour éviter la duplication du code cookie
   // httpOnly = pas accessible en JS côté client (protection XSS)
   // sameSite lax = envoyé sur navigation top-level (nécessaire pour redirect 42)

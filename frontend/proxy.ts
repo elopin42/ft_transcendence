@@ -5,31 +5,36 @@ import { routing } from '@/config/routing';
 import { locales, defaultLocale } from '@/config/i18n';
 import { ROUTES, ROUTES_PUBLIC } from '@/config/routes';
 
+// regex dynamique — genere /(fr|en|...) a partir du tableau locales
+// pas de hardcode, si on rajoute une langue ca marche automatiquement
+const localePrefix = new RegExp(`^/(${locales.join('|')})(/|$)`);
+
 // next-intl gere la detection de langue et les redirections de locale
 const intlMiddleware = createMiddleware(routing);
+
+// TODO récuperer isPrivate depuis le config/routes.ts pour dire si '/' est accecible ou privé
+// idée decide si le tableau de routes publique est publique ou privé permet de décidé le style de site 
 
 export async function proxy(req: NextRequest) {
     const token = req.cookies.get('token')?.value;
     const path = req.nextUrl.pathname;
 
-    // On récupère la locale (via cookie ou défaut)
-    const locale = req.cookies.get('NEXT_LOCALE')?.value || defaultLocale;
-
-    // Vérification si le chemin commence par une locale valide
-    // On ajoute le "/" pour être sûr de ne pas matcher "/france" si la locale est "fr"
-    const hasLocale = locales.some(l => path.startsWith(`/${l}/`) || path === `/${l}`);
+    // verifie si l'url commence par une locale valide (/fr/... ou /en/...)
+    const hasLocale = localePrefix.test(path);
 
     //  CAS A : Redirection si locale manquante
     // Si l'utilisateur tape /dashboard, on le force vers /fr/dashboard
     if (!hasLocale && path !== '/') {
+        const locale = req.cookies.get('NEXT_LOCALE')?.value || defaultLocale;
         return NextResponse.redirect(new URL(`/${locale}${path}`, req.url));
     }
 
-    // Extraction du path "propre" (sans /fr ou /en)
-    // On s'assure que /fr/auth devient /auth (avec le slash)
+    // retire la locale du path pour comparer avec les routes publiques
+    // /fr/auth -> /auth, /en/dashboard -> /dashboard, /fr -> /
     const pathWithoutLocale = hasLocale
-        ? path.replace(/^\/(fr|en)/, '') || '/'
+        ? path.replace(localePrefix, '/').replace(/^\/$/, '/') || '/'
         : path;
+
     // la landing (/) est toujours publique meme pour les users connectés
     const isPublic = pathWithoutLocale === '/' || ROUTES_PUBLIC.some(route => pathWithoutLocale === route);
 
@@ -44,7 +49,6 @@ export async function proxy(req: NextRequest) {
         } catch {
             // token invalide ou expiré
             // TODO: refresh token - si le token est expiré mais qu'on a un refresh token
-            // on pourrait appeler le back pour en recuperer un nouveau ici
             valid = false;
         }
     }
@@ -53,11 +57,13 @@ export async function proxy(req: NextRequest) {
 
     // CAS B : Non connecté tente d'aller sur une route privée
     if (!valid && !isPublic) {
+        const locale = req.cookies.get('NEXT_LOCALE')?.value || defaultLocale;
         return NextResponse.redirect(new URL(`/${locale}${ROUTES.AUTH}`, req.url));
     }
 
     // CAS C : Connecté tente d'aller sur Login/Register (sauf la home '/')
     if (valid && isPublic && pathWithoutLocale !== '/') {
+        const locale = req.cookies.get('NEXT_LOCALE')?.value || defaultLocale;
         return NextResponse.redirect(new URL(`/${locale}${ROUTES.DASHBOARD}`, req.url));
     }
 

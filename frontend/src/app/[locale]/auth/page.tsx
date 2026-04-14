@@ -65,9 +65,15 @@ export default function LoginPage() {
             className="submit-button"
             type="button"
             onClick={async () => {
-              const data = await api.get<{ available: boolean }>('/auth/42/status');
-              if (data.available) {
-                window.location.href = '/api/auth/42'; // celui-la reste window.location, c'est OAuth
+              try {
+                const data = await api.get<{ available: boolean }>('/auth/42/status');
+                if (data.available) {
+                  window.location.href = '/api/auth/42';
+                } else {
+                  setError(t('error_42'));
+                }
+              } catch {
+                setError(t('error_42'));
               }
             }}>
             {t('login_42')}
