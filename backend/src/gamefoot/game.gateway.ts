@@ -13,6 +13,14 @@ import { AuthService } from '../auth/auth.service';
 import {  } from '@nestjs/websockets';
 
 
+  interface Player {
+    id: string; // socketId
+    pnumber: number;
+    pseudo: string;
+    x: number;
+    y: number;
+  }
+
 @WebSocketGateway({
     cors: {
         origin: process.env.CORS_ORIGIN || 'https://localhost', // fallback HTTPS car nginx gère le SSL
@@ -28,7 +36,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       private authService: AuthService
   ) {}
 
-  players = new Map<string, { pnumber: number; pseudo: string; x: number; y: number }>();
+  // en gros une sorte de tableau ou une room contient 2 player 
+  rooms = new Map<number, { player1: Player | null; player2: Player | null }>();
+  clientRoom = new Map<string, number>(); // socketId → roomId
+
+  private getAvailableRoomId(): number {
+    let i = 1;
+    while (this.rooms.has(i)) i++;
+    return i; // retourne la first room avaible
+  }
 
   async handleConnection(client: any) {
      const cookie = client.handshake.headers.cookie;
@@ -43,15 +59,23 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
        }
        try {
           const login = await this.authService.gamelogin(token);
-          console.log(login)
-          const usedNumbers = new Set(Array.from(this.players.values()).map(p => p.pnumber));
-          let pnu: number;
-          if (!usedNumbers.has(1)) pnu = 1;
-          else if (!usedNumbers.has(2)) pnu = 2;
-          else throw new Error('trop de joueurs dans la partie');
-
-          this.players.set(client.id, { pnumber: pnu, pseudo: login, x: 0, y: 0 });
-          this.server.emit('players', Array.from(this.players.entries()).map(([id, p]) => ({ id, ...p })));
+          console.log(login);
+          let roomId: number | null = null;
+          for (const [id, room] of this.rooms) {
+            if (room.player2 === null) { roomId = id; break; }
+          };
+          if (roomId === null) {
+            // si aucune room attent un joeur on cree
+            roomId = this.getAvailableRoomId();
+            this.rooms.set(roomId, { player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0 }, player2: null });
+          } else {
+            // sinon join
+            this.rooms.get(roomId)!.player2 = {id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0 };
+          }
+          this.clientRoom.set(client.id, roomId);
+          client.join(roomId.toString());
+          const room = this.rooms.get(roomId)!;
+          this.server.to(roomId.toString()).emit('players', [room.player1, room.player2]);
           console.log("connect");
       } catch (error) {
           console.log("disconnect");
@@ -62,21 +86,32 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: any) {
-    if (this.players.has(client.id)) {
-      this.players.delete(client.id);
-      this.server.emit('players', Array.from(this.players.entries()).map(([id, p]) => ({ id, ...p })));
-    }
+    const roomId = this.clientRoom.get(client.id);
+    if (!roomId) return;
+    const room = this.rooms.get(roomId)!;
+    // supprimer le joueur de la room
+    if (room.player1?.id === client.id) room.player1 = null;
+    else room.player2 = null;
+    this.clientRoom.delete(client.id);
+    this.server.to(roomId.toString()).emit('players', [room.player1, room.player2]);
   }
 
   @SubscribeMessage('move')
   handleMove(client: any, payload: { x: number; y: number }) {
     // Valider le payload (par exemple, vérifier que x et y sont des nombres)
     if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
-    const player = this.players.get(client.id);
-    if (player) {
-      player.x = payload.x;
-      player.y = payload.y;
-      this.server.emit('players', Array.from(this.players.entries()).map(([id, p]) => ({ id, ...p })));
+    const roomId = this.clientRoom.get(client.id);
+    if (!roomId) return;
+    const room = this.rooms.get(roomId!)!;
+    if (!room) return;
+    if (room.player1 && room.player1?.id === client.id) {
+        room.player1.x = payload.x;
+        room.player1.y = payload.y;
+        this.server.to(roomId.toString()).emit('players', [room.player1, room.player2]);
+    } else if (room.player2 && room.player2?.id === client.id) {
+        room.player2.x = payload.x;
+        room.player2.y = payload.y;
+        this.server.to(roomId.toString()).emit('players', [room.player1, room.player2]);
     }
   }
 }
