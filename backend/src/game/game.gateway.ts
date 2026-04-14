@@ -16,6 +16,7 @@ import { AuthService } from '../auth/auth.service';
         origin: process.env.CORS_ORIGIN || 'https://localhost', // fallback HTTPS car nginx gère le SSL
         credentials: true
     },
+    namespace: 'world'
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
