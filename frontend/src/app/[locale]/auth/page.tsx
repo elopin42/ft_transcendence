@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { api } from '@/lib/api';
 import { useRouter, Link } from '@/config/navigation';
 import { ROUTES } from '@/config/routes';
+import { API_ROUTES } from '@/config/api';
 
 
 export default function LoginPage() {
@@ -66,9 +67,9 @@ export default function LoginPage() {
             type="button"
             onClick={async () => {
               try {
-                const data = await api.get<{ available: boolean }>('/auth/42/status');
+                const data = await api.get<{ available: boolean }>(API_ROUTES.OAUTH_42.STATUS);
                 if (data.available) {
-                  window.location.href = '/api/auth/42';
+                  window.location.href = API_ROUTES.OAUTH_42.LOGIN; // utilise directement la route complete
                 } else {
                   setError(t('error_42'));
                 }

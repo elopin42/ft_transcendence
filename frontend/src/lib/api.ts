@@ -1,19 +1,19 @@
+
 // helper centralisé pour les appels API vers le backend
 // tout passe par le proxy nginx (/api/...) donc pas besoin de spécifier l'URL complète
 // credentials: 'include' envoie les cookies (token httpOnly) automatiquement
 
-const API_BASE = '/api';
-
-// raccourcis pour chaque methode HTTP
-// usage : const user = await api.get<User>('/auth/me')
-//         await api.post('/auth/login', { email, password })
+// raccourcis par methode HTTP
+// usage : const user = await api.get<User>(API_ROUTES.AUTH.ME)
+//         await api.post(API_ROUTES.AUTH.LOGIN, { email, password })
 export const api = {
-	get: <T>(endpoint: string) => request<T>(endpoint),
-	post: <T>(endpoint: string, body?: unknown) => request<T>(endpoint, { method: 'POST', body }),
-	put: <T>(endpoint: string, body?: unknown) => request<T>(endpoint, { method: 'PUT', body }),
-	patch: <T>(endpoint: string, body?: unknown) => request<T>(endpoint, { method: 'PATCH', body }),
-	delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
+	get: <T>(url: string) => request<T>(url),
+	post: <T>(url: string, body?: unknown) => request<T>(url, { method: 'POST', body }),
+	put: <T>(url: string, body?: unknown) => request<T>(url, { method: 'PUT', body }),
+	patch: <T>(url: string, body?: unknown) => request<T>(url, { method: 'PATCH', body }),
+	delete: <T>(url: string) => request<T>(url, { method: 'DELETE' }),
 };
+
 
 interface FetchOptions {
 	method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -22,25 +22,28 @@ interface FetchOptions {
 }
 
 // fonction principale — tous les autres l'utilisent remplace fetch() directement et évite de passé 'include' à chaque fois
-async function request<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+async function request<T>(url: string, options: FetchOptions = {}): Promise<T> {
 	const { method = 'GET', body, headers = {} } = options;
 
 	const config: RequestInit = {
 		method,
-		credentials: 'include', // envoie le cookie httpOnly a chaque requete
+		credentials: 'include',
 		headers: {
 			'Content-Type': 'application/json',
 			...headers,
 		},
 	};
+
 	if (body) config.body = JSON.stringify(body);
 
-	const res = await fetch(`${API_BASE}${endpoint}`, config);
-	// si le serveur repond pas en JSON (ex: 204 No Content)
-	if (res.status === 204) return {} as T;
+	const res = await fetch(url, config);
 
-	const data = await res.json();
-	if (!res.ok) throw new Error(data.message || `Erreur ${res.status}`); // on throw avec le message du back si dispo
-	return data as T;
+	if (!res.ok) {
+		// recupere le message d'erreur du back si dispo
+		const data = await res.json().catch(() => ({}));
+		throw new Error(data.message || `Request failed with status ${res.status}`);
+	}
+
+	return res.json();
 }
 

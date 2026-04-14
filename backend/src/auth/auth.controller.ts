@@ -32,6 +32,7 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
+      path: '/', // évite des bug possible de version 
     });
     res.json({ success: true });
   }
@@ -94,9 +95,9 @@ export class AuthController {
 
     const frontendUrl = this.configService.get<string>('CORS_ORIGIN', 'https://localhost'); // fallback HTTPS car nginx gère le SSL
     // TODO: utiliser la locale du user quand elle sera en db
-    res.redirect(`${frontendUrl}/fr/dashboard`); // redirection vers le frontend après login 42, à adapter selon la route d'accueil du frontend
+    res.redirect(`${frontendUrl}/dashboard`); // redirection vers le frontend après login 42, à adapter selon la route d'accueil du frontend
   }
-s
+
   // helper privé pour éviter la duplication du code cookie
   // httpOnly = pas accessible en JS côté client (protection XSS)
   // sameSite lax = envoyé sur navigation top-level (nécessaire pour redirect 42)
@@ -107,6 +108,7 @@ s
       httpOnly: true,
       secure: true, // toujours sécurisé avec nginx en hhttps, et en dev on peut se permettre de forcer le secure pour éviter les erreurs de cookies non sécurisés
       sameSite: 'lax',
+      path: '/', // évite des bug possible de version 
       maxAge: parseExpiration(this.configService.get<string>('JWT_EXPIRATION', '3h')),
     });
   }

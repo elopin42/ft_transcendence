@@ -1,6 +1,7 @@
 'use client';
 import { useLocale } from 'next-intl';
 import { api } from '@/lib/api';
+import { API_ROUTES } from '@/config/api';
 
 // createContext = permet de créer un contexte React
 // useContext = permet de consommer un contexte dans un composant enfant
@@ -27,7 +28,7 @@ interface AuthContextType {
 	isLoading: boolean;
 	isAuthenticated: boolean;
 	login: (email: string, password: string) => Promise<void>;
-	register: (email: string, password: string, login: string) => Promise<void>; 
+	register: (email: string, password: string, login: string) => Promise<void>;
 	logout: () => Promise<void>;
 	refresh: () => Promise<void>; // re-fetch le user sans recharger la page
 }
@@ -45,14 +46,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	// en demandant au back qui est le user connecté
 	const fetchUser = async () => {
 		try {
-			const data = await api.get<User>('/auth/me');
+			const data = await api.get<User>(API_ROUTES.AUTH.ME);
 			setUser(data);
 		} catch {
 			// api.get throw si res.ok est false (401, 403, etc.)
 			// donc si ca throw = pas connecté ou token expiré
 			setUser(null);
 			// Optionnel : si data.locale existe et est != currentLocale,
-            // on pourrait rediriger ici, mais c'est mieux de laisser le proxy gérer.
+			// on pourrait rediriger ici, mais c'est mieux de laisser le proxy gérer.
 		} finally {
 			setIsLoading(false); // on a fini de vérifier le token
 		}
@@ -64,20 +65,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const login = async (email: string, password: string) => {
 		// api.post throw automatiquement si le back renvoie une erreur
 		// le message d'erreur du back est dans le throw (data.message)
-		await api.post('/auth/login', { email, password });
+		await api.post(API_ROUTES.AUTH.LOGIN, { email, password });
 		await fetchUser(); // met a jour le context avec le nouveau user
 	};
 
 	const register = async (email: string, password: string, login: string) => {
 		// inscription + connexion auto : le back cree le user et renvoie un cookie
-		await api.post('/auth/register', { email, password, login });
+		await api.post(API_ROUTES.AUTH.REGISTER, { email, password, login });
 		await fetchUser(); // met a jour le context = user connecté directement
 	};
 
 	const logout = async () => {
-		try {
-			await api.post('/auth/logout');
-		} catch {/* ignore — on clear le user quoi qu'il arrive*/ }
+		try { await api.post(API_ROUTES.AUTH.LOGOUT); } catch { }
 		setUser(null);
 	};
 
