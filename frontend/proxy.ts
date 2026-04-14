@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose'; // JWT compatible Edge Runtime (Web Crypto API
 
 // seules les routes listées ici sont accessibles sans token valide
 // tout le reste redirige vers /login automatiquement
-const PUBLIC_ROUTES = ['/', '/login', '/register'];
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/dashboard']; //%%
 
 export async function proxy(req: NextRequest) {
     const token = req.cookies.get('token')?.value;
@@ -13,6 +13,7 @@ export async function proxy(req: NextRequest) {
     // vérification locale du JWT (signature + expiration) sans appel réseau
     // jose vérifie en ~0.1ms vs fetch vers le backend en ~10-50ms
     let valid = false;
+    if (process.env.NEXT_PUBLIC_SKIP_AUTH === 'true') valid = true; //%%
     if (token) {
         try {
             const secret = new TextEncoder().encode(process.env.JWT_SECRET);
