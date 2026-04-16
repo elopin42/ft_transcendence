@@ -20,6 +20,12 @@ import {  } from '@nestjs/websockets';
     x: number;
     y: number;
   }
+  interface ballon {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+  }
 
 @WebSocketGateway({
     cors: {
@@ -37,7 +43,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   // en gros une sorte de tableau ou une room contient 2 player 
-  rooms = new Map<number, { player1: Player | null; player2: Player | null }>();
+  rooms = new Map<number, { bal: ballon; player1: Player | null; player2: Player | null }>();
   clientRoom = new Map<string, number>(); // socketId → roomId
 
   private getAvailableRoomId(): number {
@@ -67,7 +73,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           if (roomId === null) {
             // si aucune room attent un joeur on cree
             roomId = this.getAvailableRoomId();
-            this.rooms.set(roomId, { player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0 }, player2: null });
+            this.rooms.set(roomId, { bal: {x: 0, y:0, vx: 5, vy:3}, player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0 }, player2: null });
           } else {
             // sinon join
             this.rooms.get(roomId)!.player2 = {id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0 };
@@ -75,7 +81,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           this.clientRoom.set(client.id, roomId);
           client.join(roomId.toString());
           const room = this.rooms.get(roomId)!;
-          this.server.to(roomId.toString()).emit('players', [room.player1, room.player2]);
+          this.server.to(roomId.toString()).emit('players', {
+            players: [room.player1, room.player2].filter(p => p !== null),
+            bal: room.bal
+          });
           console.log("connect");
       } catch (error) {
           console.log("disconnect");
@@ -93,7 +102,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (room.player1?.id === client.id) room.player1 = null;
     else room.player2 = null;
     this.clientRoom.delete(client.id);
-    this.server.to(roomId.toString()).emit('players', [room.player1, room.player2]);
+    this.server.to(roomId.toString()).emit('players', {
+       players: [room.player1, room.player2].filter(p => p !== null),
+            bal: room.bal
+    });
   }
 
   @SubscribeMessage('move')
@@ -107,11 +119,40 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (room.player1 && room.player1?.id === client.id) {
         room.player1.x = payload.x;
         room.player1.y = payload.y;
-        this.server.to(roomId.toString()).emit('players', [room.player1, room.player2]);
+        this.server.to(roomId.toString()).emit('players', {
+            players: [room.player1, room.player2].filter(p => p !== null),
+            bal: room.bal
+        });
     } else if (room.player2 && room.player2?.id === client.id) {
         room.player2.x = payload.x;
         room.player2.y = payload.y;
-        this.server.to(roomId.toString()).emit('players', [room.player1, room.player2]);
+        this.server.to(roomId.toString()).emit('players', {
+            players: [room.player1, room.player2].filter(p => p !== null),
+            bal: room.bal
+        });
     }
+  }
+      @SubscribeMessage('start')
+      handleMove(client: any) {
+      const roomId = this.clientRoom.get(client.id);
+      if (!roomId) return;
+      const interval = setInterval(() => {
+        const room = this.rooms.get(roomId!)!;
+        if (!room) return;
+        if (room.player1 && room.player2) {
+          room.bal.x += bal.vx;
+          room.bal.y += bal.vy;
+          if (bal.y <= 0 || bal.y >= 1150) bal.vy *= -1;
+          if (bal.x <= 0 || bal.x >= 2680) bal.vx *= -1;
+          this.server.to(roomId.toString()).emit('players', {
+             players: [room.player1, room.player2].filter(p => p !== null),
+             bal: { x: bal.x, y: bal.y}
+          });
+        }
+        else {
+        console.log("manque joueur");
+        }
+      }, 16);
+
   }
 }

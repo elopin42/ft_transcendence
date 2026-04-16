@@ -7,6 +7,7 @@ class GameScene extends Phaser.Scene {
     player: Phaser.GameObjects.Image |  null = null;
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     socket!: any;
+    ballon: Phaser.GameObjects.Image | null = null;
 
     myPnumber = 0;
     timep = 0;
@@ -25,11 +26,18 @@ class GameScene extends Phaser.Scene {
         let myPnumber = 0;
         this.scale.resize(map.width, map.height);
         this.cursors = this.input.keyboard!.createCursorKeys();
+        // génère la texture du ballon blanc
+        const graphics = this.add.graphics();
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillCircle(20, 20, 20); 
+        graphics.generateTexture('bal', 40, 40);
+        graphics.destroy();
+        this.ballon = this.add.image(1340, 690, 'bal');
         this.socket = io('/gamefoot', { // meme hote que la page pour Nginx route /socket.io/* vers le backend
             withCredentials: true,
         });
         this.player = null;
-        this.socket.on('players', (players: { id: string, pnumber: number, pseudo: string, x: number, y: number }[]) => {
+        this.socket.on('players', ({players, bal}: {players: { id: string, pnumber: number, pseudo: string, x: number, y: number }[], bal: { x: number, y: number}}) => {
             console.log('joueurs connectés:', players);
             const me = players.find(p => p.id === this.socket.id);
           if (me && !this.player) {  // première fois seulement
