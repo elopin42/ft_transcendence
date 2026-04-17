@@ -57,6 +57,9 @@ class GameScene extends Phaser.Scene {
               this.otherPlayers.delete(id);
             }
           });
+          if (this.ballon) {
+            this.ballon.setPosition(bal.x, bal.y);
+          }
             players.forEach(p => {
                 if (p.id === this.socket.id) return;
 
@@ -116,6 +119,14 @@ class GameScene extends Phaser.Scene {
         if (!this.cursors.left.isDown && !this.cursors.right.isDown && !this.cursors.up.isDown && !this.cursors.down.isDown) {
             (this.player as Phaser.GameObjects.Sprite).stop();
             (this.player as Phaser.GameObjects.Sprite).setTexture('nass-front');
+        }
+        //on appui sur S pour dire au back que on lance la game quand ya deux joeurs
+        if (this && this.input && this.input.keyboard) {
+          const s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+          if (s.isDown){
+            console.log('start')
+            this.socket.emit('start');
+          }
         }
         this.player.x = Phaser.Math.Clamp(this.player.x, 50, 2680);
         this.player.y = Phaser.Math.Clamp(this.player.y, 225, 1150);

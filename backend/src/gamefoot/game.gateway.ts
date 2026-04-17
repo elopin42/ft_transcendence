@@ -19,12 +19,14 @@ import {  } from '@nestjs/websockets';
     pseudo: string;
     x: number;
     y: number;
+    scale: number;
   }
   interface ballon {
     x: number;
     y: number;
     vx: number;
     vy: number;
+    start: boolean;
   }
 
 @WebSocketGateway({
@@ -73,10 +75,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           if (roomId === null) {
             // si aucune room attent un joeur on cree
             roomId = this.getAvailableRoomId();
-            this.rooms.set(roomId, { bal: {x: 0, y:0, vx: 5, vy:3}, player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0 }, player2: null });
+            this.rooms.set(roomId, { bal: {x: 1340, y:690, vx: 5, vy:3, start:false}, player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0, scale: 0 }, player2: null });
           } else {
             // sinon join
-            this.rooms.get(roomId)!.player2 = {id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0 };
+            this.rooms.get(roomId)!.player2 = {id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0, scale: 0 };
           }
           this.clientRoom.set(client.id, roomId);
           client.join(roomId.toString());
@@ -102,6 +104,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (room.player1?.id === client.id) room.player1 = null;
     else room.player2 = null;
     this.clientRoom.delete(client.id);
+    if (!room.player1 && !room.player2) {
+        this.rooms.delete(roomId);
+        this.clientRoom.delete(client.id);
+        return;
+    }
     this.server.to(roomId.toString()).emit('players', {
        players: [room.player1, room.player2].filter(p => p !== null),
             bal: room.bal
@@ -109,7 +116,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('move')
-  handleMove(client: any, payload: { x: number; y: number }) {
+  handleMove(client: any, payload: { x: number; y: number; scale: number}) {
     // Valider le payload (par exemple, vérifier que x et y sont des nombres)
     if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
     const roomId = this.clientRoom.get(client.id);
@@ -119,6 +126,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (room.player1 && room.player1?.id === client.id) {
         room.player1.x = payload.x;
         room.player1.y = payload.y;
+        room.player1.scale = payload.scale;
         this.server.to(roomId.toString()).emit('players', {
             players: [room.player1, room.player2].filter(p => p !== null),
             bal: room.bal
@@ -126,6 +134,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } else if (room.player2 && room.player2?.id === client.id) {
         room.player2.x = payload.x;
         room.player2.y = payload.y;
+        room.player2.scale = payload.scale;
         this.server.to(roomId.toString()).emit('players', {
             players: [room.player1, room.player2].filter(p => p !== null),
             bal: room.bal
@@ -133,26 +142,34 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
       @SubscribeMessage('start')
-      handleMove(client: any) {
+      handlestart(client: any) {
+      console.log("start");
       const roomId = this.clientRoom.get(client.id);
       if (!roomId) return;
+      const room = this.rooms.get(roomId!)!;
+      if (!room) return;
+      console.log("start boucle");
+      if (room.bal.start) return;
+      room.bal.start = true;
       const interval = setInterval(() => {
-        const room = this.rooms.get(roomId!)!;
-        if (!room) return;
         if (room.player1 && room.player2) {
-          room.bal.x += bal.vx;
-          room.bal.y += bal.vy;
-          if (bal.y <= 0 || bal.y >= 1150) bal.vy *= -1;
-          if (bal.x <= 0 || bal.x >= 2680) bal.vx *= -1;
+          room.bal.x += room.bal.vx;
+          room.bal.y += room.bal.vy;
+          // console.log(room.bal.x);
+          // console.log(room.bal.y);
+          if (room.bal.y <= 410 || room.bal.y >= 1480) room.bal.vy *= -1;
+          if ((room.bal.y <= room.player1.y + 150 && room.bal.y >= room.player1.y - 150) && (room.bal.x <= room.player1.x + 150 && room.bal.x >= room.player1.x - 150)) room.bal.vx *= -1;
+          else if ((room.bal.y <= room.player2.y + 150 && room.bal.y >= room.player2.y - 150) && (room.bal.x <= room.player2.x + 150 && room.bal.x >= room.player2.x - 150)) room.bal.vx *= -1;
+          else if (room.bal.x <= 50 || room.bal.x >= 2680) room.bal.vx *= -1;
           this.server.to(roomId.toString()).emit('players', {
              players: [room.player1, room.player2].filter(p => p !== null),
-             bal: { x: bal.x, y: bal.y}
+             bal: { x: room.bal.x, y: room.bal.y}
           });
         }
         else {
         console.log("manque joueur");
         }
-      }, 16);
+      }, 8);
 
   }
 }
