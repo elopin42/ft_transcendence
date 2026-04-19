@@ -130,8 +130,8 @@ class GameScene extends Phaser.Scene {
         }
         this.player.x = Phaser.Math.Clamp(this.player.x, 50, 2680);
         this.player.y = Phaser.Math.Clamp(this.player.y, 225, 1150);
-        this.socket.emit('move', { x: this.player.x, y: this.player.y });
         const scale = Phaser.Math.Linear(0.15, 0.35, (this.player.y - 280) / (1150 - 280));
+        this.socket.emit('move', { x: this.player.x, y: this.player.y, scale: scale });
         (this.player as Phaser.GameObjects.Sprite).setScale(scale);
     }
 }

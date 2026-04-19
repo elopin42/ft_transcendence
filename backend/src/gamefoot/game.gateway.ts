@@ -75,7 +75,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           if (roomId === null) {
             // si aucune room attent un joeur on cree
             roomId = this.getAvailableRoomId();
-            this.rooms.set(roomId, { bal: {x: 1340, y:690, vx: 5, vy:3, start:false}, player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0, scale: 0 }, player2: null });
+            this.rooms.set(roomId, { bal: {x: 1340, y:690, vx: 10, vy:6, start:false}, player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0, scale: 0 }, player2: null });
           } else {
             // sinon join
             this.rooms.get(roomId)!.player2 = {id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0, scale: 0 };
@@ -157,9 +157,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           room.bal.y += room.bal.vy;
           // console.log(room.bal.x);
           // console.log(room.bal.y);
+          const player1Bottom = room.player1.y + (2412 / 2) * room.player1.scale;
+          const player2Bottom = room.player2.y + (2412 / 2) * room.player2.scale;
           if (room.bal.y <= 410 || room.bal.y >= 1480) room.bal.vy *= -1;
-          if ((room.bal.y <= room.player1.y + 150 && room.bal.y >= room.player1.y - 150) && (room.bal.x <= room.player1.x + 150 && room.bal.x >= room.player1.x - 150)) room.bal.vx *= -1;
-          else if ((room.bal.y <= room.player2.y + 150 && room.bal.y >= room.player2.y - 150) && (room.bal.x <= room.player2.x + 150 && room.bal.x >= room.player2.x - 150)) room.bal.vx *= -1;
+          if ((room.bal.y <= player1Bottom && room.bal.y >= player1Bottom - 100) && (room.bal.x <= room.player1.x + 50 && room.bal.x >= room.player1.x - 50)) room.bal.vx *= -1;
+          else if ((room.bal.y <= player2Bottom && room.bal.y >= player2Bottom - 100) && (room.bal.x <= room.player2.x + 50 && room.bal.x >= room.player2.x - 50)) room.bal.vx *= -1;
           else if (room.bal.x <= 50 || room.bal.x >= 2680) room.bal.vx *= -1;
           this.server.to(roomId.toString()).emit('players', {
              players: [room.player1, room.player2].filter(p => p !== null),
@@ -169,7 +171,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         else {
         console.log("manque joueur");
         }
-      }, 8);
+      }, 16);
 
   }
 }
