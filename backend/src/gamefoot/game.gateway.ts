@@ -20,6 +20,7 @@ import {  } from '@nestjs/websockets';
     x: number;
     y: number;
     scale: number;
+    win: number;
   }
   interface ballon {
     x: number;
@@ -45,7 +46,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   // en gros une sorte de tableau ou une room contient 2 player 
-  rooms = new Map<number, { bal: ballon; player1: Player | null; player2: Player | null }>();
+  rooms = new Map<number, { bal: ballon; player1: Player | null; player2: Player | null; interval?: any }>();
   clientRoom = new Map<string, number>(); // socketId → roomId
 
   private getAvailableRoomId(): number {
@@ -75,10 +76,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           if (roomId === null) {
             // si aucune room attent un joeur on cree
             roomId = this.getAvailableRoomId();
-            this.rooms.set(roomId, { bal: {x: 1340, y:690, vx: 10, vy:6, start:false}, player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0, scale: 0 }, player2: null });
+            this.rooms.set(roomId, { bal: {x: 1340, y:690, vx: 10, vy:6, start:false}, player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0, scale: 0, win: 0 }, player2: null });
           } else {
             // sinon join
-            this.rooms.get(roomId)!.player2 = {id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0, scale: 0 };
+            this.rooms.get(roomId)!.player2 = {id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0, scale: 0, win: 0 };
           }
           this.clientRoom.set(client.id, roomId);
           client.join(roomId.toString());
@@ -151,7 +152,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log("start boucle");
       if (room.bal.start) return;
       room.bal.start = true;
-      const interval = setInterval(() => {
+      room.interval = setInterval(() => {
         if (room.player1 && room.player2) {
           room.bal.x += room.bal.vx;
           room.bal.y += room.bal.vy;
@@ -162,7 +163,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           if (room.bal.y <= 410 || room.bal.y >= 1480) room.bal.vy *= -1;
           if ((room.bal.y <= player1Bottom && room.bal.y >= player1Bottom - 100) && (room.bal.x <= room.player1.x + 50 && room.bal.x >= room.player1.x - 50)) room.bal.vx *= -1;
           else if ((room.bal.y <= player2Bottom && room.bal.y >= player2Bottom - 100) && (room.bal.x <= room.player2.x + 50 && room.bal.x >= room.player2.x - 50)) room.bal.vx *= -1;
-          else if (room.bal.x <= 50 || room.bal.x >= 2680) room.bal.vx *= -1;
+          else if (room.bal.x <= 50 || room.bal.x >= 2680) {
+            if (room.bal.x <= 50) room.player1.pnumber == 2 ? room.player1.win++ : room.player2.win++;
+            else if (room.bal.x >= 2680) room.player2.pnumber == 1 ? room.player2.win++ : room.player1.win++;
+            room.bal.x = 1340;
+            room.bal.y = 690;
+            room.bal.start = false;
+            clearInterval(room.interval);
+            room.interval = null;
+            return;
+          }
           this.server.to(roomId.toString()).emit('players', {
              players: [room.player1, room.player2].filter(p => p !== null),
              bal: { x: room.bal.x, y: room.bal.y}

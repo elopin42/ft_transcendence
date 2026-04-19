@@ -37,7 +37,7 @@ class GameScene extends Phaser.Scene {
             withCredentials: true,
         });
         this.player = null;
-        this.socket.on('players', ({players, bal}: {players: { id: string, pnumber: number, pseudo: string, x: number, y: number }[], bal: { x: number, y: number}}) => {
+        this.socket.on('players', ({players, bal}: {players: { id: string, pnumber: number, pseudo: string, x: number, y: number, win: number }[], bal: { x: number, y: number}}) => {
             console.log('joueurs connectés:', players);
             const me = players.find(p => p.id === this.socket.id);
           if (me && !this.player) {  // première fois seulement
@@ -67,7 +67,7 @@ class GameScene extends Phaser.Scene {
                     const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
                     const scales = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
                     const labelOffset = (2412 * scales) / 2 + 20;
-                    const login = this.add.text(p.x, p.y - labelOffset, p.pseudo, {
+                    const login = this.add.text(p.x, p.y - labelOffset, '${p.pseudo} (${p.wins} wins)', {
                         fontSize: '20px',
                         color: '#ff0000',
                         stroke: '#000000',
@@ -79,6 +79,7 @@ class GameScene extends Phaser.Scene {
                     const sprite = this.otherPlayers.get(p.id);
                     if (!sprite) return;
                     sprite.sprite.setPosition(p.x, p.y);
+                    sprite.login.setText(`${p.pseudo} (${p.win} wins)`);
                     const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
                     const labelOffset = (2412 * scale) / 2 + 20;
                     sprite.login.setPosition(p.x, p.y - labelOffset);
