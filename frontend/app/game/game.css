@@ -49,6 +49,53 @@
     transform: scale(1.05);
 }
 
+.game-button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.5);
+    z-index: 50;
+    pointer-events: auto;
+}
+
+.countdown {
+    font-size: 6rem;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+.modal {
+    background: linear-gradient(180deg, rgba(18,18,20,0.9), rgba(12,12,14,0.95));
+    padding: 28px 36px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    color: #fff;
+    text-align: center;
+    min-width: 320px;
+}
+
+.modal h2 { margin: 0 0 8px 0; }
+.modal p { margin: 0 0 16px 0; }
+.modal-button {
+    background: #9e30a9;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.modal-button:hover { filter: brightness(1.05); }
+
 .player-label {
     position: absolute;
     transform: translate(-50%, -50%);

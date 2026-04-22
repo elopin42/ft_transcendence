@@ -10,7 +10,7 @@ import { Server } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
-import {  } from '@nestjs/websockets';
+import { PrismaService } from '../prisma/prisma.service';
 
 
   interface Player {
@@ -28,6 +28,7 @@ import {  } from '@nestjs/websockets';
     vx: number;
     vy: number;
     start: boolean;
+    finish: boolean;
   }
 
 @WebSocketGateway({
@@ -42,7 +43,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server!: Server; // évité que typescript mette une erreur sait que ce sera initialisé
 
   constructor(
-      private authService: AuthService
+      private authService: AuthService,
+      private prisma: PrismaService,
   ) {}
 
   // en gros une sorte de tableau ou une room contient 2 player 
@@ -76,10 +78,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           if (roomId === null) {
             // si aucune room attent un joeur on cree
             roomId = this.getAvailableRoomId();
-            this.rooms.set(roomId, { bal: {x: 1340, y:690, vx: 10, vy:6, start:false}, player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0, scale: 0, win: 0 }, player2: null });
+            this.rooms.set(roomId, { bal: {x: 1340, y:690, vx: 10, vy:6, start:false, finish: false}, player1: {id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0, scale: 0, win: 0 }, player2: null });
           } else {
             // sinon join
-            this.rooms.get(roomId)!.player2 = {id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0, scale: 0, win: 0 };
+            const existing = this.rooms.get(roomId);
+            if (!existing) return;
+            if (existing.bal.finish) return;
+            existing.player2 = {id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0, scale: 0, win: 0 };
           }
           this.clientRoom.set(client.id, roomId);
           client.join(roomId.toString());
@@ -150,7 +155,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const room = this.rooms.get(roomId!)!;
       if (!room) return;
       console.log("start boucle");
-      if (room.bal.start) return;
+      if (room.bal.start || room.bal.finish) return;
       room.bal.start = true;
       room.interval = setInterval(() => {
         if (room.player1 && room.player2) {
@@ -163,9 +168,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           if (room.bal.y <= 410 || room.bal.y >= 1480) room.bal.vy *= -1;
           if ((room.bal.y <= player1Bottom && room.bal.y >= player1Bottom - 100) && (room.bal.x <= room.player1.x + 50 && room.bal.x >= room.player1.x - 50)) room.bal.vx *= -1;
           else if ((room.bal.y <= player2Bottom && room.bal.y >= player2Bottom - 100) && (room.bal.x <= room.player2.x + 50 && room.bal.x >= room.player2.x - 50)) room.bal.vx *= -1;
-          else if (room.bal.x <= 50 || room.bal.x >= 2680) {
+          else if ((room.bal.x <= 50 || room.bal.x >= 2680) || (room.player1.win >= 5 || room.player2.win >= 5)) {
             if (room.bal.x <= 50) room.player1.pnumber == 2 ? room.player1.win++ : room.player2.win++;
             else if (room.bal.x >= 2680) room.player2.pnumber == 1 ? room.player2.win++ : room.player1.win++;
+            else if (room.player1.win >= 5 || room.player2.win >= 5) {
+              const login = room.player1.win == 5 ? room.player1.pseudo : room.player2.pseudo;
+              this.prisma.user.update({
+                where: { login },
+                data: { points: { increment: 1 } }
+              }).catch(e => console.log(e));
+              room.bal.finish = true;
+            }
             room.bal.x = 1340;
             room.bal.y = 690;
             room.bal.start = false;

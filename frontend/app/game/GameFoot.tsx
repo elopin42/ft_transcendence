@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { io } from 'socket.io-client';
 import './game.css';
+import { useRouter } from 'next/navigation';
 
 interface PlayerData {
     id: string;
@@ -177,6 +178,11 @@ export default function GameFoot() {
     const gameRef = useRef<Phaser.Game | null>(null);
     const [players, setPlayers] = useState<PlayerData[]>([]);
     const [ball, setBall] = useState({ x: 0, y: 0 });
+    const [isStarting, setIsStarting] = useState(false);
+    const [countdown, setCountdown] = useState<number | null>(null);
+    const [finished, setFinished] = useState(false);
+    const [winner, setWinner] = useState<string | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         const game = new Phaser.Game({
@@ -198,6 +204,21 @@ export default function GameFoot() {
                 activeScene.onUpdatePlayers = (p, b) => {
                     setPlayers(p);
                     setBall(b);
+
+                    // Detect match finish (server awards win counts). If any player reached 5, show finish modal
+                    const p1 = p.find(x => x.pnumber === 1);
+                    const p2 = p.find(x => x.pnumber === 2);
+                    const p1win = p1?.win ?? 0;
+                    const p2win = p2?.win ?? 0;
+                    if (p1win >= 5 || p2win >= 5) {
+                        setFinished(true);
+                        const winnerPseudo = p1win >= 5 ? p1?.pseudo ?? 'Player 1' : p2?.pseudo ?? 'Player 2';
+                        setWinner(winnerPseudo);
+                    } else {
+                        // hide modal if scores reset
+                        setFinished(false);
+                        setWinner(null);
+                    }
                 };
                 clearInterval(checkScene);
             }
@@ -210,8 +231,24 @@ export default function GameFoot() {
     }, []);
 
     const handleStart = () => {
-        const scene = gameRef.current?.scene.scenes[0] as GameScene;
-        if (scene) scene.start();
+        if (isStarting) return;
+        // Start a 3s countdown, then emit start to server
+        setIsStarting(true);
+        setCountdown(3);
+        const tick = setInterval(() => {
+            setCountdown(c => {
+                if (c === null) return null;
+                if (c <= 1) {
+                    clearInterval(tick);
+                    setCountdown(null);
+                    setIsStarting(false);
+                    const scene = gameRef.current?.scene.scenes[0] as GameScene;
+                    if (scene) scene.start();
+                    return null;
+                }
+                return c - 1;
+            });
+        }, 1000);
     };
 
     const getScreenPos = (worldX: number, worldY: number) => {
@@ -280,11 +317,31 @@ export default function GameFoot() {
                 })}
 
                 <div className="start-button-container">
-                    <button className="game-button" onClick={handleStart}>
-                        Start Match
+                    <button className="game-button" onClick={handleStart} disabled={isStarting || finished}>
+                        {isStarting ? `Starting in ${countdown ?? 0}s` : 'Start Match'}
                     </button>
                 </div>
             </div>
+
+            {/* Countdown overlay */}
+            {isStarting && countdown !== null && (
+                <div className="overlay">
+                    <div className="countdown">{countdown}</div>
+                </div>
+            )}
+
+            {/* Finish modal */}
+            {finished && (
+                <div className="overlay">
+                    <div className="modal">
+                        <h2>Match Finished</h2>
+                        <p>{winner ? `${winner} won the match` : 'The match is finished'}</p>
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button className="modal-button" onClick={() => router.push('/dashboard')}>Go to Dashboard</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
