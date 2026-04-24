@@ -1,86 +1,43 @@
-#include build.mk
-#include init.mk
+.DEFAULT_GOAL := all
 
-.PHONY: all run logs down clean fclean ffclean re ra rme rvme db migrate-new migrate-apply migrate-status db-reset db-generate seed
+include build.mk
+include make/color.mk
 
-all:
-	docker compose up --build -d
+-include make/setup.mk
+include make/docker.mk
+-include make/db.mk
+
+.PHONY: all clean fclean ffclean help re ra rme rvme rr
+
+all: setup check-env ## Setup + vérif env + build + démarrage (non-interactif)
+	@echo "$(C_BLUE)🔨 Construction...$(C_RESET)"
+	@$(COMPOSE) build
+	@echo "$(C_BLUE)🚀 Démarrage...$(C_RESET)"
+	@$(COMPOSE) up -d
 	@echo ""
-	@echo "  App:     https://localhost"
+	@echo "  App:     $(C_GREEN)https://$(DOMAIN_NAME)$(C_RESET)"
 	@echo "  Logs:    make logs"
 	@echo "  Down:    make down"
-	@echo "  Reset:   make fclean"
+	@echo "  Reset:   make re"
+	@echo "  Help:    make help"
 	@echo ""
 
-run:
-	docker compose up -d
+clean: docker-clean ## Stop + supprime volumes
+	@echo "$(C_GREEN)✓ clean OK$(C_RESET)"
 
-logs:
-	docker compose logs -f
+fclean: docker-fclean ## clean + supprime images
+	@echo "$(C_GREEN)✓ fclean OK$(C_RESET)"
 
-down:
-	docker compose down
+ffclean: docker-prune ## Nettoyage Docker total (toutes images machine)
+	@echo "$(C_GREEN)✓ ffclean OK$(C_RESET)"
 
-clean:
-	docker compose down -v
+re: fclean all ## Reset complet + rebuild
+ra: clean all ## Reset (garde images) + rebuild
+rme: fclean up ## Reset complet sans rebuild
+rvme: fclean all ## Alias de re
+rr: clean up ## Reset léger sans rebuild
 
-fclean:
-	docker compose down -v --rmi all
-
-ffclean: fclean
-	docker system prune -af --volumes
-	@echo "Docker entièrement nettoyé"
-
-re: fclean all
-ra: clean all
-rme: fclean run
-rvme: fclean all
-rr: clean run
-
-
-# claude ma fait ca pour qu'on retrouve les lien et accede facilement
-# ═══════════════════════════════════════════════════════
-# PRISMA / DB
-# ═══════════════════════════════════════════════════════
-
-# Créer une nouvelle migration (interactif)
-# Usage: make migrate-new
-# -> te demande le nom, puis crée + applique la migration
-# -> fichier synchronisé sur ton FS grâce au bind mount
-migrate-new:
-	@read -p "Nom de la migration (ex: add_user_points): " name; \
-	if [ -z "$$name" ]; then echo "❌ Nom requis"; exit 1; fi; \
-	docker compose exec backend npx prisma migrate dev --name $$name; \
-	echo ""; \
-	echo "✓ Migration créée: backend/prisma/migrations/"; \
-	echo "  Pense à: git add backend/prisma/migrations/ && git commit"
-
-# Appliquer les migrations existantes sans en créer de nouvelle
-# Utile après git pull si un collègue a ajouté une migration
-migrate-apply:
-	docker compose exec backend npx prisma migrate deploy
-
-# Voir l'état des migrations (détecte le drift)
-# À lancer avant chaque session de dev pour vérifier que tout est sync
-migrate-status:
-	docker compose exec backend npx prisma migrate status
-
-# Reset complet DB (dev uniquement - PERTE DE DONNÉES)
-# Utile quand drift détecté ou pour repartir propre
-db-reset:
-	@echo "⚠️  Cette commande va DROP la DB. Ctrl+C pour annuler."
-	@sleep 3
-	docker compose exec backend npx prisma migrate reset --force
-
-# Régénère le client Prisma (après modif schema.prisma sans migration)
-db-generate:
-	docker compose exec backend npx prisma generate
-
-# Prisma Studio (interface web pour la DB)
-db:
-	@echo "Prisma Studio: http://localhost:5555"
-	docker compose run --rm -p 5555:5555 backend npx prisma studio --port 5555 --browser none
-
-# Seed : insère les données par défaut (4 comptes dev, etc.)
-seed:
-	docker compose exec backend npx ts-node prisma/seed.ts
+help: ## Affiche ce menu d'aide dynamique
+	@echo "$(C_BLUE)$(C_BOLD)=== $(NAME) - Menu d'aide ===$(C_RESET)"
+	@echo "Utilisation : make $(C_CYAN)<commande>$(C_RESET)\n"
+	@awk 'BEGIN {FS = ":.*##"; printf "Commandes disponibles :\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  $(C_CYAN)%-20s$(C_RESET) %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
