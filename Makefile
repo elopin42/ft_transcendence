@@ -35,6 +35,7 @@ re: fclean all
 ra: clean all
 rme: fclean run
 rvme: fclean all
+rr: clean run
 
 
 # claude ma fait ca pour qu'on retrouve les lien et accede facilement

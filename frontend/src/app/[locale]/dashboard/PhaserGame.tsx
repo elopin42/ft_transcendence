@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { io } from 'socket.io-client';
 
 class GameScene extends Phaser.Scene {
-    player!: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+    player!: Phaser.Physics.Arcade.Sprite; //%% desk - physics sprite pour les collisions
+    deskGroup!: Phaser.Physics.Arcade.StaticGroup; //%% desk - groupe statique pour bloquer le joueur
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     socket!: any;
 
@@ -18,10 +19,24 @@ class GameScene extends Phaser.Scene {
             frameHeight: 2412
         });
         this.load.image('nass-front', '/character/nass/nass-front.png');
+        this.load.image('desk', '/desk.png'); //%% desk
     }
     create() {
         const map = this.add.image(0, 0, 'map').setOrigin(0, 0);
         this.scale.resize(map.width, map.height);
+
+        this.deskGroup = this.physics.add.staticGroup(); //%% desk - groupe de collision
+
+        // %% desk - rangée 1 (la plus en arrière, petite)
+        (this.deskGroup.create(2100, 420, 'desk') as Phaser.Physics.Arcade.Image).setScale(0.18).setDepth(420).refreshBody(); //%% desk
+        // %% desk - rangée 2
+        (this.deskGroup.create(2100, 580, 'desk') as Phaser.Physics.Arcade.Image).setScale(0.22).setDepth(580).refreshBody(); //%% desk
+        // %% desk - rangée 3
+        (this.deskGroup.create(2100, 740, 'desk') as Phaser.Physics.Arcade.Image).setScale(0.26).setDepth(740).refreshBody(); //%% desk
+        // %% desk - rangée 4
+        (this.deskGroup.create(2100, 900, 'desk') as Phaser.Physics.Arcade.Image).setScale(0.30).setDepth(900).refreshBody(); //%% desk
+        // %% desk - rangée 5 (la plus en avant, grande)
+        (this.deskGroup.create(2100, 1060, 'desk') as Phaser.Physics.Arcade.Image).setScale(0.34).setDepth(1060).refreshBody(); //%% desk
         this.cursors = this.input.keyboard!.createCursorKeys();
         this.socket = io('/world', { // meme hote que la page pour Nginx route /socket.io/* vers le backend
             withCredentials: true,
@@ -74,7 +89,8 @@ class GameScene extends Phaser.Scene {
                 }
             });
         });
-        this.player = this.add.sprite(500, 1000, 'nass-front').setScale(0.35);
+        this.player = this.physics.add.sprite(500, 1000, 'nass-front').setScale(0.35); //%% desk - physics sprite
+        this.physics.add.collider(this.player, this.deskGroup); //%% desk - bloque le joueur contre les bureaux
         this.anims.create({
             key: 'walk-right',
             frames: this.anims.generateFrameNumbers('nass-frame', { start: 2, end: 0 }),
@@ -111,11 +127,12 @@ class GameScene extends Phaser.Scene {
         this.socket.emit('move', { x: this.player.x, y: this.player.y });
         const scale = Phaser.Math.Linear(0.15, 0.35, (this.player.y - 280) / (1150 - 280));
         (this.player as Phaser.GameObjects.Sprite).setScale(scale);
+        this.player.setDepth(this.player.y); //%% y-sort : joueur devant si y plus grand
     }
 }
 
 export default function PhaserGame() {
-    const ref = useRef<HTMLDivElement>(null); // creer ref vers une elements html
+    const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const game = new Phaser.Game({
@@ -123,6 +140,7 @@ export default function PhaserGame() {
             height: 720,
             parent: ref.current!,
             scene: GameScene,
+            physics: { default: 'arcade', arcade: { debug: true } }, //%% desk - debug:true pour voir les hitboxes en vert
             scale: {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
