@@ -23,7 +23,7 @@ class GameScene extends Phaser.Scene {
         const map = this.add.image(0, 0, 'map').setOrigin(0, 0);
         this.scale.resize(map.width, map.height);
         this.cursors = this.input.keyboard!.createCursorKeys();
-        this.socket = io({ // meme hote que la page pour Nginx route /socket.io/* vers le backend
+        this.socket = io('/world', { // meme hote que la page pour Nginx route /socket.io/* vers le backend
             withCredentials: true,
         });
         this.socket.on('players', (players: { id: string, pseudo: string, x: number, y: number }[]) => {
