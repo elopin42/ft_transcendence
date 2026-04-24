@@ -2,8 +2,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { io } from 'socket.io-client';
-import './game.css';
-import { useRouter } from 'next/navigation';
+import '@/styles/game.css';
+import { useRouter } from '@/config/navigation';
+import { ROUTES } from '@/config/routes';
 
 interface PlayerData {
     id: string;
@@ -53,7 +54,7 @@ class GameScene extends Phaser.Scene {
 
         this.socket.on('players', ({ players, bal }: { players: any[], bal: { x: number, y: number } }) => {
             const activeIds = new Set(players.map(p => p.id));
-            
+
             // Cleanup disconnected
             this.otherPlayers.forEach((player, id) => {
                 if (!activeIds.has(id)) {
@@ -85,7 +86,7 @@ class GameScene extends Phaser.Scene {
                     const timeo = Date.now();
                     const entry = this.otherPlayers.get(p.id);
                     if (!entry) return;
-                    
+
                     entry.sprite.setPosition(p.x, p.y);
                     const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
                     entry.sprite.setScale(scale);
@@ -111,7 +112,7 @@ class GameScene extends Phaser.Scene {
                     const isMe = p.id === this.socket.id;
                     const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
                     const labelOffset = (2412 * scale) / 2 + 20;
-                    
+
                     return {
                         id: p.id,
                         pseudo: p.pseudo,
@@ -147,7 +148,7 @@ class GameScene extends Phaser.Scene {
             this.player.y += speed;
             moving = true;
         }
-        
+
         if (moving) {
             this.player.play('walk-right', true);
         } else {
@@ -159,7 +160,7 @@ class GameScene extends Phaser.Scene {
         this.player.y = Phaser.Math.Clamp(this.player.y, 225, 1150);
         const scale = Phaser.Math.Linear(0.15, 0.35, (this.player.y - 280) / (1150 - 280));
         this.player.setScale(scale);
-        
+
         this.socket.emit('move', { x: this.player.x, y: this.player.y, scale: scale });
 
         // Force a UI update for local player movement smoothness
@@ -258,7 +259,7 @@ export default function GameFoot() {
         if (!scene) return { x: 0, y: 0 };
 
         const cam = scene.cameras.main;
-        
+
         // World to Camera (Internal resolution)
         const camX = (worldX - cam.scrollX) * cam.zoom;
         const camY = (worldY - cam.scrollY) * cam.zoom;
@@ -283,7 +284,7 @@ export default function GameFoot() {
     return (
         <div style={{ width: '100vw', height: '100vh', backgroundColor: '#000', overflow: 'hidden' }}>
             <div ref={ref} style={{ width: '100%', height: '100%' }} />
-            
+
             <div className="game-ui-container">
                 <div className="score-board">
                     <div className="score-card">
@@ -303,11 +304,11 @@ export default function GameFoot() {
                     const pos = getScreenPos(p.x, p.y - labelOffset);
 
                     return (
-                        <div 
-                            key={p.id} 
+                        <div
+                            key={p.id}
                             className={`player-label ${p.isMe ? 'me' : ''}`}
-                            style={{ 
-                                left: `${pos.x}px`, 
+                            style={{
+                                left: `${pos.x}px`,
                                 top: `${pos.y}px`,
                             }}
                         >
@@ -337,7 +338,7 @@ export default function GameFoot() {
                         <h2>Match Finished</h2>
                         <p>{winner ? `${winner} won the match` : 'The match is finished'}</p>
                         <div style={{ display: 'flex', gap: 12 }}>
-                            <button className="modal-button" onClick={() => router.push('/dashboard')}>Go to Dashboard</button>
+                            <button className="modal-button" onClick={() => router.push(ROUTES.DASHBOARD)}>Go to Dashboard</button>
                         </div>
                     </div>
                 </div>

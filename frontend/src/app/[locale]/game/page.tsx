@@ -4,7 +4,7 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-const GameFoot = dynamic(() => import('./GameFoot'), { ssr: false });
+const GameFoot = dynamic(() => import('@/components/game/GameFoot'), { ssr: false });
 
 export default function GamePage() {
     return <GameFoot />;
