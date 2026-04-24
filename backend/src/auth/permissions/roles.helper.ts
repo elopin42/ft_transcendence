@@ -1,4 +1,4 @@
-import { Grade, Perm, RoleResolved, RoleSeed } from './types';
+import { Grade, RoleResolved, RoleSeed } from './types';
 import { ROLE_SEEDS } from './roles.enum';
 
 // fonction de résolution de l'héritage des permissions d'un role DEVELOPER -> MODERATOR -> USER

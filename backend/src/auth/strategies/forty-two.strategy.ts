@@ -35,7 +35,7 @@ export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
 	}
 
 	// Appelée après l'échange code→token, accessToken permet d'appeler l'API 42
-	async validate(accessToken: string, refreshToken: string): Promise<any> {
+	async validate(accessToken: string, _refreshToken: string): Promise<any> {
 		// 42 pas configuré et que quelqu'un arrive quand même ici
 		if (!this.isConfigured) { throw new Error('42 OAuth2 strategy is not configured. Please set FORTYTWO_CLIENT_ID and FORTYTWO_CLIENT_SECRET in the environment variables.'); }
 		// /v2/me endpoint de 42 pour récupérer les infos de l'utilisateur

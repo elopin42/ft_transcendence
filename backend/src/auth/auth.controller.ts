@@ -62,7 +62,7 @@ export class AuthController {
 
   // TODO: refresh token - route préparée mais pas encore implémentée
   @Post('refresh')
-  async refresh(@Req() req: Request, @Res() res: Response) {
+  async refresh(@Req() _req: Request, @Res() res: Response) {
     // lire le refresh token depuis le cookie
     // vérifier qu'il est valide
     // générer un nouveau access token
