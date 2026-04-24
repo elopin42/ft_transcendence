@@ -21,7 +21,10 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "useUnknownInCatchVariables": true,
   },
   // "include" et "exclude" sont utilisés pour spécifier les fichiers à inclure ou à exclure de la compilation. Ici, on inclut tous les fichiers TypeScript dans le dossier "src"
   // et on exclut les dossiers "node_modules", "dist", "test" et le fichier "prisma.config.ts".
