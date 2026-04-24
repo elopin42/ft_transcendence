@@ -6,10 +6,11 @@ import { FortyTwoAuthGuard } from './guards/forty-two-auth.guard';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { parseExpiration } from '../utils/parse-expiration';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService, private configService: ConfigService) { }
+  constructor(private authService: AuthService, private configService: ConfigService, private prisma: PrismaService) { }
 
   @Post('register')
   async register(@Body() dto: RegisterDto, @Res() res: Response) { // ajout du registerDto pour bénéficier de la validation automatique des données d'entrée grâce au ValidationPipe global défini dans main.ts
@@ -31,9 +32,44 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
+      path: '/', // évite des bug possible de version 
     });
     res.json({ success: true });
   }
+
+  // retourne les infos du user connecté a partir du cookie JWT
+  // utilisé par le AuthProvider coté front pour savoir qui est connecté
+  // si le token est invalide ou le user n'existe plus -> 401
+  @Get('me')
+  async me(@Req() req: Request, @Res() res: Response) {
+    // on lit le cookie directement, pas besoin de middleware
+    // c'est la meme logique que gamelogin() dans auth.service.ts
+    const token = req.cookies?.token;
+    if (!token) throw new UnauthorizedException('Pas de token');
+    try {
+      // validateToken retourne { userId } (le payload du JWT signé dans generateToken)
+      const payload = await this.authService.validateToken(token);
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { id: true, login: true, email: true, fortyTwoId: true },
+      });
+      if (!user) throw new UnauthorizedException('User introuvable');
+      res.json(user);
+    } catch {
+      throw new UnauthorizedException('Token invalide');
+    }
+  }
+
+  // TODO: refresh token - route préparée mais pas encore implémentée
+  @Post('refresh')
+  async refresh(@Req() _req: Request, @Res() res: Response) {
+    // lire le refresh token depuis le cookie
+    // vérifier qu'il est valide
+    // générer un nouveau access token
+    // retourner le nouveau token dans le cookie
+    res.status(501).json({ message: 'Not implemented yet' });
+  }
+
 
   // route pour la connexion 42 redirect https://api.intra.42.fr/oauth/authorize
   @Get('42')
@@ -58,6 +94,7 @@ export class AuthController {
     this.setTokenCookie(res, token); // utilisation des cookies pour stocker le token
 
     const frontendUrl = this.configService.get<string>('CORS_ORIGIN', 'https://localhost'); // fallback HTTPS car nginx gère le SSL
+    // TODO: utiliser la locale du user quand elle sera en db
     res.redirect(`${frontendUrl}/dashboard`); // redirection vers le frontend après login 42, à adapter selon la route d'accueil du frontend
   }
 
@@ -71,6 +108,7 @@ export class AuthController {
       httpOnly: true,
       secure: true, // toujours sécurisé avec nginx en hhttps, et en dev on peut se permettre de forcer le secure pour éviter les erreurs de cookies non sécurisés
       sameSite: 'lax',
+      path: '/', // évite des bug possible de version 
       maxAge: parseExpiration(this.configService.get<string>('JWT_EXPIRATION', '3h')),
     });
   }

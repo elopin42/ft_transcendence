@@ -35,6 +35,8 @@ services:
     env_file:
       - ./backend/.env
       - ./.env
+    volumes: # migration des schema directement lié creer sur le docker apparait dans le local
+      - ./backend/prisma:/app/prisma
     command: sh -c "npx prisma migrate deploy && node dist/main"
     restart: always
     networks:

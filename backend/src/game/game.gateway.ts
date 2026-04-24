@@ -6,8 +6,6 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { JwtService } from '@nestjs/jwt';
-import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
 
 
