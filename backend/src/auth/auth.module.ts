@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { FortyTwoStrategy } from './strategies/forty-two.strategy'; // Importation de la stratégie d'authentification via 42 intra
+import type { StringValue } from 'ms';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { FortyTwoStrategy } from './strategies/forty-two.strategy'; // Importati
       useFactory: (config: ConfigService) => ({ // configuration de JWT avec les valeurs récupérées depuis l'env
         secret: config.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: config.get<string>('JWT_EXPIRATION', '3h') as any,
+          expiresIn: config.get<string>('JWT_EXPIRATION', '3h') as StringValue,
         },
       }),
     }),
