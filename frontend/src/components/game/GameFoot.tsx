@@ -21,9 +21,11 @@ class GameScene extends Phaser.Scene {
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     socket!: any;
     ballon: Phaser.GameObjects.Image | null = null;
+    wsKeys!: { w: Phaser.Input.Keyboard.Key, s: Phaser.Input.Keyboard.Key };
 
     myPnumber = 0;
     timep = 0;
+    twoplayerid: string | null = null;
     otherPlayers = new Map<string, { sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
     onUpdatePlayers?: (players: PlayerData[], bal: { x: number, y: number }) => void;
 
@@ -41,17 +43,24 @@ class GameScene extends Phaser.Scene {
         this.scale.resize(map.width, map.height);
         this.cursors = this.input.keyboard!.createCursorKeys();
 
+        //generation balle de foot
         const graphics = this.add.graphics();
         graphics.fillStyle(0xffffff, 1);
         graphics.fillCircle(20, 20, 20);
         graphics.generateTexture('bal', 40, 40);
         graphics.destroy();
-        this.ballon = this.add.image(1340, 690, 'bal');
-
+        // end
+        // Connect to Socket.IO server
         this.socket = io('/gamefoot', {
             withCredentials: true,
         });
-
+        this.ballon = this.add.image(1340, 690, 'bal');
+        this.wsKeys = {
+            w: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+            s: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+        };
+        
+        // Listen for player updates from the server
         this.socket.on('players', ({ players, bal }: { players: any[], bal: { x: number, y: number } }) => {
             const activeIds = new Set(players.map(p => p.id));
 
@@ -67,21 +76,27 @@ class GameScene extends Phaser.Scene {
                 this.ballon.setPosition(bal.x, bal.y);
             }
 
+            //creation du joueur local
             const me = players.find(p => p.id === this.socket.id);
             if (me && !this.player) {
-                this.myPnumber = me.pnumber;
+                this.myPnumber = me.pnumber; // pnumber savoir si on es joeur 1 ou 2 pour le spawn
                 const mapWidth = this.scale.width;
-                const startX = me.pnumber === 1 ? mapWidth * 0.12 : mapWidth * 0.88;
+                const startX = me.pnumber === 1 ? mapWidth * 0.12 : mapWidth * 0.88; // si joueur 1 spawn a 12% du bord gauche, sinon a 12% du bord droit
                 this.player = this.add.sprite(startX, 660, 'nass-front').setScale(0.35);
-                this.player.setFlipX(me.pnumber === 2);
+                this.player.setFlipX(me.pnumber === 2);//orientation du sprite selon le joueur
+            }
+            else if (me && this.player) {
+                this.player.setPosition(me.x, me.y);
             }
 
             players.forEach(p => {
                 if (p.id === this.socket.id) return;
 
+                //si le joueur n'existe pas encore, on le crée, sinon on update sa position et son animation
                 if (!this.otherPlayers.has(p.id)) {
                     const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
                     this.otherPlayers.set(p.id, { sprite, ox: p.x, oy: p.y });
+                    this.twoplayerid = p.id;
                 } else {
                     const timeo = Date.now();
                     const entry = this.otherPlayers.get(p.id);
@@ -91,7 +106,7 @@ class GameScene extends Phaser.Scene {
                     const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
                     entry.sprite.setScale(scale);
 
-                    if (timeo - this.timep > 50) {
+                    if (timeo - this.timep > 50) { // update animation every 50ms max to avoid too much CPU usage
                         this.timep = timeo;
                         if (p.x !== entry.ox || p.y !== entry.oy) {
                             entry.sprite.setFlipX(p.pnumber === 2);
@@ -161,8 +176,27 @@ class GameScene extends Phaser.Scene {
         const scale = Phaser.Math.Linear(0.15, 0.35, (this.player.y - 280) / (1150 - 280));
         this.player.setScale(scale);
 
-        this.socket.emit('move', { x: this.player.x, y: this.player.y, scale: scale });
+        this.socket.emit('move', { x: this.player.x, y: this.player.y, scale: scale });// envoi au back que on a bougé avec la position et le scale pour les autres clients
 
+
+        if (this.twoplayerid) {
+          const otherEntry = this.otherPlayers.get(this.twoplayerid);
+          if (otherEntry) {
+            const y = otherEntry.sprite.y; // position actuelle reçue du serveur
+            const speed2 = Phaser.Math.Linear(3, 7, (y - 250) / (1150 - 250));
+            let dy = 0;
+
+            if (this.wsKeys.w.isDown) dy = -speed2;
+            if (this.wsKeys.s.isDown) dy = speed2;
+
+            if (dy !== 0) {
+                const newY = Phaser.Math.Clamp(y + dy, 225, 1150);
+                const newX = otherEntry.sprite.x;
+                const scale2 = Phaser.Math.Linear(0.15, 0.35, (newY - 280) / (1150 - 280));
+                this.socket.emit('move2', { x: newX, y: newY, scale: scale2 });
+            }
+          }
+        }
         // Force a UI update for local player movement smoothness
         if (this.onUpdatePlayers && this.socket.id) {
             // Optional: we could update the local player in state here

@@ -99,7 +99,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.disconnect();
     }
   }
-
+  //todo si un joueur se deconnecte, faire en sorte que l'autre puisse continuer a jouer contre une IA ou juste rester dans la room et attendre un autre joueur
   handleDisconnect(client: any) {
     const roomId = this.clientRoom.get(client.id);
     if (!roomId) return;
@@ -145,6 +145,34 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     }
   }
+
+  //pour jouer a deux sur le meme ecran
+  @SubscribeMessage('move2')
+  handleMove2(client: any, payload: { x: number; y: number; scale: number }) {
+    // Valider le payload (par exemple, vérifier que x et y sont des nombres)
+    if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
+    const roomId = this.clientRoom.get(client.id);
+    if (!roomId) return;
+    const room = this.rooms.get(roomId!)!;
+    if (!room) return;
+    if (room.player2 && room.player1 && room.player2?.id === client.id) {
+      room.player1.x = payload.x;
+      room.player1.y = payload.y;
+      room.player1.scale = payload.scale;
+      this.server.to(roomId.toString()).emit('players', {
+        players: [room.player1, room.player2].filter(p => p !== null),
+        bal: room.bal
+      });
+    } else if (room.player1 && room.player2 && room.player1.id === client.id) {
+      room.player2.x = payload.x;
+      room.player2.y = payload.y;
+      room.player2.scale = payload.scale;
+      this.server.to(roomId.toString()).emit('players', {
+        players: [room.player1, room.player2].filter(p => p !== null),
+        bal: room.bal
+      });
+    }
+  }
   @SubscribeMessage('start')
   handlestart(client: any) {
     console.log("start");
@@ -161,15 +189,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         room.bal.y += room.bal.vy;
         // console.log(room.bal.x);
         // console.log(room.bal.y);
+        // pour detecter le pied du joueur
         const player1Bottom = room.player1.y + (2412 / 2) * room.player1.scale;
         const player2Bottom = room.player2.y + (2412 / 2) * room.player2.scale;
-        if (room.bal.y <= 410 || room.bal.y >= 1480) room.bal.vy *= -1;
-        if ((room.bal.y <= player1Bottom && room.bal.y >= player1Bottom - 100) && (room.bal.x <= room.player1.x + 50 && room.bal.x >= room.player1.x - 50)) room.bal.vx *= -1;
-        else if ((room.bal.y <= player2Bottom && room.bal.y >= player2Bottom - 100) && (room.bal.x <= room.player2.x + 50 && room.bal.x >= room.player2.x - 50)) room.bal.vx *= -1;
+        if (room.bal.y <= 410 || room.bal.y >= 1480) room.bal.vy *= -1; // rebondit sur les murs haubt et bas
+        if ((room.bal.y <= player1Bottom && room.bal.y >= player1Bottom - 100) && (room.bal.x <= room.player1.x + 50 && room.bal.x >= room.player1.x - 50)) room.bal.vx *= -1; // rebondit sur le pied du player 1
+        else if ((room.bal.y <= player2Bottom && room.bal.y >= player2Bottom - 100) && (room.bal.x <= room.player2.x + 50 && room.bal.x >= room.player2.x - 50)) room.bal.vx *= -1; // rebondit sur le pied du player 2
         else if ((room.bal.x <= 50 || room.bal.x >= 2680) || (room.player1.win >= 5 || room.player2.win >= 5)) {
-          if (room.bal.x <= 50) room.player1.pnumber == 2 ? room.player1.win++ : room.player2.win++;
-          else if (room.bal.x >= 2680) room.player2.pnumber == 1 ? room.player2.win++ : room.player1.win++;
-          else if (room.player1.win >= 5 || room.player2.win >= 5) {
+          if (room.bal.x <= 50) room.player1.pnumber == 2 ? room.player1.win++ : room.player2.win++; // +1 en win pour le joueur qui a marqué
+          else if (room.bal.x >= 2680) room.player2.pnumber == 1 ? room.player2.win++ : room.player1.win++; //inversement pour le joueur 2
+          else if (room.player1.win >= 5 || room.player2.win >= 5) {// si un joueur a gagné 5 fois, fin du match
             const login = room.player1.win == 5 ? room.player1.pseudo : room.player2.pseudo;
             this.prisma.user.update({
               where: { login },
