@@ -18,7 +18,9 @@ interface Player {
   y: number;
   scale: number;
   win: number;
+  isAI: boolean;
 }
+
 interface ballon {
   x: number;
   y: number;
@@ -75,13 +77,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (roomId === null) {
         // si aucune room attent un joeur on cree
         roomId = this.getAvailableRoomId();
-        this.rooms.set(roomId, { bal: { x: 1340, y: 690, vx: 10, vy: 6, start: false, finish: false }, player1: { id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0, scale: 0, win: 0 }, player2: null });
+        this.rooms.set(roomId, { bal: { x: 1340, y: 690, vx: 10, vy: 6, start: false, finish: false }, player1: { id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0, scale: 0, win: 0, isAI: false }, player2: null });
       } else {
         // sinon join
         const existing = this.rooms.get(roomId);
         if (!existing) return;
         if (existing.bal.finish) return;
-        existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0, scale: 0, win: 0 };
+        existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0, scale: 0, win: 0, isAI: false };
       }
       this.clientRoom.set(client.id, roomId);
       client.join(roomId.toString());

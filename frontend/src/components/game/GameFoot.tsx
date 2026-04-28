@@ -14,6 +14,7 @@ interface PlayerData {
     win: number;
     pnumber: number;
     isMe: boolean;
+    isAI: boolean;
 }
 
 class GameScene extends Phaser.Scene {
@@ -111,7 +112,7 @@ class GameScene extends Phaser.Scene {
                 const uiPlayers: PlayerData[] = players.map(p => {
                     const isMe = p.id === this.socket.id;
                     const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
-                    const labelOffset = (2412 * scale) / 2 + 20;
+                    // const labelOffset = (2412 * scale) / 2 + 20;
 
                     return {
                         id: p.id,
@@ -120,7 +121,8 @@ class GameScene extends Phaser.Scene {
                         y: p.y,
                         win: p.win,
                         pnumber: p.pnumber,
-                        isMe
+                        isMe,
+                        isAI: false
                     };
                 });
                 this.onUpdatePlayers(uiPlayers, bal);
