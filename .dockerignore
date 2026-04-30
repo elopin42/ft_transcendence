@@ -1,0 +1,41 @@
+# .dockerignore racine - actif depuis que docker-compose utilise context: .
+# pour les builds backend et frontend. Les `backend/.dockerignore` et
+# `frontend/.dockerignore` historiques ne sont plus lus par Docker dans ce mode.
+# (Tu peux les supprimer apres validation.)
+
+# Deps
+**/node_modules
+
+# Builds
+**/dist
+**/.next
+**/build
+
+# VCS / IDE
+.git
+**/.git
+**/.vscode
+**/.idea
+
+# Secrets
+**/.env
+**/.env.local
+**/.env.*.local
+
+# OS
+.DS_Store
+**/.DS_Store
+
+# Logs et tsbuildinfo
+**/*.log
+**/*.tsbuildinfo
+
+# Doc / artefacts hors build
+docs/
+
+# Outputs cowork (si jamais le dossier traine)
+outputs/
+
+# Scripts dev hote uniquement — jamais copies dans une image.
+tools/
+apps/backend/scripts/

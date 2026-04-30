@@ -1,0 +1,102 @@
+{
+  "common": {
+    "login": "Login",
+    "register": "Sign up",
+    "logout": "Logout",
+    "play": "Play",
+    "loading": "Loading..."
+  },
+  "landing": {
+    "subtitle": "Friends, Fun, code & Connect",
+    "play_button": "Play MovieStarParis 42"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "login_title": "Sign in",
+    "register_title": "Create account",
+    "login_42": "Sign in with 42",
+    "no_account": "No account?",
+    "has_account": "Already have an account?",
+    "error_login": "Login failed",
+    "error_42": "42 login not available",
+    "username": "Username",
+    "username_placeholder": "Enter your username",
+    "email_placeholder": "Enter your email",
+    "password_placeholder": "Enter your password",
+    "next": "Next",
+    "finish": "Finish",
+    "choose_character": "Who do you want to be?",
+    "choose_name": "Choose your star name!",
+    "create_account": "Create your account!",
+    "what_name": "What will your name be?"
+  },
+  "errors": {
+    "auth": {
+      "login": {
+        "invalid_credentials": "Wrong email or password."
+      },
+      "oauth_42": {
+        "failed": "Sign-in with 42 failed. Please try again."
+      },
+      "register": {
+        "email_taken": "This email is already taken.",
+        "login_taken": "This username is already taken."
+      },
+      "token": {
+        "expired": "Your session expired. Please sign in again.",
+        "invalid": "Invalid session. Please sign in again.",
+        "refresh_reused": "Security anomaly detected. All your sessions have been signed out for your safety."
+      }
+    },
+    "validation": {
+      "email": {
+        "invalid": "Invalid email format.",
+        "required": "Email is required.",
+        "too_long": "Email is too long (max 254 characters)."
+      },
+      "password": {
+        "required": "Password is required.",
+        "too_short": "Password must be at least 12 characters.",
+        "too_long": "Password is too long (max 128 characters).",
+        "missing_complexity": "Password must contain a lowercase letter, an uppercase letter, a digit and a special character."
+      },
+      "login": {
+        "required": "Username is required.",
+        "too_short": "Username must be at least 3 characters.",
+        "too_long": "Username is too long (max 20 characters).",
+        "invalid_chars": "Username can only contain letters, digits, _ and -."
+      },
+      "failed": "Invalid input."
+    },
+    "two_fa": {
+      "not_enabled": "Two-factor authentication is not enabled.",
+      "already_enabled": "Two-factor authentication is already enabled.",
+      "invalid_code": "Invalid verification code.",
+      "invalid_backup_code": "Invalid backup code.",
+      "required": "Two-factor authentication is required for this action."
+    },
+    "user": {
+      "not_found": "User not found.",
+      "profile_incomplete": "Your profile is incomplete, please fill in your details.",
+      "permission_denied": "Access denied."
+    },
+    "game": {
+      "not_found": "Game not found.",
+      "full": "This game is full.",
+      "already_started": "This game has already started."
+    },
+    "rate_limit": {
+      "exceeded": "Too many requests, slow down a bit.",
+      "brute_force": "Too many attempts, please wait a few minutes."
+    },
+    "generic": {
+      "bad_request": "Invalid request.",
+      "unauthorized": "Authentication required.",
+      "forbidden": "Action not allowed.",
+      "not_found": "Resource not found.",
+      "conflict": "Conflict with current resource state.",
+      "unknown": "An unexpected error occurred."
+    }
+  }
+}

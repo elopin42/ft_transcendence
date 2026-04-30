@@ -1,13 +1,17 @@
 # === Makefile de database ===
 
-.PHONY: migrate-new migrate-apply migrate-status db-reset db-generate db-studio seed
+.PHONY: migrate migrate-apply migrate-status db-reset db-generate db-studio seed
 
-migrate-new: ## Crée et applique une nouvelle migration (Interactif)
+migrate: ## Crée et applique une nouvelle migration (Interactif)
 	@echo "$(C_BLUE)📝 Création d'une nouvelle migration Prisma...$(C_RESET)"
 	@read -p "Nom de la migration (ex: add_user_points) : " name; \
 	if [ -z "$$name" ]; then echo "$(C_RED)❌ Erreur: Nom requis$(C_RESET)"; exit 1; fi; \
-	$(COMPOSE) exec backend npx prisma migrate dev --name $$name; \
-	echo "$(C_GREEN)✓ Migration '$$name' générée et appliquée !$(C_RESET)"; \
+	$(COMPOSE) exec backend npx prisma migrate dev --name $$name && \
+	echo "$(C_BLUE)⚙️ Régénération du client Prisma...$(C_RESET)" && \
+	$(COMPOSE) exec backend npx prisma generate && \
+	echo "$(C_BLUE)🔄 Restart backend pour recharger le client...$(C_RESET)" && \
+	$(COMPOSE) restart backend && \
+	echo "$(C_GREEN)✓ Migration '$$name' générée, appliquée et backend rechargé !$(C_RESET)" && \
 	echo "$(C_YELLOW)⚠️ Pense à git add backend/prisma/migrations/$(C_RESET)"
 
 migrate-apply: ## Applique les migrations existantes en attente
@@ -32,11 +36,13 @@ db-generate: ## Génère le client Prisma (après modif schema sans migration)
 	@echo "$(C_BLUE)⚙️ Génération du client Prisma...$(C_RESET)"
 	$(COMPOSE) exec backend npx prisma generate
 
-db-studio: ## Lance Prisma Studio (interface web DB) sur le port 5555
+db: ## Lance Prisma Studio (interface web DB) sur le port 5555
 	@echo "$(C_GREEN)📊 Démarrage de Prisma Studio...$(C_RESET)"
 	@echo " 🔗 Accès : http://localhost:5555"
 	$(COMPOSE) run --rm -p 5555:5555 backend npx prisma studio --port 5555 --browser none
 
 seed: ## Peuple la base de données avec les données par défaut
+	@# tsx au lieu de ts-node : @ftt/shared est en "type": "module" (ESM),
+	@# ts-node CJS ne sait pas le require. tsx gere ESM/CJS interop nativement.
 	@echo "$(C_BLUE)🌱 Lancement du seed script...$(C_RESET)"
-	$(COMPOSE) exec backend npx ts-node prisma/seed.ts
+	$(COMPOSE) exec backend npx tsx prisma/seed.ts

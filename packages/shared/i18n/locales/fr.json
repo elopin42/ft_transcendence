@@ -1,0 +1,102 @@
+{
+  "common": {
+    "login": "Connexion",
+    "register": "Inscription",
+    "logout": "Déconnexion",
+    "play": "Jouer",
+    "loading": "Chargement..."
+  },
+  "landing": {
+    "subtitle": "Friends, Fun, code & Connect",
+    "play_button": "Play MovieStarParis 42"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Mot de passe",
+    "login_title": "Se connecter",
+    "register_title": "Créer un compte",
+    "login_42": "Se connecter avec 42",
+    "no_account": "Pas de compte ?",
+    "has_account": "Déjà un compte ?",
+    "error_login": "Erreur de connexion",
+    "error_42": "Connexion 42 non disponible",
+    "username": "Nom d'utilisateur",
+    "username_placeholder": "Saisis ton nom d'utilisateur",
+    "email_placeholder": "Saisis ton email",
+    "password_placeholder": "Saisis ton mot de passe",
+    "next": "Suivant",
+    "finish": "Terminer",
+    "choose_character": "Qui souhaites-tu être ?",
+    "choose_name": "Choisis ton nom de star !",
+    "create_account": "Crée ton compte !",
+    "what_name": "Quel sera ton nom ?"
+  },
+  "errors": {
+    "auth": {
+      "login": {
+        "invalid_credentials": "Email ou mot de passe incorrect."
+      },
+      "oauth_42": {
+        "failed": "La connexion via 42 a echoue. Reessaie."
+      },
+      "register": {
+        "email_taken": "Cet email est deja utilise.",
+        "login_taken": "Ce nom d'utilisateur est deja pris."
+      },
+      "token": {
+        "expired": "Ta session a expire, reconnecte-toi.",
+        "invalid": "Session invalide. Reconnecte-toi.",
+        "refresh_reused": "Anomalie de securite detectee. Toutes tes sessions ont ete deconnectees pour ta securite."
+      }
+    },
+    "validation": {
+      "email": {
+        "invalid": "Format d'email invalide.",
+        "required": "L'email est obligatoire.",
+        "too_long": "L'email est trop long (max 254 caracteres)."
+      },
+      "password": {
+        "required": "Le mot de passe est obligatoire.",
+        "too_short": "Le mot de passe doit faire au moins 12 caracteres.",
+        "too_long": "Le mot de passe est trop long (max 128 caracteres).",
+        "missing_complexity": "Le mot de passe doit contenir une minuscule, une majuscule, un chiffre et un caractere special."
+      },
+      "login": {
+        "required": "Le nom d'utilisateur est obligatoire.",
+        "too_short": "Le nom d'utilisateur doit faire au moins 3 caracteres.",
+        "too_long": "Le nom d'utilisateur est trop long (max 20 caracteres).",
+        "invalid_chars": "Le nom d'utilisateur ne peut contenir que des lettres, chiffres, _ et -."
+      },
+      "failed": "Donnees invalides."
+    },
+    "two_fa": {
+      "not_enabled": "L'authentification a deux facteurs n'est pas activee.",
+      "already_enabled": "L'authentification a deux facteurs est deja active.",
+      "invalid_code": "Code de verification invalide.",
+      "invalid_backup_code": "Code de secours invalide.",
+      "required": "L'authentification a deux facteurs est requise pour cette action."
+    },
+    "user": {
+      "not_found": "Utilisateur introuvable.",
+      "profile_incomplete": "Profil incomplet, complete tes informations.",
+      "permission_denied": "Acces refuse."
+    },
+    "game": {
+      "not_found": "Partie introuvable.",
+      "full": "La partie est complete.",
+      "already_started": "La partie a deja commence."
+    },
+    "rate_limit": {
+      "exceeded": "Trop de requetes, ralentis un peu.",
+      "brute_force": "Trop de tentatives, attends quelques minutes."
+    },
+    "generic": {
+      "bad_request": "Requete invalide.",
+      "unauthorized": "Authentification requise.",
+      "forbidden": "Action non autorisee.",
+      "not_found": "Ressource introuvable.",
+      "conflict": "Conflit avec l'etat actuel de la ressource.",
+      "unknown": "Une erreur inattendue s'est produite."
+    }
+  }
+}

@@ -60,9 +60,14 @@ docker-clean: ## Arrête et supprime les conteneurs et volumes (sans toucher aux
 	@echo "$(C_YELLOW)🧹 Nettoyage de l'environnement courant...$(C_RESET)"
 	$(COMPOSE) down -v
 
-docker-fclean: ## Nettoyage complet (conteneurs, volumes, images, orphelins)
-	@echo "$(C_RED)🗑️ Suppression totale (images et volumes)...$(C_RESET)"
+docker-fclean: ## Nettoyage complet (conteneurs, volumes, images, orphelins, cache build)
+	@echo "$(C_RED)🗑️ Suppression totale (images, volumes, cache BuildKit)...$(C_RESET)"
+	sleep 3
 	$(COMPOSE) down -v --rmi all --remove-orphans
+	@# BuildKit garde un cache de couches separe, non touche par --rmi all.
+	@# Sans ce prune, un fichier ajoute APRES la premiere build ne sera pas
+	@# repris (la couche COPY reste cached).
+	$(DOCKER) builder prune -af
 
 docker-prune: ## ⚠️ DANGER: Purge tout Docker sur la machine (Interactif)
 	@echo "$(C_RED)⚠️ ATTENTION : Purge complète du système Docker !$(C_RESET)"

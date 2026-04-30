@@ -111,12 +111,12 @@ Le sujet impose d'accumuler **14 points**. Voici notre sélection 100% conforme 
 ## 📅 Timeline recommandée
 
 ```
-Semaine 1  → Docker + BDD + Login/Mdp + Game Loop local (Phase Alpha)
-Semaine 2  → WebSockets + Synchro monde + OAuth 42 + Pages légales
-Semaine 3  → IA PNJ + Inventaire + API Amis
-Semaine 4  → Classements survie + 2FA + Traduction (Phase Beta)
-Semaine 5  → Sécurité, Correctifs bugs, Polish UI finale
-Semaine 6  → Préparation pour l'évaluation !
+Semaine 1  -> Docker + BDD + Login/Mdp + Game Loop local (Phase Alpha)
+Semaine 2  -> WebSockets + Synchro monde + OAuth 42 + Pages légales
+Semaine 3  -> IA PNJ + Inventaire + API Amis
+Semaine 4  -> Classements survie + 2FA + Traduction (Phase Beta)
+Semaine 5  -> Sécurité, Correctifs bugs, Polish UI finale
+Semaine 6  -> Préparation pour l'évaluation !
 ```
 
 ---
@@ -152,7 +152,7 @@ git clone https://github.com/elopin42/ft_transcendence.git
 cd ft_transcendence
 
 # 2. Configurer les variables d'env
-cp .env.example .env  # → Remplir les secrets ensuite
+cp .env.example .env  # -> Remplir les secrets ensuite
 
 # 3. Lancer tout le projet d'un coup
 docker compose up --build

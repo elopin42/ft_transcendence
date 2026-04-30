@@ -1,0 +1,82 @@
+services:
+
+  nginx:
+    build:
+      context: ./apps/nginx
+      args:
+        DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+    ports:
+      - "443:443"
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+    networks:
+      - transcendence
+
+  frontend:
+    # Context root : besoin du shared/ workspace.
+    # Les NEXT_PUBLIC_* sont inlines par Next.js a la compilation, donc passes
+    # en build args (resolus par compose depuis le .env racine). Au runtime
+    # ils sont aussi disponibles via env_file pour les composants serveur.
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://localhost/api}
+        NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL:-https://localhost}
+        NEXT_PUBLIC_DEFAULT_LOCALE: ${NEXT_PUBLIC_DEFAULT_LOCALE:-fr}
+    expose:
+      - "3000"
+    env_file:
+      - ./apps/frontend/.env
+      - ./.env
+    restart: always
+    networks:
+      - transcendence
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    expose:
+      - "4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ./apps/backend/.env
+      - ./.env
+    volumes:
+      # Bind mount prisma/ : les migrations creees dans le container apparaissent en local.
+      - ./apps/backend/prisma:/app/apps/backend/prisma
+    command: sh -c "npx prisma migrate deploy && npm run start:prod"
+    restart: always
+    networks:
+      - transcendence
+
+  db:
+    image: postgres:15
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-transcendence}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-transcendence}" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: always
+    networks:
+      - transcendence
+
+networks:
+  transcendence:
+    driver: bridge
+
+volumes:
+  pgdata:

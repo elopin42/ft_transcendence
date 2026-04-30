@@ -10,30 +10,48 @@
 #   += concaténation
 
 # === Projet ===
-NAME        := ft_transcendence
-VERSION     := 1.0.0
-ENV_MODE    ?= dev
+NAME        		:= ft_transcendence
+VERSION     		:= 1.0.0
+# Mode runtime applicatif. Valeurs : development | production
+ENV_MODE            ?= development
+# Bypass rate-limiter en dev. Override : make THROTTLER_DISABLED=false up
+THROTTLER_DISABLED  ?= true
 
 # === Paths ===
 ROOT_DIR        := $(shell pwd)
-BACKEND_DIR     := $(ROOT_DIR)/backend
-FRONTEND_DIR    := $(ROOT_DIR)/frontend
-NGINX_DIR       := $(ROOT_DIR)/nginx
+BACKEND_DIR     := $(ROOT_DIR)/apps/backend
+FRONTEND_DIR    := $(ROOT_DIR)/apps/frontend
+NGINX_DIR       := $(ROOT_DIR)/apps/nginx
+SHARED_DIR      := $(ROOT_DIR)/packages/shared
 ENV_FILE        := $(ROOT_DIR)/.env
 
 # === Orchestration ===
-# DOCKER ?= docker → surchargeable en CLI pour Podman (Fedora) :
-#   make DOCKER=podman up
-# COMPOSE dérive de DOCKER : `docker compose` ou `podman compose`.
-DOCKER          ?= docker
-COMPOSE         := $(DOCKER) compose
-COMPOSE_FILE    := $(ROOT_DIR)/docker-compose.yml
+# Auto-detection du runtime :
+#   1. DOCKER en env (override CLI explicite, ex: `make DOCKER=podman up`)
+#   2. docker installe -> docker
+#   3. podman installe -> podman (postes Fedora ecole)
+#   4. sinon -> docker quand meme, le check-deps fail proprement
+#
+# COMPOSE : prefere `<docker> compose` (plugin v2), fallback `docker-compose`
+# (binaire v1 historique sur certains Debian). Decide au chargement.
+DOCKER          ?= $(shell command -v docker >/dev/null 2>&1 && echo docker \
+                    || (command -v podman >/dev/null 2>&1 && echo podman) \
+                    || echo docker)
+COMPOSE         := $(shell if $(DOCKER) compose version >/dev/null 2>&1; \
+                    then echo "$(DOCKER) compose" ; \
+                    else echo "docker-compose" ; fi)
+COMPOSE_FILE    := $(ROOT_DIR)/compose.yml
 
 # === Network ===
 DOMAIN_NAME         ?= localhost
 FRONTEND_PORT       ?= 3000
 BACKEND_PORT        ?= 4000
 CORS_ORIGIN         ?= https://$(DOMAIN_NAME)
+
+# === i18n ===
+# Locale par defaut servie par Next.js. Source unique de verite : ce fichier.
+# Repercute dans le .env racine, lu en build args par compose pour le frontend.
+DEFAULT_LOCALE      ?= fr
 
 # === Database (PostgreSQL) ===
 POSTGRES_USER       ?= user
@@ -45,7 +63,8 @@ DATABASE_URL        ?= postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(DB_H
 
 # === Security ===
 JWT_EXPIRATION      ?= 3h
-# JWT_SECRET est généré par `make init` via openssl rand -hex 64, pas défini ici
+JWT_REFRESH_EXPIRATION  ?= 7d
+# JWT_SECRET et TWO_FA_ENCRYPTION_KEY sont generes par `make setup` via openssl
 
 # === 42 OAuth ===
 # Laisser vide: make init génère un backend/.env avec champs vides, à remplir à la main
