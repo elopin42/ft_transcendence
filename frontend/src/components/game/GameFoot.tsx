@@ -25,7 +25,8 @@ class GameScene extends Phaser.Scene {
 
     myPnumber = 0;
     timep = 0;
-    twoplayerid: string | null = null;
+    tx = 0;
+    ty = 0;
     otherPlayers = new Map<string, { sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
     onUpdatePlayers?: (players: PlayerData[], bal: { x: number, y: number }) => void;
 
@@ -96,13 +97,14 @@ class GameScene extends Phaser.Scene {
                 if (!this.otherPlayers.has(p.id)) {
                     const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
                     this.otherPlayers.set(p.id, { sprite, ox: p.x, oy: p.y });
-                    this.twoplayerid = p.id;
                 } else {
                     const timeo = Date.now();
                     const entry = this.otherPlayers.get(p.id);
                     if (!entry) return;
 
                     entry.sprite.setPosition(p.x, p.y);
+                    this.tx = p.x;
+                    this.ty = p.y;
                     const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
                     entry.sprite.setScale(scale);
 
@@ -179,23 +181,14 @@ class GameScene extends Phaser.Scene {
         this.socket.emit('move', { x: this.player.x, y: this.player.y, scale: scale });// envoi au back que on a bougé avec la position et le scale pour les autres clients
 
 
-        if (this.twoplayerid) {
-          const otherEntry = this.otherPlayers.get(this.twoplayerid);
-          if (otherEntry) {
-            const y = otherEntry.sprite.y; // position actuelle reçue du serveur
-            const speed2 = Phaser.Math.Linear(3, 7, (y - 250) / (1150 - 250));
-            let dy = 0;
-
-            if (this.wsKeys.w.isDown) dy = -speed2;
-            if (this.wsKeys.s.isDown) dy = speed2;
-
-            if (dy !== 0) {
-                const newY = Phaser.Math.Clamp(y + dy, 225, 1150);
-                const newX = otherEntry.sprite.x;
-                const scale2 = Phaser.Math.Linear(0.15, 0.35, (newY - 280) / (1150 - 280));
-                this.socket.emit('move2', { x: newX, y: newY, scale: scale2 });
-            }
-          }
+          if ((this.wsKeys.w.isDown || this.wsKeys.s.isDown) && (this.ty != 0 || this.tx != 0)) { 
+            if (this.wsKeys.w.isDown) this.ty -= speed;
+            if (this.wsKeys.s.isDown) this.ty += speed;
+            this.tx = Phaser.Math.Clamp(this.tx, 50, 2680);
+            this.ty = Phaser.Math.Clamp(this.ty, 225, 1150);
+            const scale2 = Phaser.Math.Linear(0.15, 0.35, (this.ty - 280) / (1150 - 280));
+            this.socket.emit('move2', { x: this.tx, y: this.ty, scale: scale2 });
+          
         }
         // Force a UI update for local player movement smoothness
         if (this.onUpdatePlayers && this.socket.id) {
