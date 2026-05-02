@@ -63,6 +63,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return i; // retourne la first room avaible
   }
 
+  private getRoomAndRoomId(clientId: string): [Room | null, number | null] {
+    const roomId = this.clientRoom.get(clientId);
+    if (!roomId)
+      return [null, null];
+    const room = this.rooms.get(roomId);
+    if (!room)
+      return [null, roomId];
+    return [room, roomId];
+  }
+
   /**
    * @brief Replace a null player by a bot in the given room
    * @return True if the bot have been successfully added to the room else false
@@ -139,9 +149,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * bot if the room is not empty
    */
   handleDisconnect(client: any) {
-    const roomId = this.clientRoom.get(client.id);
-    if (!roomId) return;
-    const room = this.rooms.get(roomId)!;
+    const [room, roomId] = this.getRoomAndRoomId(client.id);
+    if (!room || !roomId)
+      return;
     // supprimer le joueur de la room
     if (room.player1?.id === client.id) room.player1 = null;
     else room.player2 = null;
@@ -164,27 +174,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleMove(client: any, payload: { x: number; y: number; scale: number }) {
     // Valider le payload (par exemple, vérifier que x et y sont des nombres)
     if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
-    const roomId = this.clientRoom.get(client.id);
-    if (!roomId) return;
-    const room = this.rooms.get(roomId!)!;
-    if (!room) return;
-    if (room.player1 && room.player1?.id === client.id) {
-      room.player1.x = payload.x;
-      room.player1.y = payload.y;
-      room.player1.scale = payload.scale;
-      this.server.to(roomId.toString()).emit('players', {
-        players: [room.player1, room.player2].filter(p => p !== null),
-        bal: room.bal
-      });
-    } else if (room.player2 && room.player2?.id === client.id) {
-      room.player2.x = payload.x;
-      room.player2.y = payload.y;
-      room.player2.scale = payload.scale;
+    const [room, roomId] = this.getRoomAndRoomId(client.id);
+    if (!room || !roomId)
+      return;
+    const updatePlayer = (player: Player) => {
+      player.x = payload.x;
+      player.y = payload.y;
+      player.scale = payload.scale;
       this.server.to(roomId.toString()).emit('players', {
         players: [room.player1, room.player2].filter(p => p !== null),
         bal: room.bal
       });
     }
+    if (room.player1 && room.player1.id === client.id)
+      updatePlayer(room.player1);
+    else if (room.player2 && room.player2.id === client.id)
+      updatePlayer(room.player2);
   }
 
   //pour jouer a deux sur le meme ecran
@@ -192,27 +197,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleMove2(client: any, payload: { x: number; y: number; scale: number }) {
     // Valider le payload (par exemple, vérifier que x et y sont des nombres)
     if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
-    const roomId = this.clientRoom.get(client.id);
-    if (!roomId) return;
-    const room = this.rooms.get(roomId!)!;
-    if (!room) return;
-    if (room.player2 && room.player1 && room.player2?.id === client.id) {
-      room.player1.x = payload.x;
-      room.player1.y = payload.y;
-      room.player1.scale = payload.scale;
-      this.server.to(roomId.toString()).emit('players', {
-        players: [room.player1, room.player2].filter(p => p !== null),
-        bal: room.bal
-      });
-    } else if (room.player1 && room.player2 && room.player1.id === client.id) {
-      room.player2.x = payload.x;
-      room.player2.y = payload.y;
-      room.player2.scale = payload.scale;
+    const [room, roomId] = this.getRoomAndRoomId(client.id);
+    if (!room || !roomId)
+      return;
+    const updatePlayer = (player: Player) => {
+      player.x = payload.x;
+      player.y = payload.y;
+      player.scale = payload.scale;
       this.server.to(roomId.toString()).emit('players', {
         players: [room.player1, room.player2].filter(p => p !== null),
         bal: room.bal
       });
     }
+    if (room.player2 && room.player1 && room.player2?.id === client.id)
+      updatePlayer(room.player1);
+    else if (room.player1 && room.player2 && room.player1.id === client.id)
+      updatePlayer(room.player2);
   }
 
   /**
@@ -222,10 +222,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('start')
   handlestart(client: any) {
     console.log("start");
-    const roomId = this.clientRoom.get(client.id);
-    if (!roomId) return;
-    const room = this.rooms.get(roomId!)!;
-    if (!room) return;
+    const [room, roomId] = this.getRoomAndRoomId(client.id);
+    if (!room || !roomId)
+      return;
     console.log("start boucle");
     if (room.bal.start || room.bal.finish) return;
     room.bal.start = true;
