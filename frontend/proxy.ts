@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose'; // JWT compatible Edge Runtime (Web Crypto API
 
 // seules les routes listées ici sont accessibles sans token valide
 // tout le reste redirige vers /login automatiquement
-const PUBLIC_ROUTES = ['/', '/login', '/register', '/dashboard']; //%%
+const PUBLIC_ROUTES = ['/', '/login', '/register'];
 
 export async function proxy(req: NextRequest) {
     const token = req.cookies.get('token')?.value;
