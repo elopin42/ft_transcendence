@@ -85,8 +85,8 @@ class GameScene extends Phaser.Scene {
                 const startX = me.pnumber === 1 ? mapWidth * 0.12 : mapWidth * 0.88; // si joueur 1 spawn a 12% du bord gauche, sinon a 12% du bord droit
                 this.player = this.add.sprite(startX, 660, 'nass-front').setScale(0.35);
                 this.player.setFlipX(me.pnumber === 2);//orientation du sprite selon le joueur
-                this.tx = p.x;
-                this.ty = p.y;
+                this.tx = startX;
+                this.ty = 600;
             }
             else if (me && this.player) {
                 this.player.setPosition(me.x, me.y);
