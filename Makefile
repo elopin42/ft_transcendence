@@ -31,8 +31,8 @@ ffclean: fclean
 	docker system prune -af --volumes
 	@echo "Docker entièrement nettoyé"
 
-re: fclean all
-ra: clean all
+re: clean all
+ra: down all
 rme: fclean run
 rvme: fclean all
 rr: clean run
