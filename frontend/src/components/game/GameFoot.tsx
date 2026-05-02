@@ -63,7 +63,7 @@ class GameScene extends Phaser.Scene {
         };
         
         // Listen for player updates from the server
-        this.socket.on('players', ({ players, bal }: { players: any[], bal: { x: number, y: number } }) => {
+        this.socket.on('players', ({ players, bal }: { players: PlayerData[], bal: { x: number, y: number } }) => {
             const activeIds = new Set(players.map(p => p.id));
 
             // Cleanup disconnected
@@ -130,9 +130,9 @@ class GameScene extends Phaser.Scene {
 
             // Update React UI
             if (this.onUpdatePlayers) {
-                const uiPlayers: PlayerData[] = players.map(p => {
+                const uiPlayers = players.map(p => {
                     const isMe = p.id === this.socket.id;
-                    const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
+                    // const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
                     // const labelOffset = (2412 * scale) / 2 + 20;
 
                     return {
@@ -143,7 +143,7 @@ class GameScene extends Phaser.Scene {
                         win: p.win,
                         pnumber: p.pnumber,
                         isMe,
-                        isAI: false
+                        isAI: p.isAI
                     };
                 });
                 this.onUpdatePlayers(uiPlayers, bal);

@@ -30,6 +30,13 @@ interface ballon {
   finish: boolean;
 }
 
+interface Room {
+  bal: ballon;
+  player1: Player | null;
+  player2: Player | null;
+  interval?: any;
+}
+
 @WebSocketGateway({
   cors: {
     origin: process.env.CORS_ORIGIN || 'https://localhost', // fallback HTTPS car nginx gère le SSL
@@ -47,13 +54,38 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) { }
 
   // en gros une sorte de tableau ou une room contient 2 player 
-  rooms = new Map<number, { bal: ballon; player1: Player | null; player2: Player | null; interval?: any }>();
+  rooms = new Map<number, Room>();
   clientRoom = new Map<string, number>(); // socketId → roomId
 
   private getAvailableRoomId(): number {
     let i = 1;
     while (this.rooms.has(i)) i++;
     return i; // retourne la first room avaible
+  }
+
+  /**
+   * @brief Replace a null player by a bot in the given room
+   * @return True if the bot have been successfully added to the room else false
+   *  */
+  private addBotToRoom(room: Room, roomId: number): boolean {
+    let pnumber: number;
+    
+    if (!room.player1)
+      pnumber = 1;
+    else if (!room.player2)
+      pnumber = 2;
+    else
+      return false;
+    room["player" + pnumber.toString()] = {
+      id: "AI_" + roomId,
+      pnumber: pnumber,
+      pseudo: "AI",
+      x: 0, y: 0,
+      scale: 0,
+      win: 0,
+      isAI: true
+    };
+    return true;
   }
 
   async handleConnection(client: any) {
@@ -101,7 +133,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.disconnect();
     }
   }
-  //todo si un joueur se deconnecte, faire en sorte que l'autre puisse continuer a jouer contre une IA ou juste rester dans la room et attendre un autre joueur
+
+  /**
+   * @brief Handles client disconnection and replace that client by a 
+   * bot if the room is not empty
+   */
   handleDisconnect(client: any) {
     const roomId = this.clientRoom.get(client.id);
     if (!roomId) return;
@@ -112,9 +148,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.clientRoom.delete(client.id);
     if (!room.player1 && !room.player2) {
       this.rooms.delete(roomId);
+
+      //Déjà supprimé avant le if non ?
       this.clientRoom.delete(client.id);
       return;
     }
+    this.addBotToRoom(room, roomId);
     this.server.to(roomId.toString()).emit('players', {
       players: [room.player1, room.player2].filter(p => p !== null),
       bal: room.bal
@@ -175,6 +214,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     }
   }
+
+  /**
+   * @brief Start the game\
+   * If the player is alone, add a bot as player 2
+   */
   @SubscribeMessage('start')
   handlestart(client: any) {
     console.log("start");
@@ -185,22 +229,31 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log("start boucle");
     if (room.bal.start || room.bal.finish) return;
     room.bal.start = true;
+    // Add bot if there is only 1 player in the room
+    if ((!room.player1 && room.player2) || (room.player1 && !room.player2))
+      this.addBotToRoom(room, roomId);
     room.interval = setInterval(() => {
+      // Il est pas censé y avoir de joueur set a null a ce moment là je pense que le if sert a rien
       if (room.player1 && room.player2) {
         room.bal.x += room.bal.vx;
         room.bal.y += room.bal.vy;
         // console.log(room.bal.x);
         // console.log(room.bal.y);
-        // pour detecter le pied du joueur
-        const player1Bottom = room.player1.y + (2412 / 2) * room.player1.scale;
-        const player2Bottom = room.player2.y + (2412 / 2) * room.player2.scale;
-        if (room.bal.y <= 410 || room.bal.y >= 1480) room.bal.vy *= -1; // rebondit sur les murs haubt et bas
-        if ((room.bal.y <= player1Bottom && room.bal.y >= player1Bottom - 100) && (room.bal.x <= room.player1.x + 50 && room.bal.x >= room.player1.x - 50)) room.bal.vx *= -1; // rebondit sur le pied du player 1
-        else if ((room.bal.y <= player2Bottom && room.bal.y >= player2Bottom - 100) && (room.bal.x <= room.player2.x + 50 && room.bal.x >= room.player2.x - 50)) room.bal.vx *= -1; // rebondit sur le pied du player 2
+        const shouldBallBounce = (ball: ballon, player: Player): boolean => {
+          // pour detecter le pied du joueur
+          const playerFoot = player.y + (2412 / 2) * player.scale;
+          return (ball.y <= playerFoot && ball.y >= playerFoot - 100) && (ball.x <= player.x + 50 && ball.x >= player.x - 50);
+        }
+        if (room.bal.y <= 410 || room.bal.y >= 1480) room.bal.vy *= -1; // rebondit sur les murs haut et bas
+        if (shouldBallBounce(room.bal, room.player1) || shouldBallBounce(room.bal, room.player2))
+          room.bal.vx *= -1; // Bounce on players foot
         else if ((room.bal.x <= 50 || room.bal.x >= 2680) || (room.player1.win >= 5 || room.player2.win >= 5)) {
-          if (room.bal.x <= 50) room.player1.pnumber == 2 ? room.player1.win++ : room.player2.win++; // +1 en win pour le joueur qui a marqué
-          else if (room.bal.x >= 2680) room.player2.pnumber == 1 ? room.player2.win++ : room.player1.win++; //inversement pour le joueur 2
-          else if (room.player1.win >= 5 || room.player2.win >= 5) {// si un joueur a gagné 5 fois, fin du match
+          if (room.bal.x <= 50)
+            room.player1.pnumber == 2 ? room.player1.win++ : room.player2.win++; // +1 en win pour le joueur qui a marqué
+          else if (room.bal.x >= 2680)
+            room.player2.pnumber == 1 ? room.player2.win++ : room.player1.win++; //inversement pour le joueur 2
+          // si un joueur a gagné 5 fois, fin du match
+          if (room.player1.win >= 5 || room.player2.win >= 5) {
             const login = room.player1.win == 5 ? room.player1.pseudo : room.player2.pseudo;
             this.prisma.user.update({
               where: { login },
@@ -220,6 +273,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           bal: { x: room.bal.x, y: room.bal.y }
         });
       }
+      // Inutile avec le bot
       else {
         console.log("manque joueur");
       }
