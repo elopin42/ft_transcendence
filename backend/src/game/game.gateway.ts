@@ -6,8 +6,6 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { JwtService } from '@nestjs/jwt';
-import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
 
 
@@ -16,6 +14,7 @@ import { AuthService } from '../auth/auth.service';
         origin: process.env.CORS_ORIGIN || 'https://localhost', // fallback HTTPS car nginx gère le SSL
         credentials: true
     },
+    namespace: 'world'
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

@@ -6,7 +6,7 @@ import { Request, Response, NextFunction } from 'express';
 export class AuthMiddleware implements NestMiddleware {
   constructor(private authService: AuthService) { }
 
-  async use(req: Request, res: Response, next: NextFunction) {
+  async use(req: Request, _res: Response, next: NextFunction) {
     // Cherche dans le header Authorization (login email/mdp)
     const authHeader = req.headers['authorization'];
     let token: string | undefined = authHeader?.split(' ')[1];

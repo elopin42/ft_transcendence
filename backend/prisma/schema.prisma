@@ -27,6 +27,7 @@ model user {
   role     role?            @relation(fields: [roleId], references: [id]) // relation avec la table des roles pour savoir quel role a l'utilisateur ( admin, modérateur, etc )
   channels channel_member[] // relation avec la table channel_member pour savoir dans quels channels est l'utilisateur et ses permissions dans ces channels
 
+  points Int @default(0) // pour le système de points et de classement
   // avatarUrl	String? // pour stocker l'url de l'avatar ( 42 ou uploadé par l'utilisateur ) mais on as la photo de l'intra on pourrais stoquer les 2 celle de l'intra et celle du jeux
 
   title String? // titre 42 je veux pouvoir les recup ca peux etre cool
