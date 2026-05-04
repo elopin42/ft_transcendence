@@ -47,6 +47,9 @@ interface Room {
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server; // évité que typescript mette une erreur sait que ce sera initialisé
+  readonly playerY: number = 660;
+  readonly playerX1: number = 330;
+  readonly playerX2: number = 2400;
 
   constructor(
     private authService: AuthService,
@@ -90,7 +93,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       id: "AI_" + roomId,
       pnumber: pnumber,
       pseudo: "AI",
-      x: 0, y: 0,
+      x: this["playerX" + pnumber.toString()],
+      y: this.playerY,
       scale: 0,
       win: 0,
       isAI: true
@@ -119,13 +123,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (roomId === null) {
         // si aucune room attent un joeur on cree
         roomId = this.getAvailableRoomId();
-        this.rooms.set(roomId, { bal: { x: 1340, y: 690, vx: 10, vy: 6, start: false, finish: false }, player1: { id: client.id, pnumber: 1, pseudo: login, x: 0, y: 0, scale: 0, win: 0, isAI: false }, player2: null });
+        this.rooms.set(roomId, {
+          bal: { x: 1340, y: 690, vx: 10, vy: 6, start: false, finish: false },
+          player1: { id: client.id, pnumber: 1, pseudo: login, x: this.playerX1, y: this.playerY, scale: 0, win: 0, isAI: false },
+          player2: null
+        });
       } else {
         // sinon join
         const existing = this.rooms.get(roomId);
         if (!existing) return;
         if (existing.bal.finish) return;
-        existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: 0, y: 0, scale: 0, win: 0, isAI: false };
+        existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: this.playerX2, y: this.playerY, scale: 0, win: 0, isAI: false };
       }
       this.clientRoom.set(client.id, roomId);
       client.join(roomId.toString());
@@ -243,7 +251,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           const playerFoot = player.y + (2412 / 2) * player.scale;
           return (ball.y <= playerFoot && ball.y >= playerFoot - 100) && (ball.x <= player.x + 50 && ball.x >= player.x - 50);
         }
-        if (room.bal.y <= 410 || room.bal.y >= 1480) room.bal.vy *= -1; // rebondit sur les murs haut et bas
+        if (room.bal.y <= 410 || room.bal.y >= 1480)
+          room.bal.vy *= -1; // rebondit sur les murs haut et bas
         if (shouldBallBounce(room.bal, room.player1) || shouldBallBounce(room.bal, room.player2))
           room.bal.vx *= -1; // Bounce on players foot
         else if ((room.bal.x <= 50 || room.bal.x >= 2680) || (room.player1.win >= 5 || room.player2.win >= 5)) {
@@ -253,19 +262,26 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             room.player2.pnumber == 1 ? room.player2.win++ : room.player1.win++; //inversement pour le joueur 2
           // si un joueur a gagné 5 fois, fin du match
           if (room.player1.win >= 5 || room.player2.win >= 5) {
-            const login = room.player1.win == 5 ? room.player1.pseudo : room.player2.pseudo;
-            this.prisma.user.update({
-              where: { login },
-              data: { points: { increment: 1 } }
-            }).catch(e => console.log(e));
+            // On envoie a la db que si le joueur gagnant est PAS une IA
+            if ((room.player1.win >= 5 && !room.player1.isAI) || (room.player2.win >= 5 && !room.player2.isAI)) {
+              const login = room.player1.win >= 5 ? room.player1.pseudo : room.player2.pseudo;
+              this.prisma.user.update({
+                where: { login },
+                data: { points: { increment: 1 } }
+              }).catch(e => console.log(e));
+            }
             room.bal.finish = true;
           }
           room.bal.x = 1340;
           room.bal.y = 690;
           room.bal.start = false;
+          room.player1.y = this.playerY;
+          room.player2.y = this.playerY;
           clearInterval(room.interval);
           room.interval = null;
-          return;
+          // Pourquoi return ici ?
+          // J'ai mis en commentaire pour que la position des joueurs et de la balle soit envoyer à chaque point marqué
+          // return;
         }
         this.server.to(roomId.toString()).emit('players', {
           players: [room.player1, room.player2].filter(p => p !== null),
