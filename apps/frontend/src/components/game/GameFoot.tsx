@@ -14,6 +14,7 @@ interface PlayerData {
     win: number;
     pnumber: number;
     isMe: boolean;
+    isAI: boolean;
 }
 
 class GameScene extends Phaser.Scene {
@@ -59,7 +60,7 @@ class GameScene extends Phaser.Scene {
             s: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S),
         };
 
-        this.socket.on('players', ({ players, bal }: { players: any[], bal: { x: number, y: number } }) => {
+        this.socket.on('players', ({ players, bal }: { players: PlayerData[], bal: { x: number, y: number } }) => {
             const activeIds = new Set(players.map(p => p.id));
 
             // Cleanup disconnected
@@ -76,13 +77,14 @@ class GameScene extends Phaser.Scene {
 
             const me = players.find(p => p.id === this.socket.id);
             if (me && !this.player) {
+                // Spawn position fournie par le serveur (Julien : coords pilotees back-side)
                 this.myPnumber = me.pnumber;
-                const mapWidth = this.scale.width;
-                const startX = me.pnumber === 1 ? mapWidth * 0.12 : mapWidth * 0.88;
-                this.player = this.add.sprite(startX, 660, 'nass-front').setScale(0.35);
+                this.player = this.add.sprite(me.x, me.y, 'nass-front').setScale(0.35);
                 this.player.setFlipX(me.pnumber === 2);
-                this.tx = startX;
-                this.ty = 600;
+                this.tx = me.x;
+                this.ty = me.y;
+            } else if (me && this.player) {
+                this.player.setPosition(me.x, me.y);
             }
 
             players.forEach(p => {
@@ -119,21 +121,16 @@ class GameScene extends Phaser.Scene {
 
             // Update React UI
             if (this.onUpdatePlayers) {
-                const uiPlayers: PlayerData[] = players.map(p => {
-                    const isMe = p.id === this.socket.id;
-                    const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
-                    const labelOffset = (2412 * scale) / 2 + 20;
-
-                    return {
-                        id: p.id,
-                        pseudo: p.pseudo,
-                        x: p.x,
-                        y: p.y,
-                        win: p.win,
-                        pnumber: p.pnumber,
-                        isMe
-                    };
-                });
+                const uiPlayers: PlayerData[] = players.map(p => ({
+                    id: p.id,
+                    pseudo: p.pseudo,
+                    x: p.x,
+                    y: p.y,
+                    win: p.win,
+                    pnumber: p.pnumber,
+                    isMe: p.id === this.socket.id,
+                    isAI: p.isAI,
+                }));
                 this.onUpdatePlayers(uiPlayers, bal);
             }
         });
