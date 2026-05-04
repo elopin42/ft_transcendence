@@ -1,6 +1,14 @@
+.DS_Store
 node_modules/
 dist/
 build/
 .env
+*.tsbuildinfo
+.commit-msg.txt
+.squash.sh
 
-inception/
+# Dossier de quarantaine : fichiers en attente de suppression manuelle
+# (filesystem WSL/NTFS bloque parfois rm depuis le sandbox).
+# Le contenu n est jamais commit ; le dossier lui-meme oui (avec README.md).
+trash/*
+!trash/README.md
