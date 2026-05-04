@@ -12,7 +12,6 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { TokenService } from '@/modules/auth/services/token.service';
 import { UsersService } from '@/modules/users/services/users.service';
 
-
 interface Player {
   id: string; // socketId
   pnumber: number;
@@ -63,7 +62,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private prisma: PrismaService,
   ) { }
 
-  // en gros une sorte de tableau ou une room contient 2 player
+  // en gros une sorte de tableau ou une room contient 2 player 
   rooms = new Map<number, Room>();
   clientRoom = new Map<string, number>(); // socketId -> roomId
 
@@ -89,7 +88,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
    */
   private addBotToRoom(room: Room, roomId: number): boolean {
     let pnumber: number;
-
+    
     if (!room.player1)
       pnumber = 1;
     else if (!room.player2)
@@ -101,9 +100,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       id: 'AI_' + roomId,
       pnumber: pnumber,
       pseudo: 'AI',
-      x: startX,
+      x: pnumber === 1 ? this.playerX1 : this.playerX2,
       y: this.playerY,
-      scale: 0,
+      scale: 0.15 + ((this.playerY - 280) / (1150 - 280)) * (0.35 - 0.15), // même formule que le frontend pour le scale
       win: 0,
       isAI: true,
     };
@@ -163,7 +162,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   /**
-   * @brief Handles client disconnection and replace that client by a
+   * @brief Handles client disconnection and replace that client by a 
    * bot if the room is not empty (Julien : bot IA)
    */
   handleDisconnect(client: any) {
@@ -221,6 +220,40 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     else if (room.player1 && room.player2 && room.player1.id === client.id) updatePlayer(room.player2);
   }
 
+  private moveAI(room: Room) {
+    const ai = room.player1?.isAI ? room.player1 : (room.player2?.isAI ? room.player2 : null);
+    if (!ai)
+      return;
+
+    const bal = room.bal;
+    const isPlayer1 = ai.pnumber === 1;
+    const ballHeadingToAI = isPlayer1 ? bal.vx < 0 : bal.vx > 0;
+    let targetY: number;
+
+    if (ballHeadingToAI) {
+      const distX = Math.abs(bal.x - ai.x);
+      const timeToReach = distX / Math.abs(bal.vx);
+      let predictedY = bal.y + bal.vy * timeToReach;
+
+      const imprecision = 0;
+      // [-0.5, 0.5] * imprecision
+      predictedY += (Math.random() - 0.5) * imprecision;
+      targetY = Math.max(410, Math.min(1480, predictedY));
+    } else {
+      targetY = (this.playerY + (2412 / 2) * ai.scale) + 50;
+    }
+
+    const footY = ai.y + (2412 / 2) * ai.scale;
+    // Vitesse identique au player dans le front
+    const speed = 3 + ((ai.y - 225) / (1150 - 225)) * (7 - 3);
+    const diff = targetY - footY;
+    if (Math.abs(diff) > speed)
+      ai.y += speed * Math.sign(diff);
+    ai.y = Math.max(225, Math.min(1150, ai.y));
+    // Recalcul du scale (même formule que le frontend)
+    ai.scale = 0.15 + ((ai.y - 280) / (1150 - 280)) * (0.35 - 0.15);
+  }
+
   /**
    * @brief Start the game.
    * If the player is alone, add a bot as second player (Julien)
@@ -239,6 +272,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (room.player1 && room.player2) {
         room.bal.x += room.bal.vx;
         room.bal.y += room.bal.vy;
+        this.moveAI(room);
         const shouldBallBounce = (ball: ballon, player: Player): boolean => {
           // pour detecter le pied du joueur
           const playerFoot = player.y + (2412 / 2) * player.scale;
@@ -247,8 +281,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         };
         if (room.bal.y <= 410 || room.bal.y >= 1480)
           room.bal.vy *= -1; // rebondit sur les murs haut et bas
-        if (shouldBallBounce(room.bal, room.player1) || shouldBallBounce(room.bal, room.player2))
-          room.bal.vx *= -1; // rebondit sur le pied d un des joueurs
+        if (shouldBallBounce(room.bal, room.player1))
+          room.bal.vx = Math.abs(room.bal.vx);
+        else if (shouldBallBounce(room.bal, room.player2))
+          room.bal.vx = -Math.abs(room.bal.vx);
         else if ((room.bal.x <= 50 || room.bal.x >= 2680) || (room.player1.win >= 5 || room.player2.win >= 5)) {
           if (room.bal.x <= 50)
             room.player1.pnumber == 2 ? room.player1.win++ : room.player2.win++; // +1 win pour le joueur qui marque
