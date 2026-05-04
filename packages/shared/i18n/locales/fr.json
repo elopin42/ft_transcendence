@@ -13,7 +13,8 @@
   "auth": {
     "email": "Email",
     "password": "Mot de passe",
-    "login_title": "Se connecter",
+    "login_title": "Connexion",
+    "login_hint": "Reste proche de tes amis ! Connecte-toi avec le même utilisateur.",
     "register_title": "Créer un compte",
     "login_42": "Se connecter avec 42",
     "no_account": "Pas de compte ?",

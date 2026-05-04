@@ -230,6 +230,6 @@ function createPerm<T extends string>(names: readonly T[]): Readonly<Record<T, P
 	const result = {} as Record<T, bigint>;
 	names.forEach((name, index) => {
 		result[name] = 1n << BigInt(index);
-	});
-	return Object.freeze(result);
+		});
+		return Object.freeze(result);
 }
