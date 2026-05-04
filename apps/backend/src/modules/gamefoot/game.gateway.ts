@@ -100,7 +100,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       id: 'AI_' + roomId,
       pnumber: pnumber,
       pseudo: 'AI',
-      x: pnumber === 1 ? this.playerX1 : this.playerX2,
+      x: startX,
       y: this.playerY,
       scale: 0.15 + ((this.playerY - 280) / (1150 - 280)) * (0.35 - 0.15), // même formule que le frontend pour le scale
       win: 0,
