@@ -1,0 +1,15 @@
+// extends : hérite des règles strictes du projet (strictNullChecks, etc.)
+// rootDir: "." : override le src du parent → permet d'inclure les fichiers prisma/
+// noEmit: true : pas de compilation, ts-node fait le runtime
+// types: ["node"] : injecte les types Node (process, console, etc.)
+// include : seulement les .ts du dossier prisma/
+
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "rootDir": ".",
+        "noEmit": true,
+        "types": ["node"]
+    },
+    "include": ["**/*.ts"]
+}

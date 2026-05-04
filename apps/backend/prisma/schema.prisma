@@ -1,0 +1,141 @@
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// === Auth
+
+// Compte utilisateur "applicatif". Donnees minimales necessaires a l'auth
+// et au profil interne du jeu. Tout ce qui vient de l'intra 42 (login_42,
+// image, campus, coalition, ...) est isole dans FortyTwoProfile pour eviter
+// que les colonnes 42 polluent ce modele si la liaison disparait.
+model User {
+  id              Int     @id @default(autoincrement())
+  login           String  @unique // pseudo applicatif (peut diverger du login 42)
+  email           String  @unique
+  password        String? // null pour les comptes OAuth-only (pas de password local)
+  avatarUrl       String? // upload utilisateur ; pour l'avatar 42 voir FortyTwoProfile.imageUrl
+  profileComplete Boolean @default(true) // passe a false apres 1er login 42 si on veut forcer un onboarding
+
+  // Bitmask global de permissions (admin, modérateur, etc.) facon Discord.
+  grade  BigInt @default(0)
+  roleId Int? // role assigné (nullable = pas de role)
+  role   Role?  @relation(fields: [roleId], references: [id]) // relation avec la table des roles pour savoir quel role a l'utilisateur ( admin, modérateur, etc )
+
+  title  String? // titre choisi par l'utilisateur (achievements, etc.)
+  points Int     @default(0) // pour le système de points et de classement
+
+  // Relations
+  channels      ChannelMember[]
+  session       Session[]
+  twoFactor     TwoFactorAuth?
+  fortyTwo      FortyTwoProfile? // null si l'utilisateur n'a pas lie son compte 42
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Profil 42 lie a un User. Relation 1:1 facultative (un User peut exister
+// sans 42, et un compte 42 sans User n'a pas de sens dans ce schema).
+//
+// On stocke ici les donnees publiques renvoyees par /v2/me (pas de token
+// 42 -> notre backend ne tape l'API 42 que pendant le flow OAuth, jamais
+// apres). Refresh manuel via futur endpoint /me/42/refresh si besoin.
+model FortyTwoProfile {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fortyTwoId Int     @unique // id sur l'intra 42, source de verite pour l'identite
+  login      String  @unique // login intra (ex: "amounib")
+  email      String? // email intra (peut differer de User.email)
+  displayName String? // nom complet
+  imageUrl   String? // avatar intra (cdn.intra.42.fr/...)
+  campus     String? // campus principal
+  poolMonth  String? // mois de piscine
+  poolYear   String? // annee de piscine
+  raw        Json? // payload complet de /v2/me, pour usage futur sans migration
+
+  linkedAt   DateTime  @default(now())
+  refreshedAt DateTime @default(now())
+}
+
+model Role {
+  id          Int    @id @default(autoincrement())
+  name        String @unique // nom du role ( admin, modérateur, etc )
+  permissions BigInt @default(0) // bitmask pour les permissions ( 1 = canBan, 2 = canKick, 4 = canMute, etc ) pour pouvoir faire des roles personnalisés avec des permissions différentes
+  users       User[] // relation avec la table des utilisateurs pour savoir quels utilisateurs ont ce role
+}
+
+// === CHAT
+
+// préparation de channel pour les groupe chat 
+model Channel {
+  id      Int             @id @default(autoincrement())
+  name    String // nom du channel
+  members ChannelMember[] // relation avec la table channel_member pour savoir quels utilisateurs sont dans le channel et leurs permissions dans le channel
+}
+
+model ChannelMember {
+  id          Int     @id @default(autoincrement())
+  userId      Int // id de l'utilisateur dans la table user
+  channelId   Int // id du channel dans la table channel
+  permissions BigInt  @default(0) // bitmask pour les permissions dans le channel ( 1 = canBan, 2 = canKick, 4 = canMute, etc )
+  user        User    @relation(fields: [userId], references: [id]) // relation avec la table des utilisateurs pour savoir quel utilisateur est dans le channel
+  channel     Channel @relation(fields: [channelId], references: [id]) // relation avec la table des channels pour savoir dans quel channel est l'utilisateur
+
+  @@unique([userId, channelId]) // un user = une entrée par channel
+}
+
+// === Session
+
+model Session {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  refreshTokenHash String @unique
+
+  // Chaînage rotation (détection de vol par replay)
+  parentId Int?
+  parent   Session?  @relation("SessionRotation", fields: [parentId], references: [id], onDelete: SetNull)
+  children Session[] @relation("SessionRotation")
+
+  ipAddress String
+  userAgent String
+
+  // Flag 2FA : true = token "requires_2fa" (password OK, attend code TOTP)
+  twoFactorPending Boolean @default(false)
+
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
+
+model TwoFactorAuth {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  secret      String // chiffré AES-256-GCM (clé en env)
+  enabled     Boolean  @default(false)
+  backupCodes String[] // hashés argon2
+
+  // Dernier timeStep TOTP utilise (anti-replay intra-fenetre).
+  // Si un code arrive avec un timeStep <= a celui-ci, on refuse.
+  lastTotpStep BigInt?
+
+  createdAt  DateTime  @default(now())
+  enabledAt  DateTime?
+  lastUsedAt DateTime?
+}
