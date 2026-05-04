@@ -131,8 +131,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       } else {
         // sinon join
         const existing = this.rooms.get(roomId);
-        if (!existing) return;
-        if (existing.bal.finish) return;
+        if (!existing || existing.bal.finish)
+          return;
         existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: this.playerX2, y: this.playerY, scale: 0, win: 0, isAI: false };
       }
       this.clientRoom.set(client.id, roomId);
