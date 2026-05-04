@@ -32,6 +32,7 @@ model User {
 
   // Relations
   channels      ChannelMember[]
+  messages      Message[]
   session       Session[]
   twoFactor     TwoFactorAuth?
   fortyTwo      FortyTwoProfile? // null si l'utilisateur n'a pas lie son compte 42
@@ -78,7 +79,8 @@ model Role {
 model Channel {
   id      Int             @id @default(autoincrement())
   name    String // nom du channel
-  members ChannelMember[] // relation avec la table channel_member pour savoir quels utilisateurs sont dans le channel et leurs permissions dans le channel
+  members  ChannelMember[] // relation avec la table channel_member pour savoir quels utilisateurs sont dans le channel et leurs permissions dans le channel
+  messages Message[]
 }
 
 model ChannelMember {
@@ -90,6 +92,18 @@ model ChannelMember {
   channel     Channel @relation(fields: [channelId], references: [id]) // relation avec la table des channels pour savoir dans quel channel est l'utilisateur
 
   @@unique([userId, channelId]) // un user = une entrée par channel
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  authorId  Int
+  author    User    @relation(fields: [authorId], references: [id])
+
+  channelId Int
+  channel   Channel @relation(fields: [channelId], references: [id])
 }
 
 // === Session
