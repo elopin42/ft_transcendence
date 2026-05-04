@@ -1,0 +1,14 @@
+{
+  "name": "ft-transcendence",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo ft_transcendence — npm workspaces",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}
