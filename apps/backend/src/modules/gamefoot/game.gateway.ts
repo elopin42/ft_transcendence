@@ -152,6 +152,34 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     }
   }
+
+  //pour jouer a deux sur le meme ecran
+  @SubscribeMessage('move2')
+  handleMove2(client: any, payload: { x: number; y: number; scale: number }) {
+    // Valider le payload (par exemple, vérifier que x et y sont des nombres)
+    if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
+    const roomId = this.clientRoom.get(client.id);
+    if (!roomId) return;
+    const room = this.rooms.get(roomId!)!;
+    if (!room) return;
+    if (room.player2 && room.player1 && room.player2?.id === client.id) {
+      room.player1.x = payload.x;
+      room.player1.y = payload.y;
+      room.player1.scale = payload.scale;
+      this.server.to(roomId.toString()).emit('players', {
+        players: [room.player1, room.player2].filter(p => p !== null),
+        bal: room.bal
+      });
+    } else if (room.player1 && room.player2 && room.player1.id === client.id) {
+      room.player2.x = payload.x;
+      room.player2.y = payload.y;
+      room.player2.scale = payload.scale;
+      this.server.to(roomId.toString()).emit('players', {
+        players: [room.player1, room.player2].filter(p => p !== null),
+        bal: room.bal
+      });
+    }
+  }
   @SubscribeMessage('start')
   handlestart(client: any) {
     const roomId = this.clientRoom.get(client.id);

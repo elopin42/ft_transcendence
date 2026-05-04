@@ -21,9 +21,12 @@ class GameScene extends Phaser.Scene {
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     socket!: any;
     ballon: Phaser.GameObjects.Image | null = null;
+    wsKeys!: { w: Phaser.Input.Keyboard.Key, s: Phaser.Input.Keyboard.Key };
 
     myPnumber = 0;
     timep = 0;
+    tx = 0;
+    ty = 0;
     otherPlayers = new Map<string, { sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
     onUpdatePlayers?: (players: PlayerData[], bal: { x: number, y: number }) => void;
 
@@ -51,6 +54,10 @@ class GameScene extends Phaser.Scene {
         this.socket = io('/gamefoot', {
             withCredentials: true,
         });
+        this.wsKeys = {
+            w: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+            s: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+        };
 
         this.socket.on('players', ({ players, bal }: { players: any[], bal: { x: number, y: number } }) => {
             const activeIds = new Set(players.map(p => p.id));
@@ -74,6 +81,8 @@ class GameScene extends Phaser.Scene {
                 const startX = me.pnumber === 1 ? mapWidth * 0.12 : mapWidth * 0.88;
                 this.player = this.add.sprite(startX, 660, 'nass-front').setScale(0.35);
                 this.player.setFlipX(me.pnumber === 2);
+                this.tx = startX;
+                this.ty = 600;
             }
 
             players.forEach(p => {
@@ -82,6 +91,8 @@ class GameScene extends Phaser.Scene {
                 if (!this.otherPlayers.has(p.id)) {
                     const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
                     this.otherPlayers.set(p.id, { sprite, ox: p.x, oy: p.y });
+                    this.tx = p.x;
+                    this.ty = p.y;
                 } else {
                     const timeo = Date.now();
                     const entry = this.otherPlayers.get(p.id);
@@ -162,6 +173,18 @@ class GameScene extends Phaser.Scene {
         this.player.setScale(scale);
 
         this.socket.emit('move', { x: this.player.x, y: this.player.y, scale: scale });
+
+        // Mode 2 joueurs sur le meme ecran : touches W/S pilotent le 2e
+        // joueur localement, on emet 'move2' au serveur qui re-route vers
+        // le bon player de la room.
+        if ((this.wsKeys.w.isDown || this.wsKeys.s.isDown) && (this.ty !== 0 || this.tx !== 0)) {
+            if (this.wsKeys.w.isDown) this.ty -= speed;
+            if (this.wsKeys.s.isDown) this.ty += speed;
+            this.tx = Phaser.Math.Clamp(this.tx, 50, 2680);
+            this.ty = Phaser.Math.Clamp(this.ty, 225, 1150);
+            const scale2 = Phaser.Math.Linear(0.15, 0.35, (this.ty - 280) / (1150 - 280));
+            this.socket.emit('move2', { x: this.tx, y: this.ty, scale: scale2 });
+        }
 
         // Force a UI update for local player movement smoothness
         if (this.onUpdatePlayers && this.socket.id) {
