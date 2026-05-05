@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 
+import { HealthModule } from '@/modules/health/health.module';
 import { AppController } from '@/app.controller';
 import { PrismaModule } from '@/common/prisma/prisma.module';
 import { LoggingModule } from '@/logging/logging.module';
@@ -10,6 +11,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
 import { UsersModule } from '@/modules/users/users.module';
 import { GameModule } from '@/modules/game/game.module';
 import { GameFootModule } from '@/modules/gamefoot/game.module';
+
 import { GlobalExceptionFilter } from '@/common/filters/global-exception.filter';
 import { ConditionalThrottlerGuard } from '@/common/guards/conditional-throttler.guard';
 import { validateEnv } from '@/common/config/env.config';
@@ -21,6 +23,7 @@ import { validateEnv } from '@/common/config/env.config';
 // qui deborde renvoie 429. Bypass complet via THROTTLER_DISABLED=true (dev/tests).
 @Module({
   imports: [
+    HealthModule,
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv, cache: true }),
     ThrottlerModule.forRoot([
       { name: 'short', ttl: 1000, limit: 10 },     // anti-rafale
