@@ -7,8 +7,4 @@ build/
 .commit-msg.txt
 .squash.sh
 
-# Dossier de quarantaine : fichiers en attente de suppression manuelle
-# (filesystem WSL/NTFS bloque parfois rm depuis le sandbox).
-# Le contenu n est jamais commit ; le dossier lui-meme oui (avec README.md).
-trash/*
-!trash/README.md
+.untracked
