@@ -36,6 +36,9 @@ model User {
   session       Session[]
   twoFactor     TwoFactorAuth?
   fortyTwo      FortyTwoProfile? // null si l'utilisateur n'a pas lie son compte 42
+  blockedUsers  BlockedUser[] @relation("Blocker")
+  blockedByUsers BlockedUser[] @relation("Blocked")
+  ownedChannels  Channel[] @relation("ChannelOwner")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -75,23 +78,45 @@ model Role {
 
 // === CHAT
 
+enum ChannelType {
+  PUBLIC
+  PRIVATE
+  PROTECTED
+  DIRECT
+}
+
 // préparation de channel pour les groupe chat 
 model Channel {
-  id      Int             @id @default(autoincrement())
-  name    String // nom du channel
-  members  ChannelMember[] // relation avec la table channel_member pour savoir quels utilisateurs sont dans le channel et leurs permissions dans le channel
+  id       Int           @id @default(autoincrement())
+  name     String        @unique
+  type     ChannelType   @default(PUBLIC)
+  password String?
+  ownerId  Int
+  owner    User          @relation("ChannelOwner", fields: [ownerId], references: [id])
+  members  ChannelMember[]
   messages Message[]
+
+  createdAt DateTime @default(now())
+}
+
+enum ChannelMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  BANNED
 }
 
 model ChannelMember {
-  id          Int     @id @default(autoincrement())
-  userId      Int // id de l'utilisateur dans la table user
-  channelId   Int // id du channel dans la table channel
-  permissions BigInt  @default(0) // bitmask pour les permissions dans le channel ( 1 = canBan, 2 = canKick, 4 = canMute, etc )
-  user        User    @relation(fields: [userId], references: [id]) // relation avec la table des utilisateurs pour savoir quel utilisateur est dans le channel
-  channel     Channel @relation(fields: [channelId], references: [id]) // relation avec la table des channels pour savoir dans quel channel est l'utilisateur
+  id        Int               @id @default(autoincrement())
+  userId    Int
+  channelId Int
+  role      ChannelMemberRole @default(MEMBER)
+  mutedUntil DateTime?
 
-  @@unique([userId, channelId]) // un user = une entrée par channel
+  user    User    @relation(fields: [userId], references: [id])
+  channel Channel @relation(fields: [channelId], references: [id])
+
+  @@unique([userId, channelId])
 }
 
 model Message {
@@ -104,6 +129,18 @@ model Message {
 
   channelId Int
   channel   Channel @relation(fields: [channelId], references: [id])
+}
+
+model BlockedUser {
+  id        Int  @id @default(autoincrement())
+  blockerId Int
+  blockedId Int
+  blocker   User @relation("Blocker", fields: [blockerId], references: [id])
+  blocked   User @relation("Blocked", fields: [blockedId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
 }
 
 // === Session
