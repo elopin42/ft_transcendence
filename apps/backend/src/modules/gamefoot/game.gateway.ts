@@ -53,8 +53,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server!: Server; // évité que typescript mette une erreur sait que ce sera initialisé
 
   readonly playerY: number = 660;
-  readonly playerX1: number = 330;
-  readonly playerX2: number = 2400;
+  readonly player1StartX: number = 330;
+  readonly player2StartX: number = 2400;
 
   readonly wallTop: number = 410;
   readonly wallBottom: number = 1480;
@@ -114,7 +114,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       pnumber = 2;
     else
       return false;
-    const startX = pnumber === 1 ? this.playerX1 : this.playerX2;
+    const startX = pnumber === 1 ? this.player1StartX : this.player2StartX;
     const newPlayer: Player = {
       id: 'AI_' + roomId,
       pnumber: pnumber,
@@ -156,14 +156,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         roomId = this.getAvailableRoomId();
         this.rooms.set(roomId, {
           bal: { x: this.ballStartX, y: this.ballStartY, vx: this.ballVx, vy: this.ballVy, start: false, finish: false },
-          player1: { id: client.id, pnumber: 1, pseudo: login, x: this.playerX1, y: this.playerY, scale: 0, win: 0, isAI: false },
+          player1: { id: client.id, pnumber: 1, pseudo: login, x: this.player1StartX, y: this.playerY, scale: 0, win: 0, isAI: false },
           player2: null,
         });
       } else {
         // sinon join
         const existing = this.rooms.get(roomId);
         if (!existing || existing.bal.finish) return;
-        existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: this.playerX2, y: this.playerY, scale: 0, win: 0, isAI: false };
+        existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: this.player2StartX, y: this.playerY, scale: 0, win: 0, isAI: false };
       }
       this.clientRoom.set(client.id, roomId);
       client.join(roomId.toString());
