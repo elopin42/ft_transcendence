@@ -37,6 +37,7 @@ interface Room {
   player1: Player | null;
   player2: Player | null;
   interval?: any;
+  targetYAI: number | null;
 }
 
 @WebSocketGateway({
@@ -158,6 +159,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           bal: { x: this.ballStartX, y: this.ballStartY, vx: this.ballVx, vy: this.ballVy, start: false, finish: false },
           player1: { id: client.id, pnumber: 1, pseudo: login, x: this.player1StartX, y: this.playerY, scale: 0, win: 0, isAI: false },
           player2: null,
+          targetYAI: null,
         });
       } else {
         // sinon join
@@ -260,26 +262,25 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const bal = room.bal;
     const isPlayer1 = ai.pnumber === 1;
     const ballHeadingToAI = isPlayer1 ? bal.vx < 0 : bal.vx > 0;
-    let targetY: number;
+    let footY: number;
 
     if (ballHeadingToAI) {
-      let predictedY = this.predictBallY(bal, ai.x - 50);
-      predictedY += (2412 / 2) * this.getPlayerScale(predictedY);
-      predictedY -= 50;
-
-      // On nerf l'ia en faussant légèrement la prédiction, pas mettre plus que 200 sinon l'ia sera trop nul
-      const imprecision = 0;
-      // [-0.5, 0.5] * imprecision
-      predictedY += (Math.random() - 0.5) * imprecision;
-      targetY = Math.max(this.wallTop, Math.min(this.wallBottom, predictedY));
+      if (room.targetYAI === null) {
+        let predictedY = this.predictBallY(bal, ai.x - 50);
+        // On nerf l'ia en faussant légèrement la prédiction, <= 100 = 100% de placement, 200 = 50% de placement, etc
+        // Les % sont pas exactes, ça dépends de la hitbox des pieds (plus la hitbox est longue en x plus le % de placement sera élevé), mais ça donne une idée
+        const imprecision = 200;
+        // [-0.5, 0.5] * imprecision
+        predictedY += (Math.random() - 0.5) * imprecision;
+        room.targetYAI = Math.max(this.wallTop, Math.min(this.wallBottom, predictedY));
+      }
+      footY = (ai.y + (2412 / 2) * ai.scale) - 50;
     } else {
-      targetY = this.playerY;
+      room.targetYAI = null;
+      footY = ai.y;
     }
-
-    const footY = ai.y + (2412 / 2) * ai.scale;
-    // Vitesse identique au player dans le front
     const speed = this.getPlayerSpeed(ai.y);
-    const diff = targetY - footY;
+    const diff = (room.targetYAI ?? this.playerY) - footY;
     if (Math.abs(diff) > speed)
       ai.y += speed * Math.sign(diff);
     ai.y = Math.max(225, Math.min(this.wallDist, ai.y));
@@ -340,6 +341,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           // Reset Y des deux joueurs au point marque (Julien)
           room.player1.y = this.playerY;
           room.player2.y = this.playerY;
+          room.targetYAI = null;
           clearInterval(room.interval);
           room.interval = null;
         }
