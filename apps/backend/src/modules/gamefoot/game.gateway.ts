@@ -23,7 +23,7 @@ interface Player {
   isAI: boolean;
 }
 
-interface ballon {
+interface Ball {
   x: number;
   y: number;
   vx: number;
@@ -33,10 +33,10 @@ interface ballon {
 }
 
 interface Room {
-  bal: ballon;
+  bal: Ball;
   player1: Player | null;
   player2: Player | null;
-  interval?: any;
+  interval?: NodeJS.Timeout;
   targetYAI: number | null;
 }
 
@@ -241,7 +241,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     else if (room.player1 && room.player2 && room.player1.id === client.id) updatePlayer(room.player2);
   }
 
-  private predictBallY(bal: ballon, targetX: number): number {
+  private predictBallY(bal: Ball, targetX: number): number {
     // On prédit la position y du ballon quand il atteindra la position x cible en supposant qu'il ne rebondit pas
     let predictedY = bal.y + bal.vy * (Math.abs(targetX - bal.x) / Math.abs(bal.vx));
     // Normalisation pour faire comme si le mur du haut était à y = 0
@@ -306,7 +306,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         room.bal.x += room.bal.vx;
         room.bal.y += room.bal.vy;
         this.moveAI(room);
-        const shouldBallBounce = (ball: ballon, player: Player): boolean => {
+        const shouldBallBounce = (ball: Ball, player: Player): boolean => {
           // pour detecter le pied du joueur
           const playerFoot = player.y + (2412 / 2) * player.scale;
           return (ball.y <= playerFoot && ball.y >= playerFoot - 100)
@@ -343,7 +343,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           room.player2.y = this.playerY;
           room.targetYAI = null;
           clearInterval(room.interval);
-          room.interval = null;
+          room.interval = undefined;
         }
         this.server.to(roomId.toString()).emit('players', {
           players: [room.player1, room.player2].filter(p => p !== null),
@@ -353,7 +353,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         // Avec le bot ce cas ne devrait plus arriver, mais on garde le clean au cas ou
         if (room.interval) {
           clearInterval(room.interval);
-          room.interval = null;
+          room.interval = undefined;
         }
         room.bal.start = false;
       }

@@ -1,5 +1,4 @@
 'use client';
-import { useLocale } from 'next-intl';
 import { api } from '@/lib/api';
 import { API_ROUTES } from '@/config/api';
 
@@ -40,10 +39,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
-	const currentLocale = useLocale(); // 'fr' ou 'en'
 
 	// au montage, on vérifie si le cookie contient un token valide
-	// en demandant au back qui est le user connecté
+	// en demandant au back qui est le user connecté. La redirection sur
+	// changement de locale est gérée par le middleware proxy.ts (next-intl),
+	// pas ici → on n'a pas besoin de currentLocale ici.
 	const fetchUser = async () => {
 		try {
 			const data = await api.get<User>(API_ROUTES.USERS.ME);
@@ -52,8 +52,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			// api.get throw si res.ok est false (401, 403, etc.)
 			// donc si ca throw = pas connecté ou token expiré
 			setUser(null);
-			// Optionnel : si data.locale existe et est != currentLocale,
-			// on pourrait rediriger ici, mais c'est mieux de laisser le proxy gérer.
 		} finally {
 			setIsLoading(false); // on a fini de vérifier le token
 		}

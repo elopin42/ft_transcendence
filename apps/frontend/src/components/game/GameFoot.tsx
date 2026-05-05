@@ -198,7 +198,10 @@ export default function GameFoot() {
     const ref = useRef<HTMLDivElement>(null);
     const gameRef = useRef<Phaser.Game | null>(null);
     const [players, setPlayers] = useState<PlayerData[]>([]);
-    const [ball, setBall] = useState({ x: 0, y: 0 });
+    // Underscore prefix : convention TS pour variable destructuree non lue
+    // (substitution mecanique pour passer noUnusedLocals strict, cf. charte
+    // 03-CONTRIBUTING.md). setBall est utilise plus bas dans le composant.
+    const [_ball, setBall] = useState({ x: 0, y: 0 });
     const [isStarting, setIsStarting] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
     const [finished, setFinished] = useState(false);

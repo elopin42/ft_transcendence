@@ -18,7 +18,10 @@
 // - le provider gere la reconnexion automatique si deconnexion
 // - le provider gere l'auth (envoie le token au handshake)
 
-import { createContext, useContext, ReactNode } from 'react';
+// ReactNode n'est pas encore utilise (le SocketProvider est un squelette,
+// le children prop typed sera ajoute quand on implementera vraiment le
+// provider en Phase 2 — cf. docs/02-ROADMAP.md). Retire pour l'instant.
+import { createContext, useContext } from 'react';
 import { Socket } from 'socket.io-client';
 
 interface SocketContextType {
