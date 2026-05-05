@@ -82,6 +82,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return [room, roomId];
   }
 
+  private getPlayerScale(y: number): number {
+    // même formule que le frontend
+    return 0.15 + ((y - 280) / (1150 - 280)) * (0.35 - 0.15);
+  }
+
+  private getPlayerSpeed(y: number): number {
+    // même formule que le frontend
+    return 3 + ((y - 225) / (1150 - 225)) * (7 - 3);
+  }
+
   /**
    * @brief Replace a null player by a bot in the given room
    * @return True if the bot have been successfully added to the room else false
@@ -102,7 +112,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       pseudo: 'AI',
       x: startX,
       y: this.playerY,
-      scale: 0.15 + ((this.playerY - 280) / (1150 - 280)) * (0.35 - 0.15), // même formule que le frontend pour le scale
+      scale: this.getPlayerScale(this.playerY),
       win: 0,
       isAI: true,
     };
@@ -220,6 +230,23 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     else if (room.player1 && room.player2 && room.player1.id === client.id) updatePlayer(room.player2);
   }
 
+  private predictBallY(bal: ballon, targetX: number): number {
+    const wallTop = 410;
+    const wallBot = 1480;
+    const height = wallBot - wallTop;
+
+    // On prédit la position y du ballon quand il atteindra la position x cible en supposant qu'il ne rebondit pas
+    let predictedY = bal.y + bal.vy * (Math.abs(targetX - bal.x) / Math.abs(bal.vx));
+    // Normalisation pour faire comme si le mur du haut était à y = 0
+    predictedY -= wallTop;
+    // L'idée c'est que si ballOrientation est entre 0 et height, predictedvy = bal.vy, et si il est entre height et height * 2, predictedvy = -bal.vy
+    const ballOrientation = Math.abs(predictedY) % (height * 2);
+    // Récup la position y prédite du ballon dans l'écran (y base = 0)
+    const predictedYBase = ballOrientation > height ? (height * 2) - ballOrientation : ballOrientation;
+    // On replace avec y base = walltop au lieu de 0
+    return (wallTop + predictedYBase);
+  }
+
   private moveAI(room: Room) {
     const ai = room.player1?.isAI ? room.player1 : (room.player2?.isAI ? room.player2 : null);
     if (!ai)
@@ -231,27 +258,27 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     let targetY: number;
 
     if (ballHeadingToAI) {
-      const distX = Math.abs(bal.x - ai.x);
-      const timeToReach = distX / Math.abs(bal.vx);
-      let predictedY = bal.y + bal.vy * timeToReach;
+      let predictedY = this.predictBallY(bal, ai.x - 50);
+      predictedY += (2412 / 2) * this.getPlayerScale(predictedY);
+      predictedY -= 50;
 
+      // On nerf l'ia en faussant légèrement la prédiction, pas mettre plus que 200 sinon l'ia sera trop nul
       const imprecision = 0;
       // [-0.5, 0.5] * imprecision
       predictedY += (Math.random() - 0.5) * imprecision;
       targetY = Math.max(410, Math.min(1480, predictedY));
     } else {
-      targetY = (this.playerY + (2412 / 2) * ai.scale) + 50;
+      targetY = this.playerY;
     }
 
     const footY = ai.y + (2412 / 2) * ai.scale;
     // Vitesse identique au player dans le front
-    const speed = 3 + ((ai.y - 225) / (1150 - 225)) * (7 - 3);
+    const speed = this.getPlayerSpeed(ai.y);
     const diff = targetY - footY;
     if (Math.abs(diff) > speed)
       ai.y += speed * Math.sign(diff);
     ai.y = Math.max(225, Math.min(1150, ai.y));
-    // Recalcul du scale (même formule que le frontend)
-    ai.scale = 0.15 + ((ai.y - 280) / (1150 - 280)) * (0.35 - 0.15);
+    ai.scale = this.getPlayerScale(ai.y);
   }
 
   /**
