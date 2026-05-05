@@ -1,0 +1,26 @@
+{
+  "name": "@ftt/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Code partage backend + frontend (env, codes d'erreur, i18n, permissions)",
+  "type": "module",
+  "exports": {
+    "./env": "./env/index.ts",
+    "./errors": "./errors/index.ts",
+    "./i18n": "./i18n/index.ts",
+    "./i18n/locales/*.json": "./i18n/locales/*.json",
+    "./lib": "./lib/index.ts",
+    "./permissions": "./permissions/index.ts",
+    "./types": "./types/index.ts"
+  },
+  "files": [
+    "env",
+    "errors",
+    "i18n",
+    "lib",
+    "permissions"
+  ],
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}
