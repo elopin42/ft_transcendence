@@ -56,6 +56,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   readonly playerX1: number = 330;
   readonly playerX2: number = 2400;
 
+  readonly wallTop: number = 410;
+  readonly wallBottom: number = 1480;
+  readonly wallDist: number = this.wallBottom - this.wallTop;
+
+  readonly ballVx: number = 10;
+  readonly ballVy: number = 6;
+  readonly ballStartX: number = 1340;
+  readonly ballStartY: number = 690;
+
   constructor(
     private readonly tokenService: TokenService,
     private readonly usersService: UsersService,
@@ -84,12 +93,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private getPlayerScale(y: number): number {
     // même formule que le frontend
-    return 0.15 + ((y - 280) / (1150 - 280)) * (0.35 - 0.15);
+    return 0.15 + ((y - 280) / (this.wallDist - 280)) * (0.35 - 0.15);
   }
 
   private getPlayerSpeed(y: number): number {
     // même formule que le frontend
-    return 3 + ((y - 225) / (1150 - 225)) * (7 - 3);
+    return 3 + ((y - 225) / (this.wallDist - 225)) * (7 - 3);
   }
 
   /**
@@ -146,7 +155,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         // si aucune room attent un joeur on cree
         roomId = this.getAvailableRoomId();
         this.rooms.set(roomId, {
-          bal: { x: 1340, y: 690, vx: 10, vy: 6, start: false, finish: false },
+          bal: { x: this.ballStartX, y: this.ballStartY, vx: this.ballVx, vy: this.ballVy, start: false, finish: false },
           player1: { id: client.id, pnumber: 1, pseudo: login, x: this.playerX1, y: this.playerY, scale: 0, win: 0, isAI: false },
           player2: null,
         });
@@ -231,20 +240,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private predictBallY(bal: ballon, targetX: number): number {
-    const wallTop = 410;
-    const wallBot = 1480;
-    const height = wallBot - wallTop;
-
     // On prédit la position y du ballon quand il atteindra la position x cible en supposant qu'il ne rebondit pas
     let predictedY = bal.y + bal.vy * (Math.abs(targetX - bal.x) / Math.abs(bal.vx));
     // Normalisation pour faire comme si le mur du haut était à y = 0
-    predictedY -= wallTop;
-    // L'idée c'est que si ballOrientation est entre 0 et height, predictedvy = bal.vy, et si il est entre height et height * 2, predictedvy = -bal.vy
-    const ballOrientation = Math.abs(predictedY) % (height * 2);
+    predictedY -= this.wallTop;
+    // L'idée c'est que si ballOrientation est entre 0 et wallDist, predictedvy = bal.vy, et si il est entre wallDist et wallDist * 2, predictedvy = -bal.vy
+    const ballOrientation = Math.abs(predictedY) % (this.wallDist * 2);
     // Récup la position y prédite du ballon dans l'écran (y base = 0)
-    const predictedYBase = ballOrientation > height ? (height * 2) - ballOrientation : ballOrientation;
+    const predictedYBase = ballOrientation > this.wallDist ? (this.wallDist * 2) - ballOrientation : ballOrientation;
     // On replace avec y base = walltop au lieu de 0
-    return (wallTop + predictedYBase);
+    return (this.wallTop + predictedYBase);
   }
 
   private moveAI(room: Room) {
@@ -266,7 +271,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const imprecision = 0;
       // [-0.5, 0.5] * imprecision
       predictedY += (Math.random() - 0.5) * imprecision;
-      targetY = Math.max(410, Math.min(1480, predictedY));
+      targetY = Math.max(this.wallTop, Math.min(this.wallBottom, predictedY));
     } else {
       targetY = this.playerY;
     }
@@ -277,7 +282,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const diff = targetY - footY;
     if (Math.abs(diff) > speed)
       ai.y += speed * Math.sign(diff);
-    ai.y = Math.max(225, Math.min(1150, ai.y));
+    ai.y = Math.max(225, Math.min(this.wallDist, ai.y));
     ai.scale = this.getPlayerScale(ai.y);
   }
 
@@ -306,7 +311,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           return (ball.y <= playerFoot && ball.y >= playerFoot - 100)
             && (ball.x <= player.x + 50 && ball.x >= player.x - 50);
         };
-        if (room.bal.y <= 410 || room.bal.y >= 1480)
+        if (room.bal.y <= this.wallTop || room.bal.y >= this.wallBottom)
           room.bal.vy *= -1; // rebondit sur les murs haut et bas
         if (shouldBallBounce(room.bal, room.player1))
           room.bal.vx = Math.abs(room.bal.vx);
@@ -329,8 +334,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             }
             room.bal.finish = true;
           }
-          room.bal.x = 1340;
-          room.bal.y = 690;
+          room.bal.x = this.ballStartX;
+          room.bal.y = this.ballStartY;
           room.bal.start = false;
           // Reset Y des deux joueurs au point marque (Julien)
           room.player1.y = this.playerY;
