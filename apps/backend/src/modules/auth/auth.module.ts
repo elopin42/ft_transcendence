@@ -18,13 +18,21 @@ import { TokenService } from '@/modules/auth/services/token.service';
 import { SessionService } from '@/modules/auth/services/session.service';
 import { TwoFactorService } from '@/modules/auth/services/two-factor.service';
 
+// Pattern Repository : les repositories Prisma sont declares ici. Les
+// services injectent ces repos plutot que PrismaService directement.
+// Cf. docs/01-ARCHITECTURE.md
+import { SessionRepository } from '@/modules/auth/repositories/session.repository';
+import { TwoFactorRepository } from '@/modules/auth/repositories/two-factor.repository';
+
 import { JwtStrategy } from '@/modules/auth/strategies/jwt.strategy';
 import { FortyTwoStrategy } from '@/modules/auth/strategies/forty-two.strategy';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 
 import type { EnvConfig } from '@/common/config/env.config';
 
-// Module auth : controllers, services, strategies Passport, guard global JWT.
+// Module auth : controllers, services, repositories, strategies Passport,
+// guard global JWT.
+//
 // JwtModule est configure async pour lire le secret depuis l'env validee.
 // Le JwtAuthGuard est enregistre comme APP_GUARD -> protege toutes les routes
 // HTTP par defaut (bypass via @Public() sur les routes ouvertes).
@@ -57,10 +65,14 @@ import type { EnvConfig } from '@/common/config/env.config';
         TokenService,
         SessionService,
         TwoFactorService,
+        // Repositories Prisma encapsulees (Pattern Repository).
+        SessionRepository,
+        TwoFactorRepository,
+        // Strategies Passport.
         JwtStrategy,
         FortyTwoStrategy,
-        // JwtAuthGuard appliqué globalement toute route est protégée
-        // sauf si décorée avec @Public().
+        // JwtAuthGuard applique globalement : toute route est protegee
+        // sauf si decoree avec @Public().
         { provide: APP_GUARD, useClass: JwtAuthGuard },
     ],
     exports: [
@@ -68,7 +80,7 @@ import type { EnvConfig } from '@/common/config/env.config';
         TokenService,
         SessionService,
         PasswordService,
-        TwoFactorService
+        TwoFactorService,
     ],
 })
 export class AuthModule { }

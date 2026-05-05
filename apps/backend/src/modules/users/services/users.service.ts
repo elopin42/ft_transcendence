@@ -4,34 +4,35 @@ import { Prisma } from '@prisma/client';
 import { AppException } from '@/common/exceptions/app.exception';
 import { ERR } from '@ftt/shared/errors';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { UserRepository } from '@/modules/users/repositories/user.repository';
+import { FortyTwoProfileRepository } from '@/modules/users/repositories/forty-two-profile.repository';
 import type { FortyTwoProfile } from '@/modules/auth/types/forty-two-profile.type';
 
-// CRUD utilisateurs. Toute manipulation de la table User passe par ici.
-// AuthService et les Gateways game/gamefoot l'appellent au lieu de toucher
-// Prisma directement -> centralisation des regles metier (anti-leak password,
-// resolution de login disponible, gestion des collisions OAuth 42).
+// CRUD utilisateurs. Pattern Repository : toutes les queries Prisma vivent
+// dans UserRepository / FortyTwoProfileRepository. Ce service orchestre la
+// logique metier (anti-leak password, resolution login, gestion collisions
+// OAuth 42, transactions multi-tables).
+//
+// PrismaService est injecte UNIQUEMENT pour `$transaction` (operations
+// multi-tables atomiques). Toute query simple sur User ou FortyTwoProfile
+// passe par les repos.
 @Injectable()
 export class UsersService {
-	constructor(private readonly prisma: PrismaService) { }
+	constructor(
+		private readonly users: UserRepository,
+		private readonly fortyTwo: FortyTwoProfileRepository,
+		private readonly prisma: PrismaService,
+	) { }
 
-	// === READ
+	// === READ -- proxy 1-liner vers le repo. Garde l'API publique stable
+	// pour AuthService et les Gateways game/gamefoot (cf. docs/01-ARCHITECTURE.md
+	// regle 4 : le service est la porte d'entree publique).
 
-	findById(id: number) { return this.prisma.user.findUnique({ where: { id } }); }
-	findByEmail(email: string) { return this.prisma.user.findUnique({ where: { email } }); }
-	findByLogin(login: string) { return this.prisma.user.findUnique({ where: { login } }); }
-
-	// Variante "public" : select Prisma explicite, JAMAIS le password.
-	// A utiliser pour toutes les routes qui retournent un user au client.
-	//
-	// Pattern Prisma recommande (whitelist > blacklist) : reduit le payload
-	// reseau et empeche de leak un futur champ sensible si on l'ajoute au
-	// schema sans penser a updater chaque endpoint.
-	findByIdPublic(id: number) {
-		return this.prisma.user.findUnique({
-			where: { id },
-			omit: { password: true },
-		});
-	}
+	findById(id: number) { return this.users.findById(id); }
+	findByEmail(email: string) { return this.users.findByEmail(email); }
+	findByLogin(login: string) { return this.users.findByLogin(login); }
+	findByIdPublic(id: number) { return this.users.findByIdPublic(id); }
+	findByLoginPublic(login: string) { return this.users.findByLoginPublic(login); }
 
 	// === WRITE
 
@@ -43,16 +44,18 @@ export class UsersService {
 	// deux requetes concurrentes peuvent passer le check puis tomber sur le
 	// meme email a l'insert.
 	async createWithPassword(email: string, hashedPassword: string, login: string) {
-		if (await this.findByEmail(email)) {
+		if (await this.users.findByEmail(email)) {
 			throw new AppException(ERR.AUTH.REGISTER.EMAIL_TAKEN, HttpStatus.CONFLICT);
 		}
 		const finalLogin = await this.resolveAvailableLogin(login, email);
 		try {
-			return await this.prisma.user.create({
-				data: { email, password: hashedPassword, login: finalLogin },
+			return await this.users.create({
+				email,
+				password: hashedPassword,
+				login: finalLogin,
 			});
-		} catch (error: any) {
-			if (error.code === 'P2002') {
+		} catch (error: unknown) {
+			if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
 				throw new AppException(ERR.AUTH.REGISTER.EMAIL_TAKEN, HttpStatus.CONFLICT);
 			}
 			throw error;
@@ -70,46 +73,35 @@ export class UsersService {
 	//      meme transaction
 	async findOrCreateFrom42(profile: FortyTwoProfile) {
 		// 1. Profil 42 deja lie ?
-		const existing = await this.prisma.fortyTwoProfile.findUnique({
-			where: { fortyTwoId: profile.fortyTwoId },
-			include: { user: true },
-		});
+		const existing = await this.fortyTwo.findByFortyTwoId(profile.fortyTwoId);
 		if (existing) {
-			await this.prisma.fortyTwoProfile.update({
-				where: { id: existing.id },
-				data: this.toFortyTwoUpdateData(profile),
-			});
+			await this.fortyTwo.update(existing.id, this.toFortyTwoUpdateData(profile));
 			return existing.user;
 		}
 
 		// 2. User existant via email applicatif -> on attache la 42
-		const existingByEmail = await this.findByEmail(profile.email);
+		const existingByEmail = await this.users.findByEmail(profile.email);
 		if (existingByEmail) {
-			await this.prisma.fortyTwoProfile.create({
-				data: this.toFortyTwoCreateData(profile, existingByEmail.id),
-			});
+			await this.fortyTwo.create(this.toFortyTwoCreateData(profile, existingByEmail.id));
 			return existingByEmail;
 		}
 
-		// 3. Creation complete : User + FortyTwoProfile en transaction.
+		// 3. Creation complete : User + FortyTwoProfile en transaction
+		// (atomicite : si une seule des deux operations echoue, rollback total).
 		const finalLogin = await this.resolveAvailableLogin(profile.login, profile.email, '_42');
 		return this.prisma.$transaction(async (tx) => {
-			const user = await tx.user.create({
-				data: {
-					email: profile.email,
-					login: finalLogin,
-					password: null,
-					avatarUrl: profile.imageUrl, // valeur par defaut, l'utilisateur peut la changer
-				},
-			});
-			await tx.fortyTwoProfile.create({
-				data: this.toFortyTwoCreateData(profile, user.id),
-			});
+			const user = await this.users.create({
+				email: profile.email,
+				login: finalLogin,
+				password: null,
+				avatarUrl: profile.imageUrl, // valeur par defaut, l'utilisateur peut la changer
+			}, tx);
+			await this.fortyTwo.create(this.toFortyTwoCreateData(profile, user.id), tx);
 			return user;
 		});
 	}
 
-	// === PRIVATE — mappers FortyTwoProfile
+	// === PRIVATE -- mappers FortyTwoProfile
 
 	// Mapper "create" : tous les champs requis par Prisma + userId. Type de
 	// retour explicite pour que TypeScript verifie que rien ne manque cote
@@ -132,8 +124,8 @@ export class UsersService {
 
 	// Mapper "update" : champs susceptibles d'avoir change cote intra (email,
 	// image, campus). On NE TOUCHE PAS a fortyTwoId/login qui servent d'ancre
-	// — sinon une eventuelle re-attribution de login 42 cote intra ferait
-	// duplique. Type Prisma.FortyTwoProfileUpdateInput pour validation stricte.
+	// -- sinon une eventuelle re-attribution de login 42 cote intra ferait
+	// duplique.
 	private toFortyTwoUpdateData(profile: FortyTwoProfile): Prisma.FortyTwoProfileUpdateInput {
 		return {
 			email: profile.email,
@@ -162,13 +154,13 @@ export class UsersService {
 		email: string,
 		suffix?: string,
 	): Promise<string> {
-		if (!(await this.findByLogin(wanted))) return wanted;
+		if (!(await this.users.findByLogin(wanted))) return wanted;
 
 		const fromEmail = email.split('@')[0];
-		if (!(await this.findByLogin(fromEmail))) return fromEmail;
+		if (!(await this.users.findByLogin(fromEmail))) return fromEmail;
 
 		const withSuffix = `${fromEmail}${suffix ?? '_' + Date.now().toString(36)}`;
-		if (!(await this.findByLogin(withSuffix))) return withSuffix;
+		if (!(await this.users.findByLogin(withSuffix))) return withSuffix;
 
 		return `${fromEmail}_${Date.now().toString(36)}`;
 	}

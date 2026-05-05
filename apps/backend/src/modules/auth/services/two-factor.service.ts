@@ -13,6 +13,7 @@ import { randomBytes } from 'node:crypto';
 import { AppException } from '@/common/exceptions/app.exception';
 import { ERR } from '@ftt/shared/errors';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { TwoFactorRepository } from '@/modules/auth/repositories/two-factor.repository';
 import { PasswordService } from '@/modules/auth/services/password.service';
 import { encrypt, decrypt } from '@/common/utils/crypto';
 import type { EnvConfig } from '@/common/config/env.config';
@@ -28,14 +29,19 @@ import type { EnvConfig } from '@/common/config/env.config';
 // 10 backup codes hashes argon2id (RFC 9106) avant stockage. Format hex 8 chars
 // = 32 bits d'entropie par code (~4.3 milliards de combinaisons), suffisant
 // vu le throttle des routes 2fa.
+//
+// Pattern Repository : toutes les queries TwoFactorAuth passent par
+// TwoFactorRepository. PrismaService est injecte UNIQUEMENT pour la
+// transaction Serializable de verify() (anti-race sur le code TOTP).
 @Injectable()
 export class TwoFactorService {
 	private readonly logger = new Logger(TwoFactorService.name);
 	private readonly issuer = 'ft_transcendence';
 
 	constructor(
-		private readonly prisma: PrismaService,
+		private readonly twoFactor: TwoFactorRepository,
 		private readonly password: PasswordService,
+		private readonly prisma: PrismaService,
 		private readonly config: ConfigService<EnvConfig, true>,
 	) { }
 
@@ -49,11 +55,7 @@ export class TwoFactorService {
 		const otpauth = generateURI({ label: userEmail, issuer: this.issuer, secret });
 		const qrCode = await toDataURL(otpauth);
 
-		await this.prisma.twoFactorAuth.upsert({
-			where: { userId },
-			update: { secret: this.encryptSecret(secret), enabled: false },
-			create: { userId, secret: this.encryptSecret(secret), enabled: false, backupCodes: [] },
-		});
+		await this.twoFactor.upsertSetup(userId, this.encryptSecret(secret));
 
 		return { secret, qrCode, otpauth };
 	}
@@ -72,10 +74,7 @@ export class TwoFactorService {
 		const plainCodes = this.generateBackupCodes();
 		const hashedCodes = await Promise.all(plainCodes.map((c) => this.password.hash(c)));
 
-		await this.prisma.twoFactorAuth.update({
-			where: { userId },
-			data: { enabled: true, enabledAt: new Date(), backupCodes: hashedCodes },
-		});
+		await this.twoFactor.enable(userId, hashedCodes);
 
 		return { backupCodes: plainCodes };
 	}
@@ -84,7 +83,7 @@ export class TwoFactorService {
 	// si deux requetes concurrentes presentent le meme code TOTP (anti-race).
 	async verify(userId: number, code: string): Promise<boolean> {
 		return this.prisma.$transaction(async (tx) => {
-			const tfa = await tx.twoFactorAuth.findUnique({ where: { userId } });
+			const tfa = await this.twoFactor.findByUserId(userId, tx);
 			if (!tfa) throw new AppException(ERR.TWO_FA.NOT_ENABLED, HttpStatus.NOT_FOUND);
 			if (!tfa.enabled) throw new AppException(ERR.TWO_FA.NOT_ENABLED, HttpStatus.BAD_REQUEST);
 
@@ -95,10 +94,7 @@ export class TwoFactorService {
 			const result = await this.verifyTotpCode(this.decryptSecret(tfa.secret), code, lastStep);
 			if (result.valid) {
 				if (result.delta !== 0) this.logger.debug(`TOTP drift user=${userId} delta=${result.delta}`);
-				await tx.twoFactorAuth.update({
-					where: { userId },
-					data: { lastTotpStep: BigInt(result.timeStep), lastUsedAt: new Date() },
-				});
+				await this.twoFactor.updateAfterTotpVerify(userId, BigInt(result.timeStep), tx);
 				return true;
 			}
 
@@ -107,10 +103,7 @@ export class TwoFactorService {
 			for (let i = 0; i < tfa.backupCodes.length; i++) {
 				if (await this.password.verify(tfa.backupCodes[i], code)) {
 					const remaining = tfa.backupCodes.filter((_, idx) => idx !== i);
-					await tx.twoFactorAuth.update({
-						where: { userId },
-						data: { backupCodes: remaining, lastUsedAt: new Date() },
-					});
+					await this.twoFactor.consumeBackupCode(userId, remaining, tx);
 					this.logger.warn(`Backup code used user=${userId} remaining=${remaining.length}`);
 					return true;
 				}
@@ -120,33 +113,30 @@ export class TwoFactorService {
 	}
 
 	// Suppression complete de la 2FA. Le controller doit avoir verifie le
-	// password de l'user avant d'appeler — sinon un attaquant ayant vole une
+	// password de l'user avant d'appeler -- sinon un attaquant ayant vole une
 	// session active pourrait desactiver la 2FA et garder l'acces.
 	async disable(userId: number): Promise<void> {
-		await this.prisma.twoFactorAuth.delete({ where: { userId } });
+		await this.twoFactor.delete(userId);
 	}
 
 	async regenerateBackupCodes(userId: number): Promise<string[]> {
 		const plainCodes = this.generateBackupCodes();
 		const hashedCodes = await Promise.all(plainCodes.map((c) => this.password.hash(c)));
-		await this.prisma.twoFactorAuth.update({
-			where: { userId },
-			data: { backupCodes: hashedCodes },
-		});
+		await this.twoFactor.updateBackupCodes(userId, hashedCodes);
 		return plainCodes;
 	}
 
 	// Lu par AuthService.login() pour brancher le flow requires_2fa
 	// (pose le cookie pending au lieu des cookies access/refresh standards).
 	async isEnabled(userId: number): Promise<boolean> {
-		const tfa = await this.prisma.twoFactorAuth.findUnique({ where: { userId } });
+		const tfa = await this.twoFactor.findByUserId(userId);
 		return tfa?.enabled ?? false;
 	}
 
 	// === PRIVATE
 
 	private async findOrFail(userId: number) {
-		const tfa = await this.prisma.twoFactorAuth.findUnique({ where: { userId } });
+		const tfa = await this.twoFactor.findByUserId(userId);
 		if (!tfa) throw new AppException(ERR.TWO_FA.NOT_ENABLED, HttpStatus.NOT_FOUND);
 		return tfa;
 	}
