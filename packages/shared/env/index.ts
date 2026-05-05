@@ -35,6 +35,8 @@ const duration = z.string().regex(
 	'format attendu : nombre + unite (s/m/h/d), ex: "3h", "7d"',
 );
 
+// Zod 4 : `.default()` apres `.transform()` attend la valeur de SORTIE
+// (boolean), pas l'entree (string). En Zod 3 c'etait l'inverse, breaking change.
 const stringBool = z.enum(['true', 'false']).transform((v) => v === 'true');
 
 // === Schemas ========================================================
@@ -54,7 +56,7 @@ export const sharedEnvSchema = z.object({
 export const backendEnvSchema = sharedEnvSchema.extend({
 	ENV_MODE: z.enum(['development', 'production']).default('development'),
 	PORT: z.coerce.number().int().positive().default(4000),
-	THROTTLER_DISABLED: stringBool.default('true'),
+	THROTTLER_DISABLED: stringBool.default(true),
 
 	// PostgreSQL : URL complete, pas les composants. ConfigService valide,
 	// PrismaClient lit.
@@ -106,10 +108,11 @@ export function parseEnv<T extends z.ZodTypeAny>(
 	const parsed = schema.safeParse(source);
 	if (parsed.success) return parsed.data;
 
-	const lines = parsed.error.errors.map((e) => {
+	// Zod 4 : `.errors` renomme en `.issues` (breaking change).
+	const lines = parsed.error.issues.map((e: z.ZodIssue) => {
 		const path = e.path.join('.');
 		// Indique la valeur actuelle pour les erreurs de longueur (debug)
-		const actual = source[path];
+		const actual = source[path as string];
 		const hint = typeof actual === 'string'
 			? ` (actuel : ${actual.length} chars)`
 			: '';
