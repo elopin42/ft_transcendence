@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import * as Phaser from 'phaser';
 import { io, Socket } from 'socket.io-client';
+import * as GameShared from '@ftt/shared/game';
 
 class GameScene extends Phaser.Scene {
     player!: Phaser.Physics.Arcade.Sprite;
@@ -15,8 +16,8 @@ class GameScene extends Phaser.Scene {
     preload() {
         this.load.image('map', '/map.png');
         this.load.spritesheet('nass-frame', '/character/nass/nass-allframe-right.png', {
-            frameWidth: 1760,
-            frameHeight: 2412,
+            frameWidth: GameShared.PLAYER_WIDTH,
+            frameHeight: GameShared.PLAYER_HEIGHT,
         });
         this.load.image('nass-front', '/character/nass/nass-front.png');
         this.load.image('desk', '/desk.png');
@@ -59,7 +60,7 @@ class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard!.createCursorKeys();
         this.socket = io('/world', { withCredentials: true, reconnection: false });
 
-        this.socket.on('players', (players: { id: string, pseudo: string, x: number, y: number }[]) => {
+        this.socket.on('players', (players: GameShared.PlayerBase[]) => {
             const activeIds = new Set(players.map(p => p.id));
             this.otherPlayers.forEach((player, id) => {
                 if (!activeIds.has(id)) {
@@ -73,8 +74,8 @@ class GameScene extends Phaser.Scene {
                 if (p.id === this.socket.id) return;
                 if (!this.otherPlayers.has(p.id)) {
                     const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
-                    const scales = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
-                    const labelOffset = (2412 * scales) / 2 + 20;
+                    const scales = GameShared.getPlayerScale(p.y);
+                    const labelOffset = (GameShared.PLAYER_HEIGHT * scales) / 2 + 20;
                     const login = this.add.text(p.x, p.y - labelOffset, p.pseudo, {
                         fontSize: '20px',
                         color: '#ff0000',
@@ -86,8 +87,8 @@ class GameScene extends Phaser.Scene {
                     const sprite = this.otherPlayers.get(p.id);
                     if (!sprite) return;
                     sprite.sprite.setPosition(p.x, p.y);
-                    const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
-                    const labelOffset = (2412 * scale) / 2 + 20;
+                    const scale = GameShared.getPlayerScale(p.y);
+                    const labelOffset = (GameShared.PLAYER_HEIGHT * scale) / 2 + 20;
                     sprite.login.setPosition(p.x, p.y - labelOffset);
                     sprite.sprite.setScale(scale);
                     if (timeo - this.timep < 50) return;
@@ -119,7 +120,7 @@ class GameScene extends Phaser.Scene {
 
     update() {
         // Vitesse en pixels/seconde (multiplie par 60 vs 60 fps cible).
-        const speed = Phaser.Math.Linear(3, 7, (this.player.y - 250) / (1150 - 250)) * 60;
+        const speed = GameShared.getPlayerSpeed(this.player.y) * 60;
         const moving = this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.up.isDown || this.cursors.down.isDown;
 
         if (this.cursors.left.isDown) {
@@ -149,11 +150,11 @@ class GameScene extends Phaser.Scene {
             this.player.setTexture('nass-front');
         }
 
-        this.player.x = Phaser.Math.Clamp(this.player.x, 50, 2690);
-        this.player.y = Phaser.Math.Clamp(this.player.y, 250, 1180);
+        this.player.x = Phaser.Math.Clamp(this.player.x, GameShared.getPlayerMinX(this.player.scale), GameShared.getPlayerMaxX(this.player.scale));
+        this.player.y = Phaser.Math.Clamp(this.player.y, GameShared.PLAYER_MIN_Y, GameShared.PLAYER_MAX_Y);
 
         if (this.socket.connected) this.socket.emit('move', { x: this.player.x, y: this.player.y });
-        const scale = Phaser.Math.Linear(0.13, 0.30, (this.player.y - 280) / (1150 - 280));
+        const scale = GameShared.getPlayerScale(this.player.y);
         this.player.setScale(scale);
         this.player.setDepth(this.player.body!.bottom);
     }

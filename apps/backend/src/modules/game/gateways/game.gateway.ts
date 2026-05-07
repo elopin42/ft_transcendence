@@ -10,6 +10,7 @@ import { Logger } from '@nestjs/common';
 import { Server } from 'socket.io';
 import { TokenService } from '@/modules/auth/services/token.service';
 import { UsersService } from '@/modules/users/services/users.service';
+import * as GameShared from '@ftt/shared/game';
 
 @WebSocketGateway({
   cors: {
@@ -21,6 +22,9 @@ import { UsersService } from '@/modules/users/services/users.service';
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(GameGateway.name);
 
+  private readonly spawnX = 500;
+  private readonly spawnY = 1000;
+
   @WebSocketServer()
   server!: Server;
 
@@ -29,7 +33,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly usersService: UsersService,
   ) { }
 
-  players = new Map<string, { pseudo: string; x: number; y: number }>();
+  players = new Map<string, GameShared.PlayerBase>();
 
   async handleConnection(client: any) {
     // Le cookie d'auth s'appelle access_token (cf. cookie.helper.ts).
@@ -48,7 +52,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!user) throw new WsException('User not found');
       const login = user.login;
       this.logger.log(`Player connected: ${login} (client ${client.id})`);
-      this.players.set(client.id, { pseudo: login, x: 0, y: 0 });
+      this.players.set(client.id, { id: client.id, pseudo: login, x: this.spawnX, y: this.spawnY, scale: GameShared.getPlayerScale(this.spawnY) });
     } catch (error) {
       this.logger.warn(`Player disconnected during auth: ${(error as Error)?.message ?? error}`);
       client.disconnect();
@@ -58,7 +62,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDisconnect(client: any) {
     if (this.players.has(client.id)) {
       this.players.delete(client.id);
-      this.server.emit('players', Array.from(this.players.entries()).map(([id, p]) => ({ id, ...p })));
+      this.server.emit('players', Array.from(this.players.entries()).map(([, p]) => (p)));
     }
   }
 
@@ -69,7 +73,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (player) {
       player.x = payload.x;
       player.y = payload.y;
-      this.server.emit('players', Array.from(this.players.entries()).map(([id, p]) => ({ id, ...p })));
+      this.server.emit('players', Array.from(this.players.entries()).map(([, p]) => (p)));
     }
   }
 }
