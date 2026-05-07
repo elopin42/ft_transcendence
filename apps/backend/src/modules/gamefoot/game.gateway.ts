@@ -21,6 +21,7 @@ interface Player {
   scale: number;
   win: number;
   isAI: boolean;
+  twoPlayer: boolean;
 }
 
 interface ballon {
@@ -125,6 +126,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       scale: this.getPlayerScale(this.playerY),
       win: 0,
       isAI: true,
+      twoPlayer: false,
     };
     if (pnumber === 1) room.player1 = newPlayer;
     else room.player2 = newPlayer;
@@ -157,7 +159,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         roomId = this.getAvailableRoomId();
         this.rooms.set(roomId, {
           bal: { x: this.ballStartX, y: this.ballStartY, vx: this.ballVx, vy: this.ballVy, start: false, finish: false },
-          player1: { id: client.id, pnumber: 1, pseudo: login, x: this.player1StartX, y: this.playerY, scale: 0, win: 0, isAI: false },
+          player1: { id: client.id, pnumber: 1, pseudo: login, x: this.player1StartX, y: this.playerY, scale: 0, win: 0, isAI: false, twoPlayer: false },
           player2: null,
           targetYAI: null,
         });
@@ -165,7 +167,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         // sinon join
         const existing = this.rooms.get(roomId);
         if (!existing || existing.bal.finish) return;
-        existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: this.player2StartX, y: this.playerY, scale: 0, win: 0, isAI: false };
+        existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: this.player2StartX, y: this.playerY, scale: 0, win: 0, isAI: false, twoPlayer: false };
       }
       this.clientRoom.set(client.id, roomId);
       client.join(roomId.toString());
@@ -204,6 +206,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @SubscribeMessage('twoPlayer')
+  handleTwoPlayer(client: any, payload: { twoPlayer: boolean }) {
+    if (typeof payload?.twoPlayer !== 'boolean') return;
+    const [room, roomId] = this.getRoomAndRoomId(client.id);
+    if (!room || !roomId) return;
+    const player = room.player1?.id === client.id ? room.player1 : (room.player2?.id === client.id ? room.player2 : null);
+    if (!player) return;
+    player.twoPlayer = payload.twoPlayer;
+  }
+
   @SubscribeMessage('move')
   handleMove(client: any, payload: { x: number; y: number; scale: number }) {
     if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
@@ -228,6 +240,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
     const [room, roomId] = this.getRoomAndRoomId(client.id);
     if (!room || !roomId) return;
+    if (room.player1?.isAI || room.player2?.isAI) return; // pas de mode 2 joueurs si un des deux joueurs est un bot
+    if(!room.player1 || !room.player2) return;
+    if (!room.player1.twoPlayer || !room.player2.twoPlayer) return; // les deux joueurs doivent avoir le mode 2 joueurs activé
     const updatePlayer = (player: Player) => {
       player.x = payload.x;
       player.y = payload.y;
