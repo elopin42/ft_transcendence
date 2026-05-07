@@ -22,9 +22,6 @@ import * as GameShared from '@ftt/shared/game';
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(GameGateway.name);
 
-  private readonly spawnX = 500;
-  private readonly spawnY = 1000;
-
   @WebSocketServer()
   server!: Server;
 
@@ -34,6 +31,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) { }
 
   players = new Map<string, GameShared.PlayerBase>();
+
+  private emitPlayers() {
+    this.server.emit('players', Array.from(this.players.entries()).map(([, p]) => (p)));
+  }
 
   async handleConnection(client: any) {
     // Le cookie d'auth s'appelle access_token (cf. cookie.helper.ts).
@@ -52,7 +53,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!user) throw new WsException('User not found');
       const login = user.login;
       this.logger.log(`Player connected: ${login} (client ${client.id})`);
-      this.players.set(client.id, { id: client.id, pseudo: login, x: this.spawnX, y: this.spawnY, scale: GameShared.getPlayerScale(this.spawnY) });
+      this.players.set(client.id, {
+        id: client.id,
+        pseudo: login,
+        x: GameShared.DASHBOARD_SPAWN_X,
+        y: GameShared.DASHBOARD_SPAWN_Y,
+        scale: GameShared.DASHBOARD_SPAWN_SCALE
+      });
+      this.emitPlayers();
     } catch (error) {
       this.logger.warn(`Player disconnected during auth: ${(error as Error)?.message ?? error}`);
       client.disconnect();
@@ -62,18 +70,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDisconnect(client: any) {
     if (this.players.has(client.id)) {
       this.players.delete(client.id);
-      this.server.emit('players', Array.from(this.players.entries()).map(([, p]) => (p)));
+      this.emitPlayers();
     }
   }
 
   @SubscribeMessage('move')
-  handleMove(client: any, payload: { x: number; y: number }) {
-    if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
+  handleMove(client: any, payload: GameShared.MovePayload) {
+    if (typeof payload?.xVector !== 'number' || typeof payload?.yVector !== 'number') return;
     const player = this.players.get(client.id);
     if (player) {
-      player.x = payload.x;
-      player.y = payload.y;
-      this.server.emit('players', Array.from(this.players.entries()).map(([, p]) => (p)));
+      GameShared.movePlayer(player, payload);
+      this.emitPlayers();
     }
   }
 }

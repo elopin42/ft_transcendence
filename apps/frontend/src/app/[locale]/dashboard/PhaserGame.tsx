@@ -4,8 +4,31 @@ import * as Phaser from 'phaser';
 import { io, Socket } from 'socket.io-client';
 import * as GameShared from '@ftt/shared/game';
 
+class Player {
+    base: GameShared.PlayerBase;
+    sprite: Phaser.Physics.Arcade.Sprite;
+
+    constructor(base: GameShared.PlayerBase, sprite: Phaser.Physics.Arcade.Sprite) {
+        this.base = base;
+        this.sprite = sprite;
+    }
+
+    setScale(scale: number): this {
+        this.base.scale = scale;
+        this.sprite.setScale(scale);
+        return this;
+    }
+
+    setPosition(x: number, y: number): this {
+        this.base.x = x;
+        this.base.y = y;
+        this.sprite.setPosition(x, y);
+        return this;
+    }
+}
+
 class GameScene extends Phaser.Scene {
-    player!: Phaser.Physics.Arcade.Sprite;
+    player: Player | null = null;
     deskGroup!: Phaser.Physics.Arcade.StaticGroup;
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     socket!: Socket;
@@ -71,11 +94,18 @@ class GameScene extends Phaser.Scene {
             });
 
             players.forEach(p => {
-                if (p.id === this.socket.id) return;
-                if (!this.otherPlayers.has(p.id)) {
-                    const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
-                    const scales = GameShared.getPlayerScale(p.y);
-                    const labelOffset = (GameShared.PLAYER_HEIGHT * scales) / 2 + 20;
+                if (p.id === this.socket.id) {
+                    if (!this.player) {
+                        this.player = new Player(p, this.physics.add.sprite(GameShared.DASHBOARD_SPAWN_X, GameShared.DASHBOARD_SPAWN_Y, 'nass-front'));
+                        this.player.setScale(GameShared.DASHBOARD_SPAWN_SCALE);
+                        this.physics.add.collider(this.player.sprite, this.deskGroup);
+                        this.player.sprite.setSize(400, 200).setOffset(680, 2200);
+                    } else {
+                        this.player.setPosition(p.x, p.y).setScale(p.scale);
+                    }
+                } else if (!this.otherPlayers.has(p.id)) {
+                    const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(p.scale);
+                    const labelOffset = (GameShared.PLAYER_HEIGHT * p.scale) / 2 + 20;
                     const login = this.add.text(p.x, p.y - labelOffset, p.pseudo, {
                         fontSize: '20px',
                         color: '#ff0000',
@@ -86,11 +116,9 @@ class GameScene extends Phaser.Scene {
                     const timeo = Date.now();
                     const sprite = this.otherPlayers.get(p.id);
                     if (!sprite) return;
-                    sprite.sprite.setPosition(p.x, p.y);
-                    const scale = GameShared.getPlayerScale(p.y);
-                    const labelOffset = (GameShared.PLAYER_HEIGHT * scale) / 2 + 20;
+                    sprite.sprite.setPosition(p.x, p.y).setScale(p.scale);
+                    const labelOffset = (GameShared.PLAYER_HEIGHT * p.scale) / 2 + 20;
                     sprite.login.setPosition(p.x, p.y - labelOffset);
-                    sprite.sprite.setScale(scale);
                     if (timeo - this.timep < 50) return;
                     this.timep = timeo;
                     if (p.x !== sprite.ox || p.y !== sprite.oy) {
@@ -106,10 +134,6 @@ class GameScene extends Phaser.Scene {
             });
         });
 
-        this.player = this.physics.add.sprite(500, 1000, 'nass-front').setScale(0.35);
-        this.physics.add.collider(this.player, this.deskGroup);
-        this.player.setSize(400, 200).setOffset(680, 2200);
-
         this.anims.create({
             key: 'walk-right',
             frames: this.anims.generateFrameNumbers('nass-frame', { start: 2, end: 0 }),
@@ -119,44 +143,32 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
-        // Vitesse en pixels/seconde (multiplie par 60 vs 60 fps cible).
-        const speed = GameShared.getPlayerSpeed(this.player.y) * 60;
-        const moving = this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.up.isDown || this.cursors.down.isDown;
+        if (!this.player) return;
+        const moveX: boolean = this.cursors.left.isDown !== this.cursors.right.isDown;
+        const moveY: boolean = this.cursors.up.isDown !== this.cursors.down.isDown;
 
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-speed);
-            this.player.setFlipX(true);
-            this.player.play('walk-right', true);
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(speed);
-            this.player.setFlipX(false);
-            this.player.play('walk-right', true);
-        } else {
-            this.player.setVelocityX(0);
+        if (!moveX && !moveY) {
+            this.player.sprite.stop();
+            this.player.sprite.setTexture('nass-front');
         }
 
-        if (this.cursors.up.isDown) {
-            this.player.setVelocityY(-speed);
-            if (!this.cursors.left.isDown && !this.cursors.right.isDown) this.player.play('walk-right', true);
-        } else if (this.cursors.down.isDown) {
-            this.player.setVelocityY(speed);
-            if (!this.cursors.left.isDown && !this.cursors.right.isDown) this.player.play('walk-right', true);
-        } else {
-            this.player.setVelocityY(0);
+        let vx = 0;
+        let vy = 0;
+
+        if (moveX) {
+            vx = this.cursors.left.isDown ? -1 : 1;
+            this.player.sprite.setFlipX(this.cursors.left.isDown);
+            this.player.sprite.play('walk-right', true);
         }
-
-        if (!moving) {
-            this.player.stop();
-            this.player.setTexture('nass-front');
+        if (moveY) {
+            vy = this.cursors.up.isDown ? -1 : 1;
+            if (!moveX) this.player.sprite.play('walk-right', true);
         }
+        GameShared.movePlayer(this.player.base, { xVector: vx, yVector: vy });
+        this.player.setPosition(this.player.base.x, this.player.base.y);
 
-        this.player.x = Phaser.Math.Clamp(this.player.x, GameShared.getPlayerMinX(this.player.scale), GameShared.getPlayerMaxX(this.player.scale));
-        this.player.y = Phaser.Math.Clamp(this.player.y, GameShared.PLAYER_MIN_Y, GameShared.PLAYER_MAX_Y);
-
-        if (this.socket.connected) this.socket.emit('move', { x: this.player.x, y: this.player.y });
-        const scale = GameShared.getPlayerScale(this.player.y);
-        this.player.setScale(scale);
-        this.player.setDepth(this.player.body!.bottom);
+        if (this.socket.connected && (moveX || moveY)) this.socket.emit('move', { xVector: vx, yVector: vy });
+        this.player.sprite.setDepth(this.player.sprite.body!.bottom);
     }
 }
 

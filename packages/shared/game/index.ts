@@ -21,6 +21,23 @@ export const PLAYER_MIN_Y = WALL_Y - (PLAYER_HEIGHT * PLAYER_MIN_SCALE) / 2 + 30
 
 export const PLAYER_Y_RANGE = PLAYER_MAX_Y - PLAYER_MIN_Y;
 
+export const DASHBOARD_SPAWN_X = MAP_WIDTH / 2;
+export const DASHBOARD_SPAWN_Y = MAP_HEIGHT / 2;
+export const DASHBOARD_SPAWN_SCALE = getPlayerScale(DASHBOARD_SPAWN_Y);
+
+export interface PlayerBase {
+    id: string;
+    pseudo: string;
+    x: number;
+    y: number;
+    scale: number;
+}
+
+export interface MovePayload {
+    xVector: number;
+    yVector: number;
+}
+
 export function getPlayerMaxX(scale: number): number {
     return MAP_WIDTH - (PLAYER_WIDTH * scale) / 4;
 }
@@ -41,10 +58,14 @@ export function getPlayerSpeed(y: number): number {
     return linearInterpolation(PLAYER_MIN_SPEED, PLAYER_MAX_SPEED, (y - PLAYER_MIN_Y) / PLAYER_Y_RANGE);
 }
 
-export interface PlayerBase {
-    id: string;
-    pseudo: string;
-    x: number;
-    y: number;
-    scale: number;
+export function movePlayer(player: PlayerBase, move: MovePayload): void {
+    if (move.xVector !== 0) {
+        player.x += getPlayerSpeed(player.y) * move.xVector;
+        player.x = Math.max(getPlayerMinX(player.scale), Math.min(getPlayerMaxX(player.scale), player.x));
+    }
+    if (move.yVector !== 0) {
+        player.y += getPlayerSpeed(player.y) * move.yVector;
+        player.y = Math.max(PLAYER_MIN_Y, Math.min(PLAYER_MAX_Y, player.y));
+        player.scale = getPlayerScale(player.y);
+    }
 }
