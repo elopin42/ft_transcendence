@@ -29,6 +29,8 @@ class GameScene extends Phaser.Scene {
     timep = 0;
     tx = 0;
     ty = 0;
+    twoPlayer = false;
+    lasttwoPlayer = false;
     otherPlayers = new Map<string, { sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
     onUpdatePlayers?: (players: PlayerData[], bal: { x: number, y: number }) => void;
 
@@ -185,10 +187,10 @@ class GameScene extends Phaser.Scene {
             this.socket.emit('move2', { x: this.tx, y: this.ty, scale: scale2 });
         }
 
-        this.socket.emit('twoplayer', { twoPlayer: this.twoPlayer });
-        // Force a UI update for local player movement smoothness
-        if (this.onUpdatePlayers && this.socket.id) {
-            // Optional: we could update the local player in state here
+        if (this.twoPlayer !== this.lasttwoPlayer) {
+          console.log('TwoPlayer modede:', this.twoPlayer);
+          this.lasttwoPlayer = this.twoPlayer;
+          this.socket.emit('twoPlayer', { twoPlayer: this.twoPlayer });
         }
     }
 
@@ -254,6 +256,11 @@ export default function GameFoot() {
             game.destroy(true);
         };
     }, []);
+  
+    useEffect(() => {
+        const scene = gameRef.current?.scene.scenes[0] as GameScene | undefined;
+        if (scene) scene.twoPlayer = twoPlayer;
+    }, [twoPlayer]);
 
     const handleStart = () => {
         if (isStarting) return;

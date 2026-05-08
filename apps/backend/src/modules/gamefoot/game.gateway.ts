@@ -213,6 +213,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!room || !roomId) return;
     const player = room.player1?.id === client.id ? room.player1 : (room.player2?.id === client.id ? room.player2 : null);
     if (!player) return;
+    console.log(`Player ${player.pseudo} in room ${roomId} set twoPlayer mode to ${payload.twoPlayer}`);
     player.twoPlayer = payload.twoPlayer;
   }
 
