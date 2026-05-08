@@ -119,11 +119,6 @@ class GameScene extends Phaser.Scene {
         let moveX: boolean = this.cursors.left.isDown !== this.cursors.right.isDown;
         let moveY: boolean = this.cursors.up.isDown !== this.cursors.down.isDown;
 
-        if (!moveX && !moveY) {
-            this.player.sprite.stop();
-            this.player.sprite.setTexture('nass-front');
-        }
-
         let vx = 0;
         let vy = 0;
 
@@ -145,6 +140,10 @@ class GameScene extends Phaser.Scene {
                 this.player.setPosition(this.player.base.x, this.player.base.y);
                 if (this.socket.connected) this.socket.emit('move', { xVector: vx, yVector: vy });
             }
+        }
+        if (!moveX && !moveY) {
+            this.player.sprite.stop();
+            this.player.sprite.setTexture('nass-front');
         }
         this.player.sprite.setDepth(this.player.base.y + (GameShared.PLAYER_HEIGHT * this.player.base.scale) / 2);
     }

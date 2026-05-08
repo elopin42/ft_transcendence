@@ -15,6 +15,7 @@ interface PlayerData {
     pnumber: number;
     isMe: boolean;
     isAI: boolean;
+    twoPlayer: boolean;
 }
 
 class GameScene extends Phaser.Scene {
@@ -28,6 +29,8 @@ class GameScene extends Phaser.Scene {
     timep = 0;
     tx = 0;
     ty = 0;
+    twoPlayer = false;
+    lasttwoPlayer = false;
     otherPlayers = new Map<string, { sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
     onUpdatePlayers?: (players: PlayerData[], bal: { x: number, y: number }) => void;
 
@@ -130,6 +133,7 @@ class GameScene extends Phaser.Scene {
                     pnumber: p.pnumber,
                     isMe: p.id === this.socket.id,
                     isAI: p.isAI,
+                    twoPlayer: p.twoPlayer,
                 }));
                 this.onUpdatePlayers(uiPlayers, bal);
             }
@@ -183,9 +187,10 @@ class GameScene extends Phaser.Scene {
             this.socket.emit('move2', { x: this.tx, y: this.ty, scale: scale2 });
         }
 
-        // Force a UI update for local player movement smoothness
-        if (this.onUpdatePlayers && this.socket.id) {
-            // Optional: we could update the local player in state here
+        if (this.twoPlayer !== this.lasttwoPlayer) {
+          console.log('TwoPlayer modede:', this.twoPlayer);
+          this.lasttwoPlayer = this.twoPlayer;
+          this.socket.emit('twoPlayer', { twoPlayer: this.twoPlayer });
         }
     }
 
@@ -200,6 +205,7 @@ export default function GameFoot() {
     const [players, setPlayers] = useState<PlayerData[]>([]);
     const [ball, setBall] = useState({ x: 0, y: 0 });
     const [isStarting, setIsStarting] = useState(false);
+    const [twoPlayer, setTwoPlayer] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
     const [finished, setFinished] = useState(false);
     const [winner, setWinner] = useState<string | null>(null);
@@ -250,6 +256,11 @@ export default function GameFoot() {
             game.destroy(true);
         };
     }, []);
+  
+    useEffect(() => {
+        const scene = gameRef.current?.scene.scenes[0] as GameScene | undefined;
+        if (scene) scene.twoPlayer = twoPlayer;
+    }, [twoPlayer]);
 
     const handleStart = () => {
         if (isStarting) return;
@@ -300,9 +311,20 @@ export default function GameFoot() {
 
     const player1 = players.find(p => p.pnumber === 1);
     const player2 = players.find(p => p.pnumber === 2);
+return (
+        <div style={{ width: '100vw', height: '100vh', backgroundColor: '#000', overflow: 'hidden', position: 'relative' }}>
+            {/* Checkbox 2 players */}
+            <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 10 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff', fontWeight: 500 }}>
+                    <input
+                        type="checkbox"
+                        checked={twoPlayer}
+                        onChange={e => setTwoPlayer(e.target.checked)}
+                    />
+                    2 Players (local)
+                </label>
+            </div>
 
-    return (
-        <div style={{ width: '100vw', height: '100vh', backgroundColor: '#000', overflow: 'hidden' }}>
             <div ref={ref} style={{ width: '100%', height: '100%' }} />
 
             <div className="game-ui-container">
@@ -318,11 +340,9 @@ export default function GameFoot() {
                 </div>
 
                 {players.map(p => {
-                    // Calculate "top of head" in world coordinates
                     const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
                     const labelOffset = (2412 * scale) / 2 + 20;
                     const pos = getScreenPos(p.x, p.y - labelOffset);
-
                     return (
                         <div
                             key={p.id}
