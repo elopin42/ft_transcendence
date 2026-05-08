@@ -25,6 +25,16 @@ export const DASHBOARD_SPAWN_X = MAP_WIDTH / 2;
 export const DASHBOARD_SPAWN_Y = MAP_HEIGHT / 2;
 export const DASHBOARD_SPAWN_SCALE = getPlayerScale(DASHBOARD_SPAWN_Y);
 
+export const DESKTOP_WIDTH = 2020;
+export const DESKTOP_HEIGHT = 536;
+export const DESKTOPS = [
+    { x: 2150, y: 435, scale: 0.56 },
+    { x: 2350, y: 580, scale: 0.64 },
+    { x: 2600, y: 755, scale: 0.76 },
+    { x: 2870, y: 960, scale: 0.88 },
+    { x: 3190, y: 1200, scale: 1.02 },
+];
+
 export interface PlayerBase {
     id: string;
     pseudo: string;
@@ -58,14 +68,66 @@ export function getPlayerSpeed(y: number): number {
     return linearInterpolation(PLAYER_MIN_SPEED, PLAYER_MAX_SPEED, (y - PLAYER_MIN_Y) / PLAYER_Y_RANGE);
 }
 
-export function movePlayer(player: PlayerBase, move: MovePayload): void {
+function getPlayerFeet(x: number, y: number, scale: number): { x: number; y: number, width: number, height: number } {
+    const width = PLAYER_WIDTH * scale;
+    const height = 256 * scale; // hauteur des pieds sur l'image du perso en scale 1 * scale actuel
+    const botOffset = 45 * scale; // espace entre le bas le l'image et les pieds du perso en scale 1 * scale actuel
+    return { x: x, y: y + ((PLAYER_HEIGHT * scale) / 2 - height / 2) - botOffset, width: width / 2.5, height: height };
+}
+
+function getDesktopRect(): { x: number; y: number, width: number, height: number }[] {
+    let rects: { x: number; y: number, width: number, height: number }[] = [];
+    for (const desktop of DESKTOPS) {
+        const { x, y, scale } = desktop;
+        const width = DESKTOP_WIDTH * scale;
+        const height = 100 * scale; // hauteur des pieds de bureaux en scale 1 * scale actuel
+        const leftOffset = 60 * scale / 2; // espace entre le bord gauche de l'image et le bureau en scale 1 * scale actuel
+        rects.push({ x: x + leftOffset, y: y + (DESKTOP_HEIGHT * scale) / 2 - height / 2, width: width - leftOffset, height: height });
+    }
+    return rects;
+}
+
+export function movePlayer(player: PlayerBase, move: MovePayload): boolean {
+    if (move.xVector === 0 && move.yVector === 0)
+        return false;
+    let xFail: boolean = move.xVector === 0;
+    const checkHitbox = (newX: number, newY: number, newScale: number): boolean => {
+        const playerFeets = getPlayerFeet(newX, newY, newScale);
+        const deskHitbox = getDesktopRect();
+        for (const desk of deskHitbox) {
+            const overlapX = (playerFeets.x + playerFeets.width / 2 > desk.x - desk.width / 2) &&
+                (playerFeets.x - playerFeets.width / 2 < desk.x + desk.width / 2);
+            const overlapY = (playerFeets.y + playerFeets.height / 2 > desk.y - desk.height / 2) &&
+                (playerFeets.y - playerFeets.height / 2 < desk.y + desk.height / 2);
+            if (overlapX && overlapY) {
+                if (move.yVector !== 0) {
+                    const penLeft = Math.abs((playerFeets.x + playerFeets.width / 2) - (desk.x - desk.width / 2));
+                    const penRight = Math.abs((playerFeets.x - playerFeets.width / 2) - (desk.x + desk.width / 2));
+                    if (penLeft < 2 || penRight < 2) {
+                        newX = penLeft < penRight ? (desk.x - desk.width / 2) - playerFeets.width / 2 : (desk.x + desk.width / 2) + playerFeets.width / 2;
+                        break;
+                    }
+                }
+                return false;
+            }
+        }
+        player.x = newX;
+        player.y = newY;
+        player.scale = newScale;
+        return true;
+    };
     if (move.xVector !== 0) {
-        player.x += getPlayerSpeed(player.y) * move.xVector;
-        player.x = Math.max(getPlayerMinX(player.scale), Math.min(getPlayerMaxX(player.scale), player.x));
+        let x = player.x + getPlayerSpeed(player.y) * move.xVector;
+        x = Math.max(getPlayerMinX(player.scale), Math.min(getPlayerMaxX(player.scale), x));
+        if (!checkHitbox(x, player.y, player.scale))
+            xFail = true;
     }
     if (move.yVector !== 0) {
-        player.y += getPlayerSpeed(player.y) * move.yVector;
-        player.y = Math.max(PLAYER_MIN_Y, Math.min(PLAYER_MAX_Y, player.y));
-        player.scale = getPlayerScale(player.y);
+        let y = player.y + getPlayerSpeed(player.y) * move.yVector;
+        y = Math.max(PLAYER_MIN_Y, Math.min(PLAYER_MAX_Y, y));
+        let scale = getPlayerScale(y);
+        if (!checkHitbox(player.x, y, scale) && xFail)
+            return false;
     }
+    return true;
 }
