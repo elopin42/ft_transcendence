@@ -8,6 +8,7 @@
     "./env": "./env/index.ts",
     "./errors": "./errors/index.ts",
     "./game": "./game/index.ts",
+    "./game/dashboard": "./game/dashboard.ts",
     "./i18n": "./i18n/index.ts",
     "./i18n/locales/*.json": "./i18n/locales/*.json",
     "./lib": "./lib/index.ts",

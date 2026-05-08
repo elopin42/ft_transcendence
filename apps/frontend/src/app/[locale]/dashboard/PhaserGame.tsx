@@ -2,13 +2,20 @@
 import { useEffect, useRef } from 'react';
 import * as Phaser from 'phaser';
 import { io, Socket } from 'socket.io-client';
-import * as GameShared from '@ftt/shared/game';
+import { PLAYER_HEIGHT, PLAYER_WIDTH, PlayerBase } from '@ftt/shared/game';
+import {
+    movePlayer,
+    DESKTOPS,
+    SPAWN_SCALE,
+    SPAWN_X,
+    SPAWN_Y
+} from '@ftt/shared/game/dashboard';
 
 class Player {
-    base: GameShared.PlayerBase;
+    base: PlayerBase;
     sprite: Phaser.GameObjects.Sprite;
 
-    constructor(base: GameShared.PlayerBase, sprite: Phaser.GameObjects.Sprite) {
+    constructor(base: PlayerBase, sprite: Phaser.GameObjects.Sprite) {
         this.base = base;
         this.sprite = sprite;
     }
@@ -38,8 +45,8 @@ class GameScene extends Phaser.Scene {
     preload() {
         this.load.image('map', '/map.png');
         this.load.spritesheet('nass-frame', '/character/nass/nass-allframe-right.png', {
-            frameWidth: GameShared.PLAYER_WIDTH,
-            frameHeight: GameShared.PLAYER_HEIGHT,
+            frameWidth: PLAYER_WIDTH,
+            frameHeight: PLAYER_HEIGHT,
         });
         this.load.image('nass-front', '/character/nass/nass-front.png');
         this.load.image('desk', '/desk.png');
@@ -49,7 +56,7 @@ class GameScene extends Phaser.Scene {
         const map = this.add.image(0, 0, 'map').setOrigin(0, 0);
         this.scale.resize(map.width, map.height);
 
-        GameShared.DESKTOPS.forEach(d => {
+        DESKTOPS.forEach(d => {
             const img = this.add.image(d.x, d.y, 'desk').setScale(d.scale);
             img.setDepth(d.y + (img.height * d.scale) / 2);
         });
@@ -57,7 +64,7 @@ class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard!.createCursorKeys();
         this.socket = io('/world', { withCredentials: true, reconnection: false });
 
-        this.socket.on('players', (players: GameShared.PlayerBase[]) => {
+        this.socket.on('players', (players: PlayerBase[]) => {
             const activeIds = new Set(players.map(p => p.id));
             this.otherPlayers.forEach((player, id) => {
                 if (!activeIds.has(id)) {
@@ -70,14 +77,14 @@ class GameScene extends Phaser.Scene {
             players.forEach(p => {
                 if (p.id === this.socket.id) {
                     if (!this.player) {
-                        this.player = new Player(p, this.add.sprite(GameShared.DASHBOARD_SPAWN_X, GameShared.DASHBOARD_SPAWN_Y, 'nass-front'));
-                        this.player.setScale(GameShared.DASHBOARD_SPAWN_SCALE);
+                        this.player = new Player(p, this.add.sprite(SPAWN_X, SPAWN_Y, 'nass-front'));
+                        this.player.setScale(SPAWN_SCALE);
                     } else {
                         this.player.setPosition(p.x, p.y).setScale(p.scale);
                     }
                 } else if (!this.otherPlayers.has(p.id)) {
                     const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(p.scale);
-                    const labelOffset = (GameShared.PLAYER_HEIGHT * p.scale) / 2 + 20;
+                    const labelOffset = (PLAYER_HEIGHT * p.scale) / 2 + 20;
                     const login = this.add.text(p.x, p.y - labelOffset, p.pseudo, {
                         fontSize: '20px',
                         color: '#ff0000',
@@ -89,7 +96,7 @@ class GameScene extends Phaser.Scene {
                     const sprite = this.otherPlayers.get(p.id);
                     if (!sprite) return;
                     sprite.sprite.setPosition(p.x, p.y).setScale(p.scale);
-                    const labelOffset = (GameShared.PLAYER_HEIGHT * p.scale) / 2 + 20;
+                    const labelOffset = (PLAYER_HEIGHT * p.scale) / 2 + 20;
                     sprite.login.setPosition(p.x, p.y - labelOffset);
                     if (timeo - this.timep < 50) return;
                     this.timep = timeo;
@@ -132,7 +139,7 @@ class GameScene extends Phaser.Scene {
             if (!moveX) this.player.sprite.play('walk-right', true);
         }
         if (moveX || moveY) {
-            if (!GameShared.movePlayer(this.player.base, { xVector: vx, yVector: vy })) {
+            if (!movePlayer(this.player.base, { xVector: vx, yVector: vy })) {
                 moveY = false;
                 moveX = false;
             } else {
@@ -145,7 +152,7 @@ class GameScene extends Phaser.Scene {
             this.player.sprite.stop();
             this.player.sprite.setTexture('nass-front');
         }
-        this.player.sprite.setDepth(this.player.base.y + (GameShared.PLAYER_HEIGHT * this.player.base.scale) / 2);
+        this.player.sprite.setDepth(this.player.base.y + (PLAYER_HEIGHT * this.player.base.scale) / 2);
     }
 }
 

@@ -10,7 +10,13 @@ import { Logger } from '@nestjs/common';
 import { Server } from 'socket.io';
 import { TokenService } from '@/modules/auth/services/token.service';
 import { UsersService } from '@/modules/users/services/users.service';
-import * as GameShared from '@ftt/shared/game';
+import type { MovePayload, PlayerBase } from '@ftt/shared/game';
+import {
+    movePlayer,
+    SPAWN_SCALE,
+    SPAWN_X,
+    SPAWN_Y
+} from '@ftt/shared/game/dashboard';
 
 @WebSocketGateway({
   cors: {
@@ -30,7 +36,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly usersService: UsersService,
   ) { }
 
-  players = new Map<string, GameShared.PlayerBase>();
+  players = new Map<string, PlayerBase>();
 
   private emitPlayers() {
     this.server.emit('players', Array.from(this.players.entries()).map(([, p]) => (p)));
@@ -56,9 +62,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.players.set(client.id, {
         id: client.id,
         pseudo: login,
-        x: GameShared.DASHBOARD_SPAWN_X,
-        y: GameShared.DASHBOARD_SPAWN_Y,
-        scale: GameShared.DASHBOARD_SPAWN_SCALE
+        x: SPAWN_X,
+        y: SPAWN_Y,
+        scale: SPAWN_SCALE
       });
       this.emitPlayers();
     } catch (error) {
@@ -75,11 +81,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('move')
-  handleMove(client: any, payload: GameShared.MovePayload) {
+  handleMove(client: any, payload: MovePayload) {
     if (typeof payload?.xVector !== 'number' || typeof payload?.yVector !== 'number') return;
     const player = this.players.get(client.id);
     if (player) {
-      GameShared.movePlayer(player, payload);
+      movePlayer(player, payload);
       this.emitPlayers();
     }
   }
