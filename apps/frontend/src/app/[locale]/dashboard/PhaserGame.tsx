@@ -86,7 +86,8 @@ class GameScene extends Phaser.Scene {
                     const sprite = this.otherPlayers.get(p.id);
                     if (!sprite) return;
                     sprite.sprite.setPosition(p.x, p.y);
-                    const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
+                    const scale = Phaser.Math.Linear(0.13, 0.30, (p.y - 280) / (1150 - 280));
+                    //laisser 0,13 et 0,30 pour que tout les joeurs on le meme rendu
                     const labelOffset = (2412 * scale) / 2 + 20;
                     sprite.login.setPosition(p.x, p.y - labelOffset);
                     sprite.sprite.setScale(scale);
