@@ -89,6 +89,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return [room, roomId];
   }
 
+  private sendPlayers(roomId: string, room: Room) {
+    this.server.to(roomId.toString()).emit('players', {
+      players: [room.player1, room.player2].filter(p => p !== null),
+      bal: { x: room.bal.x, y: room.bal.y }
+    });
+  }
+
   /**
    * @brief Replace a null player by a bot in the given room
    * @return True if the bot have been successfully added to the room else false
@@ -158,10 +165,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.clientRoom.set(client.id, roomId);
       client.join(roomId.toString());
       const room = this.rooms.get(roomId)!;
-      this.server.to(roomId.toString()).emit('players', {
-        players: [room.player1, room.player2].filter(p => p !== null),
-        bal: room.bal
-      });
+      this.sendPlayers(roomId.toString(), room);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'auth failed';
       this.logger.warn(`Player disconnected during auth: ${message}`);
@@ -186,10 +190,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
     this.addBotToRoom(room, roomId);
-    this.server.to(roomId.toString()).emit('players', {
-      players: [room.player1, room.player2].filter(p => p !== null),
-      bal: room.bal
-    });
+    this.sendPlayers(roomId.toString(), room);
   }
 
   @SubscribeMessage('twoPlayer')
@@ -199,23 +200,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!room || !roomId) return;
     const player = room.player1?.id === client.id ? room.player1 : (room.player2?.id === client.id ? room.player2 : null);
     if (!player) return;
-    console.log(`Player ${player.pseudo} in room ${roomId} set twoPlayer mode to ${payload.twoPlayer}`);
     player.twoPlayer = payload.twoPlayer;
   }
 
   @SubscribeMessage('move')
-  handleMove(client: any, payload: { x: number; y: number; scale: number }) {
-    if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
+  handleMove(client: any, payload: { y: number }) {
+    if (typeof payload?.y !== 'number') return;
     const [room, roomId] = this.getRoomAndRoomId(client.id);
     if (!room || !roomId) return;
     const updatePlayer = (player: Player) => {
-      player.x = payload.x;
-      player.y = payload.y;
-      player.scale = payload.scale;
-      this.server.to(roomId.toString()).emit('players', {
-        players: [room.player1, room.player2].filter(p => p !== null),
-        bal: room.bal
-      });
+      player.y += getPlayerSpeed(player.y) * payload.y;
+      player.scale = getPlayerScale(player.y);
+      this.sendPlayers(roomId.toString(), room);
     };
     if (room.player1 && room.player1.id === client.id) updatePlayer(room.player1);
     else if (room.player2 && room.player2.id === client.id) updatePlayer(room.player2);
@@ -223,21 +219,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Mode 2 joueurs sur le meme ecran (Ethan)
   @SubscribeMessage('move2')
-  handleMove2(client: any, payload: { x: number; y: number; scale: number }) {
-    if (typeof payload?.x !== 'number' || typeof payload?.y !== 'number') return;
+  handleMove2(client: any, payload: { y: number }) {
+    if (typeof payload?.y !== 'number') return;
     const [room, roomId] = this.getRoomAndRoomId(client.id);
     if (!room || !roomId) return;
     if (room.player1?.isAI || room.player2?.isAI) return; // pas de mode 2 joueurs si un des deux joueurs est un bot
     if(!room.player1 || !room.player2) return;
     if (!room.player1.twoPlayer || !room.player2.twoPlayer) return; // les deux joueurs doivent avoir le mode 2 joueurs activé
     const updatePlayer = (player: Player) => {
-      player.x = payload.x;
-      player.y = payload.y;
-      player.scale = payload.scale;
-      this.server.to(roomId.toString()).emit('players', {
-        players: [room.player1, room.player2].filter(p => p !== null),
-        bal: room.bal
-      });
+      player.y += getPlayerSpeed(player.y) * payload.y;
+      player.scale = getPlayerScale(player.y);
+      this.sendPlayers(roomId.toString(), room);
     };
     if (room.player2 && room.player1 && room.player2.id === client.id) updatePlayer(room.player1);
     else if (room.player1 && room.player2 && room.player1.id === client.id) updatePlayer(room.player2);
@@ -340,10 +332,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           clearInterval(room.interval);
           room.interval = null;
         }
-        this.server.to(roomId.toString()).emit('players', {
-          players: [room.player1, room.player2].filter(p => p !== null),
-          bal: { x: room.bal.x, y: room.bal.y }
-        });
+        this.sendPlayers(roomId.toString(), room);
       } else {
         // Avec le bot ce cas ne devrait plus arriver, mais on garde le clean au cas ou
         if (room.interval) {

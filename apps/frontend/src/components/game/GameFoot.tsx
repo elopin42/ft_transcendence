@@ -156,15 +156,15 @@ class GameScene extends Phaser.Scene {
     update() {
         if (!this.player) return;
         const speed = getPlayerSpeed(this.player.y);
-        let moving = false;
+        const moving = this.cursors.up.isDown !== this.cursors.down.isDown;
+        let vy = 0;
 
         if (this.cursors.up.isDown) {
             this.player.y -= speed;
-            moving = true;
-        }
-        if (this.cursors.down.isDown) {
+            vy = -1;
+        } else if (this.cursors.down.isDown) {
             this.player.y += speed;
-            moving = true;
+            vy = 1;
         }
 
         if (moving) {
@@ -175,19 +175,26 @@ class GameScene extends Phaser.Scene {
         }
 
         this.player.y = Phaser.Math.Clamp(this.player.y, PLAYER_MIN_Y, PLAYER_MAX_Y);
-        const scale = getPlayerScale(this.player.y);
         this.player.setScale(getPlayerScale(this.player.y));
 
-        this.socket.emit('move', { x: this.player.x, y: this.player.y, scale: scale });
+        this.socket.emit('move', { y: vy });
 
         // Mode 2 joueurs sur le meme ecran : touches W/S pilotent le 2e
         // joueur localement, on emet 'move2' au serveur qui re-route vers
         // le bon player de la room.
-        if ((this.wsKeys.w.isDown || this.wsKeys.s.isDown) && (this.ty !== 0 || this.tx !== 0)) {
-            if (this.wsKeys.w.isDown) this.ty -= speed;
-            if (this.wsKeys.s.isDown) this.ty += speed;
+        const moving2 = this.wsKeys.w.isDown !== this.wsKeys.s.isDown;
+        if (moving2 && (this.ty !== 0 || this.tx !== 0)) {
+            const speed2 = getPlayerSpeed(this.ty);
+            let vy2 = 0;
+            if (this.wsKeys.w.isDown) {
+                this.ty -= speed2;
+                vy2 = -1;
+            } else if (this.wsKeys.s.isDown) {
+                this.ty += speed2;
+                vy2 = 0;
+            }
             this.ty = Phaser.Math.Clamp(this.ty, PLAYER_MIN_Y, PLAYER_MAX_Y);
-            this.socket.emit('move2', { x: this.tx, y: this.ty, scale: getPlayerScale(this.ty) });
+            this.socket.emit('move2', { y: vy2 });
         }
 
         if (this.twoPlayer !== this.lasttwoPlayer) {
