@@ -11,18 +11,27 @@ import { Server } from 'socket.io';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { TokenService } from '@/modules/auth/services/token.service';
 import { UsersService } from '@/modules/users/services/users.service';
-
-interface Player {
-  id: string; // socketId
-  pnumber: number;
-  pseudo: string;
-  x: number;
-  y: number;
-  scale: number;
-  win: number;
-  isAI: boolean;
-  twoPlayer: boolean;
-}
+import { getPlayerScale, getPlayerSpeed, PLAYER_HEIGHT, PLAYER_MAX_Y, PLAYER_MIN_Y } from '@ftt/shared/game';
+import {
+    BALL_MAX_X,
+    BALL_MAX_Y,
+    BALL_MIN_X,
+    BALL_MIN_Y,
+    BALL_VX,
+    BALL_VY,
+    BALL_Y_RANGE,
+    clampNb,
+    feetBallCollision,
+    MAX_POINTS,
+    type Player,
+    PLAYER_FEET_HEIGHT,
+    PLAYER_FEET_WIDTH,
+    SPAWN_X_BALL,
+    SPAWN_X_PLAYER_1,
+    SPAWN_X_PLAYER_2,
+    SPAWN_Y_BALL,
+    SPAWN_Y_PLAYERS
+} from '@ftt/shared/game/foot';
 
 interface ballon {
   x: number;
@@ -54,19 +63,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server; // évité que typescript mette une erreur sait que ce sera initialisé
 
-  readonly playerY: number = 660;
-  readonly player1StartX: number = 330;
-  readonly player2StartX: number = 2400;
-
-  readonly wallTop: number = 410;
-  readonly wallBottom: number = 1480;
-  readonly wallDist: number = this.wallBottom - this.wallTop;
-
-  readonly ballVx: number = 10;
-  readonly ballVy: number = 6;
-  readonly ballStartX: number = 1340;
-  readonly ballStartY: number = 690;
-
   constructor(
     private readonly tokenService: TokenService,
     private readonly usersService: UsersService,
@@ -93,16 +89,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return [room, roomId];
   }
 
-  private getPlayerScale(y: number): number {
-    // même formule que le frontend
-    return 0.15 + ((y - 280) / (this.wallDist - 280)) * (0.35 - 0.15);
-  }
-
-  private getPlayerSpeed(y: number): number {
-    // même formule que le frontend
-    return 3 + ((y - 225) / (this.wallDist - 225)) * (7 - 3);
-  }
-
   /**
    * @brief Replace a null player by a bot in the given room
    * @return True if the bot have been successfully added to the room else false
@@ -116,14 +102,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       pnumber = 2;
     else
       return false;
-    const startX = pnumber === 1 ? this.player1StartX : this.player2StartX;
+    const startX = pnumber === 1 ? SPAWN_X_PLAYER_1 : SPAWN_X_PLAYER_2;
     const newPlayer: Player = {
       id: 'AI_' + roomId,
       pnumber: pnumber,
       pseudo: 'AI',
       x: startX,
-      y: this.playerY,
-      scale: this.getPlayerScale(this.playerY),
+      y: SPAWN_Y_PLAYERS,
+      scale: getPlayerScale(SPAWN_Y_PLAYERS),
       win: 0,
       isAI: true,
       twoPlayer: false,
@@ -158,8 +144,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         // si aucune room attent un joeur on cree
         roomId = this.getAvailableRoomId();
         this.rooms.set(roomId, {
-          bal: { x: this.ballStartX, y: this.ballStartY, vx: this.ballVx, vy: this.ballVy, start: false, finish: false },
-          player1: { id: client.id, pnumber: 1, pseudo: login, x: this.player1StartX, y: this.playerY, scale: 0, win: 0, isAI: false, twoPlayer: false },
+          bal: { x: SPAWN_X_BALL, y: SPAWN_Y_BALL, vx: BALL_VX, vy: BALL_VY, start: false, finish: false },
+          player1: { id: client.id, pnumber: 1, pseudo: login, x: SPAWN_X_PLAYER_1, y: SPAWN_Y_PLAYERS, scale: 0, win: 0, isAI: false, twoPlayer: false },
           player2: null,
           targetYAI: null,
         });
@@ -167,7 +153,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         // sinon join
         const existing = this.rooms.get(roomId);
         if (!existing || existing.bal.finish) return;
-        existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: this.player2StartX, y: this.playerY, scale: 0, win: 0, isAI: false, twoPlayer: false };
+        existing.player2 = { id: client.id, pnumber: 2, pseudo: login, x: SPAWN_X_PLAYER_2, y: SPAWN_Y_PLAYERS, scale: 0, win: 0, isAI: false, twoPlayer: false };
       }
       this.clientRoom.set(client.id, roomId);
       client.join(roomId.toString());
@@ -258,16 +244,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private predictBallY(bal: ballon, targetX: number): number {
-    // On prédit la position y du ballon quand il atteindra la position x cible en supposant qu'il ne rebondit pas
     let predictedY = bal.y + bal.vy * (Math.abs(targetX - bal.x) / Math.abs(bal.vx));
-    // Normalisation pour faire comme si le mur du haut était à y = 0
-    predictedY -= this.wallTop;
-    // L'idée c'est que si ballOrientation est entre 0 et wallDist, predictedvy = bal.vy, et si il est entre wallDist et wallDist * 2, predictedvy = -bal.vy
-    const ballOrientation = Math.abs(predictedY) % (this.wallDist * 2);
-    // Récup la position y prédite du ballon dans l'écran (y base = 0)
-    const predictedYBase = ballOrientation > this.wallDist ? (this.wallDist * 2) - ballOrientation : ballOrientation;
-    // On replace avec y base = walltop au lieu de 0
-    return (this.wallTop + predictedYBase);
+    predictedY -= BALL_MIN_Y;
+    const ballOrientation = Math.abs(predictedY) % (BALL_Y_RANGE * 2);
+    const predictedYBase = ballOrientation > BALL_Y_RANGE ? (BALL_Y_RANGE * 2) - ballOrientation : ballOrientation;
+    return (BALL_MIN_Y + predictedYBase);
   }
 
   private moveAI(room: Room) {
@@ -278,29 +259,33 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const bal = room.bal;
     const isPlayer1 = ai.pnumber === 1;
     const ballHeadingToAI = isPlayer1 ? bal.vx < 0 : bal.vx > 0;
-    let footY: number;
 
     if (ballHeadingToAI) {
       if (room.targetYAI === null) {
-        let predictedY = this.predictBallY(bal, ai.x - 50);
+        let predictedY = this.predictBallY(bal, ai.x - (PLAYER_FEET_WIDTH / 2));
+        let targetY = predictedY;
+        for (let i = 0; i < 5; i++) {
+            const scale = getPlayerScale(targetY);
+            targetY = predictedY - (PLAYER_HEIGHT * scale / 2 - PLAYER_FEET_HEIGHT / 2);
+            targetY = clampNb(PLAYER_MIN_Y, PLAYER_MAX_Y, targetY);
+        }
+        room.targetYAI = targetY;
         // On nerf l'ia en faussant légèrement la prédiction, <= 100 = 100% de placement, 200 = 50% de placement, etc
         // Les % sont pas exactes, ça dépends de la hitbox des pieds (plus la hitbox est longue en x plus le % de placement sera élevé), mais ça donne une idée
         const imprecision = 200;
         // [-0.5, 0.5] * imprecision
-        predictedY += (Math.random() - 0.5) * imprecision;
-        room.targetYAI = Math.max(this.wallTop, Math.min(this.wallBottom, predictedY));
+        room.targetYAI += (Math.random() - 0.5) * imprecision;
+        room.targetYAI = clampNb(PLAYER_MIN_Y, PLAYER_MAX_Y, room.targetYAI);
       }
-      footY = (ai.y + (2412 / 2) * ai.scale) - 50;
     } else {
       room.targetYAI = null;
-      footY = ai.y;
     }
-    const speed = this.getPlayerSpeed(ai.y);
-    const diff = (room.targetYAI ?? this.playerY) - footY;
+    const speed = getPlayerSpeed(ai.y);
+    const diff = (room.targetYAI ?? SPAWN_Y_PLAYERS) - ai.y;
     if (Math.abs(diff) > speed)
       ai.y += speed * Math.sign(diff);
-    ai.y = Math.max(225, Math.min(this.wallDist, ai.y));
-    ai.scale = this.getPlayerScale(ai.y);
+    ai.y = clampNb(PLAYER_MIN_Y, PLAYER_MAX_Y, ai.y);
+    ai.scale = getPlayerScale(ai.y);
   }
 
   /**
@@ -322,28 +307,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         room.bal.x += room.bal.vx;
         room.bal.y += room.bal.vy;
         this.moveAI(room);
-        const shouldBallBounce = (ball: ballon, player: Player): boolean => {
-          // pour detecter le pied du joueur
-          const playerFoot = player.y + (2412 / 2) * player.scale;
-          return (ball.y <= playerFoot && ball.y >= playerFoot - 100)
-            && (ball.x <= player.x + 50 && ball.x >= player.x - 50);
-        };
-        if (room.bal.y <= this.wallTop || room.bal.y >= this.wallBottom)
+        if (room.bal.y <= BALL_MIN_Y || room.bal.y >= BALL_MAX_Y)
           room.bal.vy *= -1; // rebondit sur les murs haut et bas
-        if (shouldBallBounce(room.bal, room.player1))
+        if (feetBallCollision(room.bal.x, room.bal.y, room.player1.x, room.player1.y, room.player1.scale))
           room.bal.vx = Math.abs(room.bal.vx);
-        else if (shouldBallBounce(room.bal, room.player2))
+        else if (feetBallCollision(room.bal.x, room.bal.y, room.player2.x, room.player2.y, room.player2.scale))
           room.bal.vx = -Math.abs(room.bal.vx);
-        else if ((room.bal.x <= 50 || room.bal.x >= 2680) || (room.player1.win >= 5 || room.player2.win >= 5)) {
-          if (room.bal.x <= 50)
+        else if ((room.bal.x <= BALL_MIN_X || room.bal.x >= BALL_MAX_X) || (room.player1.win >= MAX_POINTS || room.player2.win >= MAX_POINTS)) {
+          if (room.bal.x <= BALL_MIN_X)
             room.player1.pnumber == 2 ? room.player1.win++ : room.player2.win++; // +1 win pour le joueur qui marque
-          else if (room.bal.x >= 2680)
+          else if (room.bal.x >= BALL_MAX_X)
             room.player2.pnumber == 1 ? room.player2.win++ : room.player1.win++;
-          // si un joueur a gagne 5 fois, fin du match
-          if (room.player1.win >= 5 || room.player2.win >= 5) {
+          // si un joueur a gagne MAX_POINTS fois, fin du match
+          if (room.player1.win >= MAX_POINTS || room.player2.win >= MAX_POINTS) {
             // On envoie a la DB QUE si le gagnant n est PAS un bot AI
-            if ((room.player1.win >= 5 && !room.player1.isAI) || (room.player2.win >= 5 && !room.player2.isAI)) {
-              const login = room.player1.win >= 5 ? room.player1.pseudo : room.player2.pseudo;
+            if ((room.player1.win >= MAX_POINTS && !room.player1.isAI) || (room.player2.win >= MAX_POINTS && !room.player2.isAI)) {
+              const login = room.player1.win >= MAX_POINTS ? room.player1.pseudo : room.player2.pseudo;
               this.prisma.user.update({
                 where: { login },
                 data: { points: { increment: 1 } }
@@ -351,12 +330,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             }
             room.bal.finish = true;
           }
-          room.bal.x = this.ballStartX;
-          room.bal.y = this.ballStartY;
+          room.bal.x = SPAWN_X_BALL;
+          room.bal.y = SPAWN_Y_BALL;
           room.bal.start = false;
           // Reset Y des deux joueurs au point marque (Julien)
-          room.player1.y = this.playerY;
-          room.player2.y = this.playerY;
+          room.player1.y = SPAWN_Y_PLAYERS;
+          room.player2.y = SPAWN_Y_PLAYERS;
           room.targetYAI = null;
           clearInterval(room.interval);
           room.interval = null;

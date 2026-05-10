@@ -5,17 +5,24 @@ import { io } from 'socket.io-client';
 import '@/styles/game.css';
 import { useRouter } from '@/config/navigation';
 import { ROUTES } from '@/config/routes';
+import {
+    getPlayerScale,
+    getPlayerSpeed,
+    PLAYER_HEIGHT,
+    PLAYER_MAX_Y,
+    PLAYER_MIN_Y,
+    PLAYER_WIDTH
+} from '@ftt/shared/game';
+import {
+    BALL_SIZE,
+    MAX_POINTS,
+    type Player,
+    SPAWN_X_BALL,
+    SPAWN_Y_BALL
+} from '@ftt/shared/game/foot';
 
-interface PlayerData {
-    id: string;
-    pseudo: string;
-    x: number;
-    y: number;
-    win: number;
-    pnumber: number;
+interface FootPlayer extends Player {
     isMe: boolean;
-    isAI: boolean;
-    twoPlayer: boolean;
 }
 
 class GameScene extends Phaser.Scene {
@@ -32,13 +39,13 @@ class GameScene extends Phaser.Scene {
     twoPlayer = false;
     lasttwoPlayer = false;
     otherPlayers = new Map<string, { sprite: Phaser.GameObjects.Sprite, ox: number, oy: number }>();
-    onUpdatePlayers?: (players: PlayerData[], bal: { x: number, y: number }) => void;
+    onUpdatePlayers?: (players: FootPlayer[], bal: { x: number, y: number }) => void;
 
     preload() {
         this.load.image('map', '/map.png');
         this.load.spritesheet('nass-frame', '/character/nass/nass-allframe-right.png', {
-            frameWidth: 1760,
-            frameHeight: 2412
+            frameWidth: PLAYER_WIDTH,
+            frameHeight: PLAYER_HEIGHT
         });
         this.load.image('nass-front', '/character/nass/nass-front.png');
     }
@@ -50,10 +57,10 @@ class GameScene extends Phaser.Scene {
 
         const graphics = this.add.graphics();
         graphics.fillStyle(0xffffff, 1);
-        graphics.fillCircle(20, 20, 20);
-        graphics.generateTexture('bal', 40, 40);
+        graphics.fillCircle(BALL_SIZE / 2, BALL_SIZE / 2, BALL_SIZE / 2);
+        graphics.generateTexture('bal', BALL_SIZE, BALL_SIZE);
         graphics.destroy();
-        this.ballon = this.add.image(1340, 690, 'bal');
+        this.ballon = this.add.image(SPAWN_X_BALL, SPAWN_Y_BALL, 'bal');
 
         this.socket = io('/gamefoot', {
             withCredentials: true,
@@ -63,7 +70,7 @@ class GameScene extends Phaser.Scene {
             s: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S),
         };
 
-        this.socket.on('players', ({ players, bal }: { players: PlayerData[], bal: { x: number, y: number } }) => {
+        this.socket.on('players', ({ players, bal }: { players: FootPlayer[], bal: { x: number, y: number } }) => {
             const activeIds = new Set(players.map(p => p.id));
 
             // Cleanup disconnected
@@ -94,7 +101,7 @@ class GameScene extends Phaser.Scene {
                 if (p.id === this.socket.id) return;
 
                 if (!this.otherPlayers.has(p.id)) {
-                    const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(0.35);
+                    const sprite = this.add.sprite(p.x, p.y, 'nass-front').setScale(p.scale);
                     this.otherPlayers.set(p.id, { sprite, ox: p.x, oy: p.y });
                     this.tx = p.x;
                     this.ty = p.y;
@@ -103,9 +110,7 @@ class GameScene extends Phaser.Scene {
                     const entry = this.otherPlayers.get(p.id);
                     if (!entry) return;
 
-                    entry.sprite.setPosition(p.x, p.y);
-                    const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
-                    entry.sprite.setScale(scale);
+                    entry.sprite.setPosition(p.x, p.y).setScale(getPlayerScale(p.y));
 
                     if (timeo - this.timep > 50) {
                         this.timep = timeo;
@@ -124,11 +129,12 @@ class GameScene extends Phaser.Scene {
 
             // Update React UI
             if (this.onUpdatePlayers) {
-                const uiPlayers: PlayerData[] = players.map(p => ({
+                const uiPlayers: FootPlayer[] = players.map(p => ({
                     id: p.id,
                     pseudo: p.pseudo,
                     x: p.x,
                     y: p.y,
+                    scale: p.scale,
                     win: p.win,
                     pnumber: p.pnumber,
                     isMe: p.id === this.socket.id,
@@ -141,7 +147,7 @@ class GameScene extends Phaser.Scene {
 
         this.anims.create({
             key: 'walk-right',
-            frames: this.anims.generateFrameNumbers('nass-frame', { start: 2, end: 0 }),
+            frames: this.anims.generateFrameNumbers('nass-frame', { start: 1, end: 0 }).concat(this.anims.generateFrameNumbers('nass-frame', { start: 1, end: 2 })),
             frameRate: 4,
             repeat: -1
         });
@@ -149,7 +155,7 @@ class GameScene extends Phaser.Scene {
 
     update() {
         if (!this.player) return;
-        const speed = Phaser.Math.Linear(3, 7, (this.player.y - 250) / (1150 - 250));
+        const speed = getPlayerSpeed(this.player.y);
         let moving = false;
 
         if (this.cursors.up.isDown) {
@@ -168,10 +174,9 @@ class GameScene extends Phaser.Scene {
             this.player.setTexture('nass-front');
         }
 
-        this.player.x = Phaser.Math.Clamp(this.player.x, 50, 2680);
-        this.player.y = Phaser.Math.Clamp(this.player.y, 225, 1150);
-        const scale = Phaser.Math.Linear(0.15, 0.35, (this.player.y - 280) / (1150 - 280));
-        this.player.setScale(scale);
+        this.player.y = Phaser.Math.Clamp(this.player.y, PLAYER_MIN_Y, PLAYER_MAX_Y);
+        const scale = getPlayerScale(this.player.y);
+        this.player.setScale(getPlayerScale(this.player.y));
 
         this.socket.emit('move', { x: this.player.x, y: this.player.y, scale: scale });
 
@@ -181,14 +186,11 @@ class GameScene extends Phaser.Scene {
         if ((this.wsKeys.w.isDown || this.wsKeys.s.isDown) && (this.ty !== 0 || this.tx !== 0)) {
             if (this.wsKeys.w.isDown) this.ty -= speed;
             if (this.wsKeys.s.isDown) this.ty += speed;
-            this.tx = Phaser.Math.Clamp(this.tx, 50, 2680);
-            this.ty = Phaser.Math.Clamp(this.ty, 225, 1150);
-            const scale2 = Phaser.Math.Linear(0.15, 0.35, (this.ty - 280) / (1150 - 280));
-            this.socket.emit('move2', { x: this.tx, y: this.ty, scale: scale2 });
+            this.ty = Phaser.Math.Clamp(this.ty, PLAYER_MIN_Y, PLAYER_MAX_Y);
+            this.socket.emit('move2', { x: this.tx, y: this.ty, scale: getPlayerScale(this.ty) });
         }
 
         if (this.twoPlayer !== this.lasttwoPlayer) {
-          console.log('TwoPlayer modede:', this.twoPlayer);
           this.lasttwoPlayer = this.twoPlayer;
           this.socket.emit('twoPlayer', { twoPlayer: this.twoPlayer });
         }
@@ -202,7 +204,7 @@ class GameScene extends Phaser.Scene {
 export default function GameFoot() {
     const ref = useRef<HTMLDivElement>(null);
     const gameRef = useRef<Phaser.Game | null>(null);
-    const [players, setPlayers] = useState<PlayerData[]>([]);
+    const [players, setPlayers] = useState<FootPlayer[]>([]);
     const [ball, setBall] = useState({ x: 0, y: 0 });
     const [isStarting, setIsStarting] = useState(false);
     const [twoPlayer, setTwoPlayer] = useState(false);
@@ -237,9 +239,9 @@ export default function GameFoot() {
                     const p2 = p.find(x => x.pnumber === 2);
                     const p1win = p1?.win ?? 0;
                     const p2win = p2?.win ?? 0;
-                    if (p1win >= 5 || p2win >= 5) {
+                    if (p1win >= MAX_POINTS || p2win >= MAX_POINTS) {
                         setFinished(true);
-                        const winnerPseudo = p1win >= 5 ? p1?.pseudo ?? 'Player 1' : p2?.pseudo ?? 'Player 2';
+                        const winnerPseudo = p1win >= MAX_POINTS ? p1?.pseudo ?? 'Player 1' : p2?.pseudo ?? 'Player 2';
                         setWinner(winnerPseudo);
                     } else {
                         // hide modal if scores reset
@@ -340,8 +342,7 @@ return (
                 </div>
 
                 {players.map(p => {
-                    const scale = Phaser.Math.Linear(0.15, 0.35, (p.y - 280) / (1150 - 280));
-                    const labelOffset = (2412 * scale) / 2 + 20;
+                    const labelOffset = (PLAYER_HEIGHT * getPlayerScale(p.y)) / 2 + 20;
                     const pos = getScreenPos(p.x, p.y - labelOffset);
                     return (
                         <div
