@@ -98,6 +98,9 @@ class GameScene extends Phaser.Scene {
                     sprite.sprite.setPosition(p.x, p.y).setScale(p.scale);
                     const labelOffset = (PLAYER_HEIGHT * p.scale) / 2 + 20;
                     sprite.login.setPosition(p.x, p.y - labelOffset);
+                    const depth = sprite.sprite.y + (PLAYER_HEIGHT * sprite.sprite.scale) / 2;
+                    sprite.sprite.setDepth(depth);
+                    sprite.login.setDepth(depth);
                     if (timeo - this.timep < 50) return;
                     this.timep = timeo;
                     if (p.x !== sprite.ox || p.y !== sprite.oy) {
