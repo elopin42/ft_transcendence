@@ -7,7 +7,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { TokenService } from '@/modules/auth/services/token.service';
 import { UsersService } from '@/modules/users/services/users.service';
 import type { MovePayload, PlayerBase } from '@ftt/shared/game';
@@ -42,7 +42,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.emit('players', Array.from(this.players.entries()).map(([, p]) => (p)));
   }
 
-  async handleConnection(client: any) {
+  async handleConnection(client: Socket) {
     // Le cookie d'auth s'appelle access_token (cf. cookie.helper.ts).
     const cookie = client.handshake.headers.cookie;
     const token = cookie?.split(';')
@@ -73,7 +73,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  handleDisconnect(client: any) {
+  handleDisconnect(client: Socket) {
     if (this.players.has(client.id)) {
       this.players.delete(client.id);
       this.emitPlayers();
@@ -81,7 +81,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('move')
-  handleMove(client: any, payload: MovePayload) {
+  handleMove(client: Socket, payload: MovePayload) {
     if (typeof payload?.xVector !== 'number' || typeof payload?.yVector !== 'number') return;
     const player = this.players.get(client.id);
     if (player) {

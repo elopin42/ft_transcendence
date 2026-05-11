@@ -7,7 +7,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { TokenService } from '@/modules/auth/services/token.service';
 import { UsersService } from '@/modules/users/services/users.service';
@@ -126,7 +126,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return true;
   }
 
-  async handleConnection(client: any) {
+  async handleConnection(client: Socket) {
     // Le cookie d'auth s'appelle access_token (cf. cookie.helper.ts).
     const cookie = client.handshake.headers.cookie;
     const token = cookie?.split(';')
@@ -178,7 +178,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @brief Handles client disconnection and replace that client by a 
    * bot if the room is not empty (Julien : bot IA)
    */
-  handleDisconnect(client: any) {
+  handleDisconnect(client: Socket) {
     const [room, roomId] = this.getRoomAndRoomId(client.id);
     if (!room || !roomId) return;
     // supprimer le joueur de la room
@@ -194,7 +194,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('twoPlayer')
-  handleTwoPlayer(client: any, payload: { twoPlayer: boolean }) {
+  handleTwoPlayer(client: Socket, payload: { twoPlayer: boolean }) {
     if (typeof payload?.twoPlayer !== 'boolean') return;
     const [room, roomId] = this.getRoomAndRoomId(client.id);
     if (!room || !roomId) return;
@@ -204,12 +204,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('move')
-  handleMove(client: any, payload: { y: number }) {
+  handleMove(client: Socket, payload: { y: number }) {
     if (typeof payload?.y !== 'number') return;
     const [room, roomId] = this.getRoomAndRoomId(client.id);
     if (!room || !roomId) return;
     const updatePlayer = (player: Player) => {
       player.y += getPlayerSpeed(player.y) * payload.y;
+      player.y = clampNb(PLAYER_MIN_Y, PLAYER_MAX_Y, player.y);
       player.scale = getPlayerScale(player.y);
       this.sendPlayers(roomId.toString(), room);
     };
@@ -219,7 +220,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Mode 2 joueurs sur le meme ecran (Ethan)
   @SubscribeMessage('move2')
-  handleMove2(client: any, payload: { y: number }) {
+  handleMove2(client: Socket, payload: { y: number }) {
     if (typeof payload?.y !== 'number') return;
     const [room, roomId] = this.getRoomAndRoomId(client.id);
     if (!room || !roomId) return;
@@ -228,6 +229,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!room.player1.twoPlayer || !room.player2.twoPlayer) return; // les deux joueurs doivent avoir le mode 2 joueurs activé
     const updatePlayer = (player: Player) => {
       player.y += getPlayerSpeed(player.y) * payload.y;
+      player.y = clampNb(PLAYER_MIN_Y, PLAYER_MAX_Y, player.y);
       player.scale = getPlayerScale(player.y);
       this.sendPlayers(roomId.toString(), room);
     };
@@ -285,7 +287,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * If the player is alone, add a bot as second player (Julien)
    */
   @SubscribeMessage('start')
-  handlestart(client: any) {
+  handlestart(client: Socket) {
     const [room, roomId] = this.getRoomAndRoomId(client.id);
     if (!room || !roomId) return;
     this.logger.debug(`Match start requested in room ${roomId}`);

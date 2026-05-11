@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import '@/styles/game.css';
 import { useRouter } from '@/config/navigation';
 import { ROUTES } from '@/config/routes';
@@ -28,7 +28,7 @@ interface FootPlayer extends Player {
 class GameScene extends Phaser.Scene {
     player: Phaser.GameObjects.Sprite | null = null;
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-    socket!: any;
+    socket!: Socket;
     ballon: Phaser.GameObjects.Image | null = null;
     wsKeys!: { w: Phaser.Input.Keyboard.Key, s: Phaser.Input.Keyboard.Key };
 
@@ -191,7 +191,7 @@ class GameScene extends Phaser.Scene {
                 vy2 = -1;
             } else if (this.wsKeys.s.isDown) {
                 this.ty += speed2;
-                vy2 = 0;
+                vy2 = 1;
             }
             this.ty = Phaser.Math.Clamp(this.ty, PLAYER_MIN_Y, PLAYER_MAX_Y);
             this.socket.emit('move2', { y: vy2 });
@@ -262,6 +262,11 @@ export default function GameFoot() {
 
         return () => {
             clearInterval(checkScene);
+            const scene = game.scene.scenes[0] as GameScene | undefined;
+            if (scene?.socket) {
+                scene.socket.off('players');
+                scene.socket.disconnect();
+            }
             game.destroy(true);
         };
     }, []);

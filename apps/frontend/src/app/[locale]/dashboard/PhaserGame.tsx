@@ -171,7 +171,14 @@ export default function PhaserGame() {
                 autoCenter: Phaser.Scale.CENTER_BOTH,
             },
         });
-        return () => game.destroy(true);
+        return () => {
+            const scene = game.scene.scenes[0] as GameScene | undefined;
+            if (scene?.socket) {
+                scene.socket.off('players');
+                scene.socket.disconnect();
+            }
+            game.destroy(true);
+        };
     }, []);
 
     return <div ref={ref} style={{ width: '100vw', height: '100vh' }} />;
