@@ -12,6 +12,7 @@ export const ROUTES = {
   AUTH: '/auth',       // etait /login
   REGISTER: '/register',
   DASHBOARD: '/dashboard',
+  GAME: '/game',
 } as const;
 
 export const ROUTES_PUBLIC = ['/auth', '/register', '/not-found'] as const ;
