@@ -176,13 +176,14 @@ function DashboardOverlay() {
     };
 
     return (
-        <div className="absolute top-4 left-4 z-50 flex flex-col items-end gap-2" style={{cursor: 'pointer'}}>
+        <div className="absolute top-4 left-4 z-50 flex flex-col items-end gap-2">
             {/* Toolbar pill */}
             <div className="flex items-center justify-between bg-white bg-opacity-80 backdrop-blur-md rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:bg-opacity-90" style={{cursor: 'pointer'}} >
 
                 <button
                     onClick={() => setOpen(!open)}
                     className="relative w-9 h-9 flex items-center justify-center rounded-full text-black hover:text-[rgb(241,16,255)] transition"
+                    style={{cursor: 'pointer'}}
                 >
                     <span
                         className={`absolute text-xl transition-all duration-300 ${
