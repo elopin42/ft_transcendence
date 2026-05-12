@@ -42,7 +42,6 @@ export default async function LocaleLayout({
 			<body className="min-h-full flex flex-col">
 				<NextIntlClientProvider locale={locale} messages={messages}>
 					<AuthProvider>
-						<DebugPanel />
 						{children}
 					</AuthProvider>
 				</NextIntlClientProvider>
