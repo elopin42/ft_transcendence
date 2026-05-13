@@ -1,61 +1,78 @@
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect, ConnectedSocket, MessageBody } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect, WsException } from '@nestjs/websockets';
+import { Logger } from '@nestjs/common';
+import { Server } from 'socket.io';
 import { ChatService } from './chat.service';
-import { ChannelType } from '@prisma/client';
+import { TokenService } from '@/modules/auth/services/token.service';
+import { UsersService } from '@/modules/users/services/users.service';
 
-@WebSocketGateway({ namespace: 'chat', cors: { origin: '*' } })
+@WebSocketGateway({
+    cors: {
+        origin: process.env.CORS_ORIGIN || 'https://localhost',
+        credentials: true,
+    },
+    namespace: 'chat',
+})
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer()
-  server!: Server;
+    private readonly logger = new Logger(ChatGateway.name);
 
-  constructor(private readonly chatService: ChatService) {}
+    @WebSocketServer()
+    server!: Server;
 
-  handleConnection(client: Socket) {
-    console.log(`Client connecté: ${client.id}`);
-  }
+    constructor(
+        private readonly chatService: ChatService,
+        private readonly tokenService: TokenService,
+        private readonly usersService: UsersService,
+    ) {}
 
-  handleDisconnect(client: Socket) {
-    console.log(`Client déconnecté: ${client.id}`);
-  }
+    async handleConnection(client: any) {
+        const cookie = client.handshake.headers.cookie;
+        const token = cookie?.split(';')
+            .find((c: string) => c.trim().startsWith('access_token='))
+            ?.split('=')[1];
 
-  @SubscribeMessage('createChannel')
-  async handleCreateChannel(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { name: string; type: ChannelType; password?: string },
-  ) {
-    const userId = client.data.userId;
-    const channel = await this.chatService.createChannel(userId, payload.name, payload.type, payload.password);
-    client.join(`channel:${channel.id}`);
-    return channel;
-  }
+        if (!token) {
+            client.disconnect();
+            return;
+        }
+        try {
+            const payload = await this.tokenService.verify(token);
+            const user = await this.usersService.findById(payload.sub);
+            if (!user) throw new WsException('User not found');
+            client.data.userId = user.id;
+            this.logger.log(`Chat connected: ${user.login} (${client.id})`);
+        } catch (error) {
+            this.logger.warn(`Chat auth failed: ${(error as Error)?.message ?? error}`);
+            client.disconnect();
+        }
+    }
 
-  @SubscribeMessage('joinChannel')
-  async handleJoinChannel(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { channelId: number },
-  ) {
-    const userId = client.data.userId;
-    await this.chatService.joinChannel(userId, payload.channelId);
-    client.join(`channel:${payload.channelId}`);
-    return { success: true };
-  }
+    handleDisconnect(client: any) {
+        this.logger.log(`Chat disconnected: ${client.id}`);
+    }
 
-  @SubscribeMessage('sendMessage')
-  async handleSendMessage(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { channelId: number; content: string },
-  ) {
-    const userId = client.data.userId;
-    const message = await this.chatService.sendMessage(userId, payload.channelId, payload.content);
-    this.server.to(`channel:${payload.channelId}`).emit('newMessage', message);
-    return message;
-  }
+    @SubscribeMessage('createChannel')
+    async handleCreateChannel(client: any, payload: { name: string; type: any; password?: string }) {
+        const channel = await this.chatService.createChannel(client.data.userId, payload.name, payload.type, payload.password);
+        client.join(`channel:${channel.id}`);
+        return channel;
+    }
 
-  @SubscribeMessage('getMessages')
-  async handleGetMessages(
-    @ConnectedSocket() _client: Socket,
-    @MessageBody() payload: { channelId: number },
-  ) {
-    return this.chatService.getMessages(payload.channelId);
-  }
+    @SubscribeMessage('joinChannel')
+    async handleJoinChannel(client: any, payload: { channelId: number }) {
+        await this.chatService.joinChannel(client.data.userId, payload.channelId);
+        client.join(`channel:${payload.channelId}`);
+        return { success: true };
+    }
+
+    @SubscribeMessage('sendMessage')
+    async handleSendMessage(client: any, payload: { channelId: number; content: string }) {
+        const message = await this.chatService.sendMessage(client.data.userId, payload.channelId, payload.content);
+        this.server.to(`channel:${payload.channelId}`).emit('newMessage', message);
+        return message;
+    }
+
+    @SubscribeMessage('getMessages')
+    async handleGetMessages(_client: any, payload: { channelId: number }) {
+        return this.chatService.getMessages(payload.channelId);
+    }
 }
