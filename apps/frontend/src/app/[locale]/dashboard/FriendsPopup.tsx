@@ -175,7 +175,15 @@ export default function FriendsPopup({ onClose }: { onClose: () => void }) {
                         </button>
                     ))}
                     <div style={{ flex: 1 }} />
-                    <button onClick={onClose} style={{ width: 40, height: 40, borderRadius: '50%', background: hotpink, border: 'none', cursor: 'pointer', fontSize: 18, color: '#fff', fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                    <button
+                        onClick={onClose}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')}
+                        onMouseUp={e => (e.currentTarget.style.opacity = '1')}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                    >
+                        <img src="/btn_cross.png" alt="fermer" draggable={false} style={{ height: 44, width: 'auto', display: 'block' }} />
+                    </button>
                 </div>
                 <div style={{ padding: '14px 14px', flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                     {tab === 'amis' && <Amis />}
