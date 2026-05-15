@@ -48,6 +48,8 @@ interface Room {
   player2: Player | null;
   interval?: any;
   targetYAI: number | null;
+  private_room: boolean;
+  invite_player: string | null;
 }
 
 @WebSocketGateway({
@@ -145,7 +147,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logger.log(`Player connected: ${login} (client ${client.id})`);
       let roomId: number | null = null;
       for (const [id, room] of this.rooms) {
-        if (room.player2 === null) { roomId = id; break; }
+        if (room.player2 === null && !room.private_room) { roomId = id; break; }
+        else if (room.private_room && room.invite_player === login) { roomId = id; break; }
       };
       if (roomId === null) {
         // si aucune room attent un joeur on cree
@@ -155,6 +158,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           player1: { id: client.id, pnumber: 1, pseudo: login, x: SPAWN_X_PLAYER_1, y: SPAWN_Y_PLAYERS, scale: 0, win: 0, isAI: false, twoPlayer: false },
           player2: null,
           targetYAI: null,
+          invite_player: null,
+          private_room: false,
         });
       } else {
         // sinon join
@@ -178,6 +183,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @brief Handles client disconnection and replace that client by a 
    * bot if the room is not empty (Julien : bot IA)
    */
+
   handleDisconnect(client: Socket) {
     const [room, roomId] = this.getRoomAndRoomId(client.id);
     if (!room || !roomId) return;
@@ -191,6 +197,16 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     this.addBotToRoom(room, roomId);
     this.sendPlayers(roomId.toString(), room);
+  }
+
+  //creation d'une room privee avec un inviter 
+  @SubscribeMessage('private_game')
+  handlePrivateGame(client: Socket, payload: {login: string}) {
+    if (!payload.login) return;
+    const [room, roomId] = this.getRoomAndRoomId(client.id);
+    if (!room || !roomId) return;
+    room.private_room = true;
+    room.invite_player = payload.login;
   }
 
   @SubscribeMessage('twoPlayer')

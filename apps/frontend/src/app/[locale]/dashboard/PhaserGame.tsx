@@ -67,7 +67,15 @@ class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard!.createCursorKeys();
         this.socket = io('/world', { withCredentials: true, reconnection: false });
 
+        // Expose l'emit pour les invitations depuis React
+        const onSocketReady = this.game.registry.get('onSocketReady') as ((s: Socket) => void) | undefined;
+        if (onSocketReady) onSocketReady(this.socket);
+
         this.socket.on('players', (players: PlayerBase[]) => {
+            // Notifie le composant React avec la liste des autres joueurs
+            const onPlayersUpdate = this.game.registry.get('onPlayersUpdate') as ((p: PlayerBase[]) => void) | undefined;
+            if (onPlayersUpdate) onPlayersUpdate(players.filter(p => p.id !== this.socket.id));
+
             const activeIds = new Set(players.map(p => p.id));
             this.otherPlayers.forEach((player, id) => {
                 if (!activeIds.has(id)) {
@@ -162,8 +170,14 @@ class GameScene extends Phaser.Scene {
     }
 }
 
-function DashboardOverlay() {
+interface DashboardOverlayProps {
+    onlinePlayers: PlayerBase[];
+    onInvitePlayer: (socketId: string) => void;
+}
+
+function DashboardOverlay({ onlinePlayers, onInvitePlayer }: DashboardOverlayProps) {
     const [open, setOpen] = useState(false);
+    const [showInviteModal, setShowInviteModal] = useState(false);
     const router = useRouter();
     const { logout } = useAuth();
     const handleLogout = async () => {
@@ -239,6 +253,17 @@ function DashboardOverlay() {
                         </svg>
                     </button>
 
+                    {/* Bouton game private */}
+                    <button
+                        className="text-black hover:text-[rgb(241,16,255)] mx-2 transition-all duration-200 ease-in-out hover:rotate-12 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-full"
+                        onClick={() => setShowInviteModal(true)}
+                        style={{cursor: 'pointer'}}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+                        </svg>
+                    </button>
+
                     {/* Bouton disconnect */}
                     <button className="text-red-500 hover:text-red-600 mx-2 transition-transform duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full" onClick={handleLogout}style={{cursor: 'pointer'}}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
@@ -247,6 +272,52 @@ function DashboardOverlay() {
                     </button>
                 </div>
             </div>
+
+            {/* Modal invitation partie privée */}
+            {showInviteModal && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50"
+                    onClick={() => setShowInviteModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl p-6 min-w-[280px] max-w-sm w-full"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <h2 className="text-lg font-bold mb-4 text-gray-800">Inviter un joueur</h2>
+
+                        {onlinePlayers.length === 0 ? (
+                            <p className="text-gray-400 text-sm text-center py-4">Aucun joueur en ligne</p>
+                        ) : (
+                            <ul className="space-y-2 max-h-60 overflow-y-auto">
+                                {onlinePlayers.map(player => (
+                                    <li key={player.id}>
+                                        <button
+                                            className="w-full text-left px-4 py-2 rounded-xl hover:bg-[rgb(241,16,255)] hover:text-white transition-all duration-150 text-gray-700 font-medium"
+                                            style={{cursor: 'pointer'}}
+                                            onClick={() => {
+                                                localStorage.setItem('invite_player', player.pseudo);
+                                                router.push(ROUTES.GAME);
+                                                // onInvitePlayer(player.id);
+                                                // setShowInviteModal(false);
+                                            }}
+                                        >
+                                            {player.pseudo}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+
+                        <button
+                            className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600 transition"
+                            style={{cursor: 'pointer'}}
+                            onClick={() => setShowInviteModal(false)}
+                        >
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -254,6 +325,8 @@ function DashboardOverlay() {
 
 export default function PhaserGame() {
     const ref = useRef<HTMLDivElement>(null);
+    const [onlinePlayers, setOnlinePlayers] = useState<PlayerBase[]>([]);
+    const socketRef = useRef<Socket | null>(null);
 
     useEffect(() => {
         const game = new Phaser.Game({
@@ -267,6 +340,14 @@ export default function PhaserGame() {
                 autoCenter: Phaser.Scale.CENTER_BOTH,
             },
         });
+
+        game.registry.set('onPlayersUpdate', (players: PlayerBase[]) => {
+            setOnlinePlayers(players);
+        });
+        game.registry.set('onSocketReady', (socket: Socket) => {
+            socketRef.current = socket;
+        });
+
         return () => {
             const scene = game.scene.scenes[0] as GameScene | undefined;
             if (scene?.socket) {
@@ -277,11 +358,15 @@ export default function PhaserGame() {
         };
     }, []);
 
+    const handleInvitePlayer = (socketId: string) => {
+        socketRef.current?.emit('invite', { targetId: socketId });
+    };
+
     // return <div ref={ref} style={{ width: '100vw', height: '100vh' }} />;
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
             <div ref={ref} style={{ width: '100%', height: '100%' }} />
-            <DashboardOverlay />
+            <DashboardOverlay onlinePlayers={onlinePlayers} onInvitePlayer={handleInvitePlayer} />
         </div>
     );
 }
