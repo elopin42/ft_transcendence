@@ -5,6 +5,7 @@ import { GameScene } from './GameScene';
 import ChatBar from './ChatBar';
 import FriendsPopup from './FriendsPopup';
 import ChatPopup from './ChatPopup';
+import SettingsPopup from './SettingsPopup';
 
 const playerName = 'nass42';
 
@@ -13,6 +14,7 @@ export default function PhaserGame() {
     const gRef = useRef<Phaser.Game | null>(null);
     const [friendsOpen, setFriendsOpen] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     useEffect(() => {
         const g = new Phaser.Game({
@@ -113,6 +115,7 @@ export default function PhaserGame() {
                 <div style={{ flex: 1 }} />
 
                 <button
+                    onClick={() => setSettingsOpen(o => !o)}
                     style={{
                         background: 'none',
                         border: 'none',
@@ -134,6 +137,7 @@ export default function PhaserGame() {
 
             {friendsOpen && <FriendsPopup onClose={() => setFriendsOpen(false)} />}
             {chatOpen && <ChatPopup onClose={() => setChatOpen(false)} />}
+            {settingsOpen && <SettingsPopup onClose={() => setSettingsOpen(false)} />}
 
             <style>{`
                 @keyframes blink-cursor {
