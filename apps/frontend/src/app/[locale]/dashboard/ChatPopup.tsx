@@ -169,8 +169,10 @@ export default function ChatPopup({ onClose }: { onClose: () => void }) {
                         <>
                             <button
                                 onClick={() => setSelected(null)}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#fff', fontSize: 22, fontWeight: 700, lineHeight: 1 }}
-                            >←</button>
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                            >
+                                <img src="/btn_retour.png" alt="retour" draggable={false} style={{ height: 44, width: 'auto', display: 'block' }} />
+                            </button>
                             <span style={{ fontWeight: 800, fontSize: 17, color: '#fff', flex: 1, textAlign: 'center', fontFamily: '"Segoe UI", sans-serif' }}>
                                 {selected.login}
                             </span>
