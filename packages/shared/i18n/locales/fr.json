@@ -167,5 +167,99 @@
       "copyright": "© 2026 MovieStar Paris 42. Tous droits réservés.",
       "privacy_policy": "Politique de confidentialité →"
     }
+  },
+  "privacy_policy": {
+    "title": "Politique de confidentialité",
+    "legal": "Légal",
+    "last_update": "Dernière modification : 16 mai 2026",
+    "intro": "MovieStar Paris 42 s'engage à protéger vos informations personnelles. Cette politique de confidentialité explique quelles données nous collectons, comment nous les utilisons et les choix dont vous disposez. En utilisant la Plateforme, vous acceptez les pratiques décrites ci-dessous.",
+    "information_we_collect": {
+      "title": "1. Informations que nous collectons",
+      "intro": "Nous collectons les catégories d'informations suivantes :",
+      "account_information": {
+        "title": "Informations du compte",
+        "content": "Lors de votre inscription, nous collectons votre nom d'utilisateur, votre adresse e-mail et votre mot de passe (stocké sous forme hachée). Vous pouvez également fournir une photo de profil ou une biographie."
+      },
+      "usage_data": {
+        "title": "Données d'utilisation",
+        "content": "Nous collectons automatiquement des informations sur la façon dont vous interagissez avec la Plateforme, notamment les pages visitées, les fonctionnalités utilisées, les scores de jeu et les horodatages d'activité."
+      },
+      "technical_data": {
+        "title": "Données techniques",
+        "content": "Nous collectons votre adresse IP, le type de navigateur, le système d'exploitation et les identifiants d'appareil afin d'assurer le bon fonctionnement de la Plateforme et de détecter les abus."
+      },
+      "communications": {
+        "title": "Communications",
+        "content": "Si vous nous contactez par e-mail ou via la messagerie de la Plateforme, nous conservons ces échanges pour répondre à vos demandes et améliorer notre support."
+      }
+    },
+    "how_we_use": {
+      "title": "2. Utilisation de vos informations",
+      "intro": "Nous utilisons les données collectées pour :",
+      "items": [
+        "Créer et gérer votre compte.",
+        "Fournir, maintenir et améliorer la Plateforme.",
+        "Personnaliser votre expérience et afficher du contenu pertinent.",
+        "Assurer la sécurité et l'intégrité de la Plateforme.",
+        "Vous informer des mises à jour, modifications ou du support.",
+        "Respecter les obligations légales applicables."
+      ],
+      "outro": "Nous ne vendons pas vos données personnelles à des tiers."
+    },
+    "cookies": {
+      "title": "3. Cookies et technologies similaires",
+      "content": "Nous utilisons des cookies et des technologies de suivi similaires pour maintenir votre session, mémoriser vos préférences et analyser les habitudes d'utilisation. Vous pouvez gérer les paramètres des cookies via votre navigateur. La désactivation de certains cookies peut affecter le fonctionnement de la Plateforme."
+    },
+    "data_sharing": {
+      "title": "4. Partage des données et tiers",
+      "intro": "Nous pouvons partager vos informations dans les circonstances limitées suivantes :",
+      "items": [
+        "Avec des prestataires de services qui nous aident à exploiter la Plateforme (par ex. hébergement, analytique), dans le cadre d'accords de confidentialité stricts.",
+        "Lorsque la loi, une ordonnance judiciaire ou une autorité gouvernementale l'exige.",
+        "Pour protéger les droits, la propriété ou la sécurité de MovieStar Paris 42 ou de ses utilisateurs.",
+        "Dans le cadre d'une fusion, acquisition ou cession d'actifs, auquel cas les utilisateurs en seront informés."
+      ]
+    },
+    "data_retention": {
+      "title": "5. Conservation des données",
+      "content": "Nous conservons vos données personnelles aussi longtemps que votre compte est actif ou que nécessaire pour fournir la Plateforme. Si vous supprimez votre compte, nous supprimerons ou anonymiserons vos données dans un délai de 30 jours, sauf obligation légale de conservation ou besoin légitime de sécurité."
+    },
+    "data_security": {
+      "title": "6. Sécurité des données",
+      "content": "Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données contre tout accès non autorisé, modification, divulgation ou destruction. Les mots de passe sont hachés et ne sont jamais stockés en clair. Cependant, aucune méthode de transmission sur Internet n'est sécurisée à 100 %, et nous ne pouvons garantir une sécurité absolue."
+    },
+    "childrens_privacy": {
+      "title": "7. Confidentialité des mineurs",
+      "content": "La Plateforme est destinée aux utilisateurs âgés de 13 ans et plus. Nous ne collectons pas sciemment de données personnelles d'enfants de moins de 13 ans. Si nous apprenons qu'un enfant de moins de 13 ans nous a fourni des données personnelles, nous prendrons des mesures pour les supprimer rapidement. Si vous pensez qu'un enfant s'est inscrit sans le consentement de ses parents, veuillez nous contacter."
+    },
+    "your_rights": {
+      "title": "8. Vos droits",
+      "intro": "Selon votre juridiction, vous pouvez disposer des droits suivants concernant vos données personnelles :",
+      "items": [
+        "Accès — demander une copie des données que nous détenons sur vous.",
+        "Rectification — demander la correction de données inexactes.",
+        "Effacement — demander la suppression de vos données (sous réserve d'obligations légales).",
+        "Portabilité — recevoir vos données dans un format structuré et lisible par machine.",
+        "Opposition — vous opposer à certaines activités de traitement.",
+        "Limitation — demander que nous limitions le traitement dans certaines circonstances."
+      ],
+      "outro": "Pour exercer l'un de ces droits, contactez-nous à l'adresse ci-dessous. Nous répondrons dans un délai de 30 jours."
+    },
+    "international_transfers": {
+      "title": "9. Transferts internationaux",
+      "content": "Vos données peuvent être traitées et stockées dans des pays autres que le vôtre. En utilisant la Plateforme, vous consentez au transfert de vos données vers ces pays. Nous prenons des mesures pour garantir que des protections appropriées sont en place pour ces transferts, conformément à la loi applicable."
+    },
+    "changes_to_policy": {
+      "title": "10. Modifications de cette politique",
+      "content": "Nous pouvons mettre à jour cette politique de confidentialité de temps à autre. Nous vous informerons des modifications importantes en mettant à jour la date en haut de cette page ou en vous envoyant une notification sur la Plateforme. La poursuite de l'utilisation de la Plateforme après l'entrée en vigueur des modifications vaut acceptation de la politique mise à jour."
+    },
+    "contact": {
+      "title": "11. Contact",
+      "content": "Pour toute question ou demande relative à la confidentialité, veuillez nous contacter à l'adresse suivante :"
+    },
+    "footer": {
+      "copyright": "© 2026 MovieStar Paris 42. Tous droits réservés.",
+      "terms_of_service": "Conditions générales d'utilisation →"
+    }
   }
 }
