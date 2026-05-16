@@ -73,6 +73,13 @@ class GameScene extends Phaser.Scene {
         this.socket.on('players', ({ players, bal }: { players: FootPlayer[], bal: { x: number, y: number } }) => {
             const activeIds = new Set(players.map(p => p.id));
 
+            const invite = localStorage.getItem('invite_player');
+            if (invite) {
+                console.log('invite ', invite)
+                this.socket.emit('private_game', { login: invite });
+                localStorage.removeItem('invite_player');
+            }
+
             // Cleanup disconnected
             this.otherPlayers.forEach((player, id) => {
                 if (!activeIds.has(id)) {

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ChatModule } from '@/modules/chat/chat.module'
 
 import { AppController } from '@/app.controller';
 import { PrismaModule } from '@/common/prisma/prisma.module';
@@ -33,6 +34,7 @@ import { validateEnv } from '@/common/config/env.config';
     UsersModule,
     GameModule,
     GameFootModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [

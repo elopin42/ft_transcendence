@@ -11,6 +11,7 @@ export const ROUTES = {
   HOME: '/',
   AUTH: '/auth',
   DASHBOARD: '/dashboard',
+  GAME: '/game',
 } as const;
 
 export const ROUTES_PUBLIC = ['/auth', '/not-found'] as const ;
