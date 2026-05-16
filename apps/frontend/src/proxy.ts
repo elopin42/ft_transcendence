@@ -60,11 +60,11 @@ export async function proxy(req: NextRequest) {
 
     // --- LOGIQUE DE REDIRECTION ---
 
-    // // CAS B : Non connecté tente d'aller sur une route privée
-    // if (!valid && !isPublic) {
-    //     const locale = req.cookies.get('NEXT_LOCALE')?.value || defaultLocale;
-    //     return NextResponse.redirect(new URL(`/${locale}${ROUTES.AUTH}`, req.url));
-    // }
+    // CAS B : Non connecté tente d'aller sur une route privée
+    if (!valid && !isPublic) {
+        const locale = req.cookies.get('NEXT_LOCALE')?.value || defaultLocale;
+        return NextResponse.redirect(new URL(`/${locale}${ROUTES.AUTH}`, req.url));
+    }
 
     // CAS C : Connecté tente d'aller sur Login/Register (sauf la home '/')
     if (valid && isPublic && pathWithoutLocale !== '/') {

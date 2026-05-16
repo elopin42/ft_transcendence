@@ -1,0 +1,63 @@
+/* Pages legales (policy / privacy) - placeholder d'exemple */
+
+.legal-wrapper {
+    min-height: 100vh;
+    width: 100vw;
+    background-image: url('/background_start.png');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+
+.legal-card {
+    max-width: 720px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 18px;
+    padding: 40px 44px;
+    box-shadow: 0 12px 32px rgba(26, 74, 102, 0.18);
+    font-family: 'Montserrat', sans-serif;
+    color: #1a4a66;
+}
+
+.legal-title {
+    font-weight: 900;
+    font-size: 2em;
+    margin: 0 0 12px;
+    color: rgb(241, 16, 134);
+    letter-spacing: 0.02em;
+}
+
+.legal-lead {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 0 0 20px;
+    line-height: 1.4;
+}
+
+.legal-body {
+    font-size: 0.98em;
+    line-height: 1.6;
+    margin: 0 0 28px;
+}
+
+.legal-back {
+    display: inline-block;
+    text-decoration: none;
+    color: #ffffff;
+    background: rgb(241, 16, 134);
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.legal-back:hover {
+    transform: scale(1.03);
+    opacity: 0.92;
+}

@@ -5,7 +5,7 @@ const teal = '#4dd9e8';
 const hotpink = '#e0358b';
 const babyblue = '#b8eef5';
 
-type Page = 'home' | 'compte' | 'securite';
+type Page = 'home' | 'compte' | 'securite' | 'langue';
 
 const avatars = [
     '/avatars/av1.png',
@@ -120,18 +120,59 @@ function SecuritePage() {
     );
 }
 
+const LANGUES = [
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'en', label: 'English', flag: '🇬🇧' },
+];
+
+function LanguePage() {
+    const [selected, setSelected] = useState('fr');
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, height: '100%' }}>
+            {LANGUES.map(l => (
+                <div
+                    key={l.code}
+                    onClick={() => setSelected(l.code)}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 14,
+                        padding: '12px 16px', borderRadius: 12,
+                        background: babyblue, cursor: 'pointer',
+                        border: selected === l.code ? '3px solid ' + hotpink : '3px solid transparent',
+                    }}
+                >
+                    <span style={{ fontSize: 32 }}>{l.flag}</span>
+                    <span style={{ fontWeight: 700, fontSize: 15, color: '#333' }}>{l.label}</span>
+                    {selected === l.code && (
+                        <span style={{ marginLeft: 'auto', color: hotpink, fontWeight: 800, fontSize: 18 }}>✓</span>
+                    )}
+                </div>
+            ))}
+            <SaveBtn onClick={() => {}} />
+        </div>
+    );
+}
+
 function HomePage({ onNavigate }: { onNavigate: (p: Page) => void }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, flex: 1, alignContent: 'center' }}>
-                <button onClick={() => onNavigate('compte')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                    <img src="/btn_compte.png" alt="Mon compte" draggable={false} style={{ height: 90, width: 'auto' }} />
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Mon compte</span>
-                </button>
-                <button onClick={() => onNavigate('securite')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                    <img src="/btn_securite.png" alt="Sécurité" draggable={false} style={{ height: 90, width: 'auto' }} />
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Sécurité</span>
-                </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, flex: 1, justifyContent: 'center' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                    <button onClick={() => onNavigate('compte')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                        <img src="/btn_compte.png" alt="Mon compte" draggable={false} style={{ height: 90, width: 'auto' }} />
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Mon compte</span>
+                    </button>
+                    <button onClick={() => onNavigate('securite')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                        <img src="/btn_securite.png" alt="Sécurité" draggable={false} style={{ height: 90, width: 'auto' }} />
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Sécurité</span>
+                    </button>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <button onClick={() => onNavigate('langue')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                        <img src="/btn_langue.png" alt="Langue" draggable={false} style={{ height: 90, width: 'auto' }} />
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Langue</span>
+                    </button>
+                </div>
             </div>
 
             <button style={{ background: 'none', border: 'none', cursor: 'pointer', margin: '0 auto 8px', display: 'flex' }}>
@@ -153,6 +194,7 @@ export default function SettingsPopup({ onClose }: { onClose: () => void }) {
         home: 'Options de jeu',
         compte: 'Mon compte',
         securite: 'Sécurité',
+        langue: 'Langue',
     };
 
     return (
@@ -200,6 +242,7 @@ export default function SettingsPopup({ onClose }: { onClose: () => void }) {
                     {page === 'home' && <HomePage onNavigate={setPage} />}
                     {page === 'compte' && <ComptePage />}
                     {page === 'securite' && <SecuritePage />}
+                    {page === 'langue' && <LanguePage />}
                 </div>
             </div>
         </div>
