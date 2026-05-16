@@ -13,7 +13,7 @@ export default async function Home() {
         <h1 className="subtitle-front">{t('subtitle')}</h1>
       </div>
       <div className="button">
-        <Link className="main-btn-msp pink-button" href={ROUTES.REGISTER}>
+        <Link className="main-btn-msp pink-button" href={ROUTES.AUTH}>
           {t('play_button')} {/* JOUER MAINTENANT / PLAY NOW */}
         </Link>
         <div className="button-art">

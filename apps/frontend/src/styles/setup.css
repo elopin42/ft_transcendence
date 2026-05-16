@@ -236,3 +236,27 @@
   cursor: pointer;
   padding: 0;
 }
+
+.submit-button {
+  width: 50%;
+  border: none;
+  color: hsla(192, 100%, 88%, 0.806);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(102, 224, 255, 0.2) 27%,
+    rgba(102, 224, 255, 0.2) 63%,
+    transparent 100%
+  );
+  clip-path: polygon(0 0, 85% 0%, 100% 0, 100% 15%, 100% 90%, 91% 100%, 0 100%);
+  padding: 0.5em;
+  animation: blinkShadowsFilter 0.5s ease-in infinite;
+  transition: all 500ms;
+}
+
+.submit-button:hover {
+  color: hsl(0, 0%, 100%);
+  cursor: pointer;
+  font-size: medium;
+  font-weight: bold;
+}

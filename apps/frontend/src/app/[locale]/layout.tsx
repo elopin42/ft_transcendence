@@ -5,7 +5,6 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from 'next/navigation';
 import { AuthProvider } from "@/providers/AuthProvider";
 import { LOCALES } from "@ftt/shared/i18n";
-import DebugPanel from "@/components/debug/DebugPanel";
 import "../globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -42,7 +41,6 @@ export default async function LocaleLayout({
 			<body className="min-h-full flex flex-col">
 				<NextIntlClientProvider locale={locale} messages={messages}>
 					<AuthProvider>
-						<DebugPanel />
 						{children}
 					</AuthProvider>
 				</NextIntlClientProvider>

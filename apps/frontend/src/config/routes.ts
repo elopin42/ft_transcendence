@@ -9,9 +9,8 @@ export const IS_PRIVATE = false;
 
 export const ROUTES = {
   HOME: '/',
-  AUTH: '/auth',       // etait /login
-  REGISTER: '/register',
+  AUTH: '/auth',
   DASHBOARD: '/dashboard',
 } as const;
 
-export const ROUTES_PUBLIC = ['/auth', '/register', '/not-found'] as const ;
+export const ROUTES_PUBLIC = ['/auth', '/not-found'] as const ;
