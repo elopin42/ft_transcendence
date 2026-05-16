@@ -13,6 +13,8 @@ export const ROUTES = {
   REGISTER: '/register',
   DASHBOARD: '/dashboard',
   GAME: '/game',
+  POLICY: '/policy',
+  PRIVACY: '/privacy',
 } as const;
 
-export const ROUTES_PUBLIC = ['/auth', '/register', '/not-found'] as const ;
+export const ROUTES_PUBLIC = ['/auth', '/register', '/not-found', '/policy', '/privacy'] as const ;
