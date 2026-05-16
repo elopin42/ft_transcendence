@@ -1,0 +1,265 @@
+{
+  "common": {
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar sesión",
+    "play": "Jugar",
+    "loading": "Cargando..."
+  },
+  "landing": {
+    "subtitle": "Friends, Fun, code & Connect",
+    "play_button": "Juega a MovieStarParis 42"
+  },
+  "auth": {
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "login_title": "Iniciar sesión",
+    "login_hint": "¡Mantente cerca de tus amigos! Conéctate con el mismo usuario.",
+    "register_title": "Crear una cuenta",
+    "login_42": "Conectarse con 42",
+    "no_account": "¿No tienes cuenta?",
+    "has_account": "¿Ya tienes cuenta?",
+    "error_login": "Error de inicio de sesión",
+    "error_42": "Conexión 42 no disponible",
+    "username": "Nombre de usuario",
+    "username_placeholder": "Introduce tu nombre de usuario",
+    "email_placeholder": "Introduce tu correo electrónico",
+    "password_placeholder": "Introduce tu contraseña",
+    "next": "Siguiente",
+    "finish": "Finalizar",
+    "choose_character": "¿Quién quieres ser?",
+    "choose_name": "¡Elige tu nombre de estrella!",
+    "create_account": "¡Crea tu cuenta!",
+    "what_name": "¿Cuál será tu nombre?"
+  },
+  "errors": {
+    "auth": {
+      "login": {
+        "invalid_credentials": "Correo electrónico o contraseña incorrectos."
+      },
+      "oauth_42": {
+        "failed": "La conexión mediante 42 ha fallado. Inténtalo de nuevo."
+      },
+      "register": {
+        "email_taken": "Este correo electrónico ya está en uso.",
+        "login_taken": "Este nombre de usuario ya está ocupado."
+      },
+      "token": {
+        "expired": "Tu sesión ha expirado, vuelve a iniciar sesión.",
+        "invalid": "Sesión inválida. Vuelve a iniciar sesión.",
+        "refresh_reused": "Anomalía de seguridad detectada. Todas tus sesiones han sido cerradas por tu seguridad."
+      }
+    },
+    "validation": {
+      "email": {
+        "invalid": "Formato de correo electrónico inválido.",
+        "required": "El correo electrónico es obligatorio.",
+        "too_long": "El correo electrónico es demasiado largo (máx. 254 caracteres)."
+      },
+      "password": {
+        "required": "La contraseña es obligatoria.",
+        "too_short": "La contraseña debe tener al menos 12 caracteres.",
+        "too_long": "La contraseña es demasiado larga (máx. 128 caracteres).",
+        "missing_complexity": "La contraseña debe contener una minúscula, una mayúscula, un número y un carácter especial."
+      },
+      "login": {
+        "required": "El nombre de usuario es obligatorio.",
+        "too_short": "El nombre de usuario debe tener al menos 3 caracteres.",
+        "too_long": "El nombre de usuario es demasiado largo (máx. 20 caracteres).",
+        "invalid_chars": "El nombre de usuario solo puede contener letras, números, _ y -."
+      },
+      "failed": "Datos inválidos."
+    },
+    "two_fa": {
+      "not_enabled": "La autenticación de dos factores no está activada.",
+      "already_enabled": "La autenticación de dos factores ya está activa.",
+      "invalid_code": "Código de verificación inválido.",
+      "invalid_backup_code": "Código de respaldo inválido.",
+      "required": "La autenticación de dos factores es obligatoria para esta acción."
+    },
+    "user": {
+      "not_found": "Usuario no encontrado.",
+      "profile_incomplete": "Perfil incompleto, completa tu información.",
+      "permission_denied": "Acceso denegado."
+    },
+    "game": {
+      "not_found": "Partida no encontrada.",
+      "full": "La partida está completa.",
+      "already_started": "La partida ya ha comenzado."
+    },
+    "rate_limit": {
+      "exceeded": "Demasiadas solicitudes, ve más despacio.",
+      "brute_force": "Demasiados intentos, espera unos minutos."
+    },
+    "generic": {
+      "bad_request": "Solicitud inválida.",
+      "unauthorized": "Autenticación requerida.",
+      "forbidden": "Acción no autorizada.",
+      "not_found": "Recurso no encontrado.",
+      "conflict": "Conflicto con el estado actual del recurso.",
+      "unknown": "Se ha producido un error inesperado."
+    }
+  },
+  "terms_of_service": {
+    "title": "Términos y condiciones de uso",
+    "legal": "Legal",
+    "last_update": "Última actualización: 16 de mayo de 2026",
+    "acceptance_of_terms": {
+      "title": "1. Aceptación de los términos",
+      "content": "Al crear una cuenta o acceder a MovieStar Paris 42 (la \"Plataforma\"), aceptas quedar vinculado por estos Términos y condiciones de uso. Si no aceptas estos términos, por favor no uses la Plataforma. Estos términos constituyen un acuerdo legalmente vinculante entre tú y MovieStar Paris 42."
+    },
+    "eligibility": {
+      "title": "2. Elegibilidad",
+      "content": "Debes tener al menos 13 años para usar la Plataforma. Al registrarte, confirmas que cumples este requisito. Si tienes menos de 18 años, debes obtener el consentimiento de un padre o tutor. Nos reservamos el derecho de eliminar las cuentas de usuarios que mientan sobre su edad."
+    },
+    "account_responsibilities": {
+      "title": "3. Responsabilidades de la cuenta",
+      "intro": "Eres responsable de la confidencialidad de tus credenciales y de todas las actividades realizadas desde tu cuenta. Te comprometes a:",
+      "items": [
+        "Proporcionar información de registro exacta y completa.",
+        "No compartir tu cuenta con terceros.",
+        "Notificarnos inmediatamente cualquier acceso no autorizado o violación de seguridad.",
+        "Usar solo una cuenta por persona, salvo autorización expresa."
+      ]
+    },
+    "user_conduct": {
+      "title": "4. Comportamiento de los usuarios",
+      "intro": "Te comprometes a no adoptar comportamientos dañinos, perturbadores o ilegales. Las conductas prohibidas incluyen, entre otras:",
+      "items": [
+        "Acoso, intimidación o amenazas hacia otros usuarios.",
+        "Subir o compartir contenido ilegal, obsceno u ofensivo.",
+        "Intentar hackear, explotar o interrumpir la Plataforma o sus servidores.",
+        "Usar scripts automatizados, bots o trampas para obtener ventajas injustas.",
+        "Suplantar la identidad de una persona o entidad.",
+        "Cualquier forma de fraude o prácticas engañosas."
+      ],
+      "outro": "El incumplimiento puede resultar en la suspensión o cancelación definitiva de tu cuenta sin previo aviso."
+    },
+    "virtual_items": {
+      "title": "5. Objetos virtuales y contenido de la Plataforma",
+      "content": "MovieStar Paris 42 puede ofrecer objetos virtuales y/o cosméticos. Estos elementos no tienen valor monetario real y no pueden canjearse por dinero real. Todos los objetos virtuales se te conceden bajo licencia, no se venden, y pueden modificarse o eliminarse en cualquier momento. No somos responsables de la pérdida de objetos virtuales por cancelación de cuenta, inactividad o problemas técnicos."
+    },
+    "intellectual_property": {
+      "title": "6. Propiedad intelectual",
+      "content": "Todo el contenido de la Plataforma, incluidos gráficos, código, textos y marcas, es propiedad de MovieStar Paris 42 o de sus licenciantes y está protegido por las leyes de propiedad intelectual aplicables. No puedes copiar, reproducir, distribuir ni crear obras derivadas sin nuestro permiso expreso por escrito. El contenido generado por los usuarios sigue siendo de tu propiedad, pero al publicarlo nos otorgas una licencia no exclusiva y libre de regalías para usarlo, mostrarlo y distribuirlo dentro de la Plataforma."
+    },
+    "termination": {
+      "title": "7. Cancelación",
+      "content": "Nos reservamos el derecho de suspender o cancelar tu acceso a la Plataforma en cualquier momento, con o sin causa, y con o sin previo aviso. En caso de cancelación, tu derecho a usar la Plataforma cesa de inmediato."
+    },
+    "disclaimer_of_warranties": {
+      "title": "8. Exclusión de garantías",
+      "content": "La Plataforma se proporciona \"tal cual\" y \"según disponibilidad\", sin garantías de ningún tipo, expresas o implícitas. No garantizamos que la Plataforma sea ininterrumpida, libre de errores o de componentes dañinos. El uso de la Plataforma es bajo tu propio riesgo."
+    },
+    "limitation_of_liability": {
+      "title": "9. Limitación de responsabilidad",
+      "content": "En la máxima medida permitida por la ley, MovieStar Paris 42 no será responsable de daños indirectos, incidentales, especiales o consecuentes derivados del uso o la imposibilidad de uso de la Plataforma, incluso si hemos sido informados de la posibilidad de dichos daños."
+    },
+    "changes_to_terms": {
+      "title": "10. Modificaciones de estos términos",
+      "content": "Podemos actualizar estos Términos y condiciones de uso de vez en cuando. En tal caso, actualizaremos la fecha de \"Última actualización\" en la parte superior de esta página. El uso continuado de la Plataforma tras los cambios implica la aceptación de los términos revisados. Te recomendamos revisar estos términos periódicamente."
+    },
+    "contact": {
+      "title": "11. Contacto",
+      "content": "Para cualquier pregunta sobre estos Términos y condiciones de uso, contáctanos en la siguiente dirección:"
+    },
+    "footer": {
+      "copyright": "© 2026 MovieStar Paris 42. Todos los derechos reservados.",
+      "privacy_policy": "Política de privacidad →"
+    }
+  },
+  "privacy_policy": {
+    "title": "Política de privacidad",
+    "legal": "Legal",
+    "last_update": "Última actualización: 16 de mayo de 2026",
+    "intro": "MovieStar Paris 42 se compromete a proteger tu información personal. Esta política de privacidad explica qué datos recopilamos, cómo los usamos y las opciones de las que dispones. Al usar la Plataforma, aceptas las prácticas descritas a continuación.",
+    "information_we_collect": {
+      "title": "1. Información que recopilamos",
+      "intro": "Recopilamos las siguientes categorías de información:",
+      "account_information": {
+        "title": "Información de la cuenta",
+        "content": "Al registrarte, recopilamos tu nombre de usuario, dirección de correo electrónico y contraseña (almacenada en forma cifrada). También puedes proporcionar una foto de perfil o una biografía."
+      },
+      "usage_data": {
+        "title": "Datos de uso",
+        "content": "Recopilamos automáticamente información sobre cómo interactúas con la Plataforma, incluidas las páginas visitadas, las funciones usadas, las puntuaciones del juego y las marcas de tiempo de actividad."
+      },
+      "technical_data": {
+        "title": "Datos técnicos",
+        "content": "Recopilamos tu dirección IP, tipo de navegador, sistema operativo e identificadores de dispositivo para garantizar el correcto funcionamiento de la Plataforma y detectar abusos."
+      },
+      "communications": {
+        "title": "Comunicaciones",
+        "content": "Si nos contactas por correo electrónico o mediante la mensajería de la Plataforma, conservamos esas comunicaciones para responder a tus consultas y mejorar nuestro soporte."
+      }
+    },
+    "how_we_use": {
+      "title": "2. Uso de tu información",
+      "intro": "Usamos los datos recopilados para:",
+      "items": [
+        "Crear y gestionar tu cuenta.",
+        "Proporcionar, mantener y mejorar la Plataforma.",
+        "Personalizar tu experiencia y mostrar contenido relevante.",
+        "Garantizar la seguridad e integridad de la Plataforma.",
+        "Informarte sobre actualizaciones, cambios o soporte.",
+        "Cumplir con las obligaciones legales aplicables."
+      ],
+      "outro": "No vendemos tus datos personales a terceros."
+    },
+    "cookies": {
+      "title": "3. Cookies y tecnologías similares",
+      "content": "Usamos cookies y tecnologías de seguimiento similares para mantener tu sesión, recordar tus preferencias y analizar los patrones de uso. Puedes gestionar la configuración de cookies a través de tu navegador. Deshabilitar ciertas cookies puede afectar al funcionamiento de la Plataforma."
+    },
+    "data_sharing": {
+      "title": "4. Compartición de datos y terceros",
+      "intro": "Podemos compartir tu información en las siguientes circunstancias limitadas:",
+      "items": [
+        "Con proveedores de servicios que nos ayudan a operar la Plataforma (p. ej., alojamiento, analítica), bajo estrictos acuerdos de confidencialidad.",
+        "Cuando lo exija la ley, una orden judicial o una autoridad gubernamental.",
+        "Para proteger los derechos, la propiedad o la seguridad de MovieStar Paris 42 o sus usuarios.",
+        "En el contexto de una fusión, adquisición o venta de activos, en cuyo caso se notificará a los usuarios."
+      ]
+    },
+    "data_retention": {
+      "title": "5. Conservación de datos",
+      "content": "Conservamos tus datos personales mientras tu cuenta esté activa o sea necesario para proporcionar la Plataforma. Si eliminas tu cuenta, suprimiremos o anonimizaremos tus datos en un plazo de 30 días, salvo obligación legal de conservación o necesidad legítima de seguridad."
+    },
+    "data_security": {
+      "title": "6. Seguridad de los datos",
+      "content": "Implementamos medidas técnicas y organizativas apropiadas para proteger tus datos contra el acceso no autorizado, alteración, divulgación o destrucción. Las contraseñas se cifran y nunca se almacenan en texto plano. Sin embargo, ningún método de transmisión por Internet es 100 % seguro, y no podemos garantizar una seguridad absoluta."
+    },
+    "childrens_privacy": {
+      "title": "7. Privacidad de los menores",
+      "content": "La Plataforma está destinada a usuarios mayores de 13 años. No recopilamos conscientemente datos personales de menores de 13 años. Si tenemos conocimiento de que un menor de 13 años nos ha proporcionado datos personales, tomaremos medidas para eliminarlos de inmediato. Si crees que un menor se ha registrado sin el consentimiento de sus padres, contáctanos."
+    },
+    "your_rights": {
+      "title": "8. Tus derechos",
+      "intro": "Según tu jurisdicción, puedes tener los siguientes derechos sobre tus datos personales:",
+      "items": [
+        "Acceso — solicitar una copia de los datos que tenemos sobre ti.",
+        "Rectificación — solicitar la corrección de datos inexactos.",
+        "Supresión — solicitar la eliminación de tus datos (sujeto a obligaciones legales).",
+        "Portabilidad — recibir tus datos en un formato estructurado y legible por máquina.",
+        "Oposición — oponerte a ciertas actividades de tratamiento.",
+        "Limitación — solicitar que limitemos el tratamiento en determinadas circunstancias."
+      ],
+      "outro": "Para ejercer cualquiera de estos derechos, contáctanos en la dirección indicada a continuación. Responderemos en un plazo de 30 días."
+    },
+    "international_transfers": {
+      "title": "9. Transferencias internacionales",
+      "content": "Tus datos pueden ser procesados y almacenados en países distintos al tuyo. Al usar la Plataforma, consientes la transferencia de tus datos a dichos países. Tomamos medidas para garantizar que existan las salvaguardas adecuadas para estas transferencias, de conformidad con la legislación aplicable."
+    },
+    "changes_to_policy": {
+      "title": "10. Cambios en esta política",
+      "content": "Podemos actualizar esta política de privacidad de vez en cuando. Te informaremos de cambios significativos actualizando la fecha en la parte superior de esta página o enviándote una notificación en la Plataforma. El uso continuado de la Plataforma tras la entrada en vigor de los cambios implica la aceptación de la política actualizada."
+    },
+    "contact": {
+      "title": "11. Contacto",
+      "content": "Para cualquier pregunta o solicitud relacionada con la privacidad, contáctanos en la siguiente dirección:"
+    },
+    "footer": {
+      "copyright": "© 2026 MovieStar Paris 42. Todos los derechos reservados.",
+      "terms_of_service": "Términos y condiciones de uso →"
+    }
+  }
+}
