@@ -99,5 +99,73 @@
       "conflict": "Conflict with current resource state.",
       "unknown": "An unexpected error occurred."
     }
+  },
+  "terms_of_service": {
+    "title": "Terms of Service",
+    "legal": "Legal",
+    "last_update": "Last updated: May 16, 2026",
+    "acceptance_of_terms": {
+      "title": "1. Acceptance of Terms",
+      "content": "By creating an account or accessing MovieStar Paris 42 (the \"Platform\"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Platform. These terms constitute a legally binding agreement between you and MovieStar Paris 42."
+    },
+    "eligibility": {
+      "title": "2. Eligibility",
+      "content": "You must be at least 13 years old to use the Platform. By registering, you confirm that you meet this requirement. If you are under 18, you must obtain parental or guardian consent. We reserve the right to terminate accounts of users who misrepresent their age."
+    },
+    "account_responsibilities": {
+      "title": "3. Account Responsibilities",
+      "intro": "You are responsible for maintaining the confidentiality of your credentials and for all activities that occur under your account. You agree to:",
+      "items": [
+      "Provide accurate and complete registration information.",
+      "Not share your account with any third party.",
+      "Notify us immediately of any unauthorized access or security breach.",
+      "Use only one account per person unless explicitly authorized."
+      ]
+    },
+    "user_conduct": {
+      "title": "4. User Conduct",
+      "intro": "You agree not to engage in any harmful, disruptive, or unlawful behavior. Prohibited conduct includes but is not limited to:",
+      "items": [
+      "Harassment, bullying, or threatening other users.",
+      "Uploading or sharing illegal, obscene, or offensive content.",
+      "Attempting to hack, exploit, or disrupt the Platform or its servers.",
+      "Using automated scripts, bots, or cheats to gain unfair advantages.",
+      "Impersonating another person or entity.",
+      "Engaging in any form of fraud or deceptive practices."
+      ],
+      "outro": "Violations may result in suspension or permanent termination of your account without prior notice."
+    },
+    "virtual_items": {
+      "title": "5. Virtual Items & In-Platform Content",
+      "content": "MovieStar Paris 42 may offer virtual items and/or cosmetics. These items have no real-world monetary value and cannot be exchanged for real currency. All virtual items are licensed to you, not sold, and may be modified or removed at any time. We are not responsible for any loss of virtual items due to account termination, inactivity, or technical issues."
+    },
+    "intellectual_property": {
+      "title": "6. Intellectual Property",
+      "content": "All content on the Platform, including graphics, code, text, and trademarks, is owned by MovieStar Paris 42 or its licensors and is protected by applicable intellectual property laws. You may not copy, reproduce, distribute, or create derivative works without our express written permission. User-generated content remains your property, but by uploading it you grant us a non-exclusive, royalty-free license to use, display, and distribute it within the Platform."
+    },
+    "termination": {
+      "title": "7. Termination",
+      "content": "We reserve the right to suspend or terminate your access to the Platform at any time, with or without cause, and with or without notice. Upon termination, your right to use the Platform immediately ceases."
+    },
+    "disclaimer_of_warranties": {
+      "title": "8. Disclaimer of Warranties",
+      "content": "The Platform is provided \"as is\" and \"as available\" without warranties of any kind, either express or implied. We do not warrant that the Platform will be uninterrupted, error-free, or free of harmful components. Your use of the Platform is at your own risk."
+    },
+    "limitation_of_liability": {
+      "title": "9. Limitation of Liability",
+      "content": "To the fullest extent permitted by law, MovieStar Paris 42 shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of or inability to use the Platform, even if we have been advised of the possibility of such damages."
+    },
+    "changes_to_terms": {
+      "title": "10. Changes to These Terms",
+      "content": "We may update these Terms of Service from time to time. When we do, we will revise the \"Last updated\" date at the top of this page. Continued use of the Platform after changes constitutes your acceptance of the revised terms. We encourage you to review these terms periodically."
+    },
+    "contact": {
+      "title": "11. Contact",
+      "content": "For any questions regarding these Terms of Service, please contact us at:"
+    },
+    "footer": {
+      "copyright": "© 2026 MovieStar Paris 42. All rights reserved.",
+      "privacy_policy": "Privacy Policy →"
+    }
   }
 }

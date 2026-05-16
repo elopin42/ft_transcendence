@@ -12,6 +12,8 @@ export const ROUTES = {
   AUTH: '/auth',
   DASHBOARD: '/dashboard',
   GAME: '/game',
+  PRIVACY_POLICY: '/privacy-policy',
+  TERMS_OF_SERVICE: '/terms-of-service'
 } as const;
 
-export const ROUTES_PUBLIC = ['/auth', '/not-found'] as const ;
+export const ROUTES_PUBLIC = [ROUTES.AUTH, ROUTES.PRIVACY_POLICY, ROUTES.TERMS_OF_SERVICE, '/not-found'] as const ;

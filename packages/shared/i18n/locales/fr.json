@@ -8,7 +8,7 @@
   },
   "landing": {
     "subtitle": "Friends, Fun, code & Connect",
-    "play_button": "Play MovieStarParis 42"
+    "play_button": "Joue à MovieStarParis 42"
   },
   "auth": {
     "email": "Email",
@@ -38,66 +38,134 @@
         "invalid_credentials": "Email ou mot de passe incorrect."
       },
       "oauth_42": {
-        "failed": "La connexion via 42 a echoue. Reessaie."
+        "failed": "La connexion via 42 a échouée. Réessaie."
       },
       "register": {
-        "email_taken": "Cet email est deja utilise.",
-        "login_taken": "Ce nom d'utilisateur est deja pris."
+        "email_taken": "Cet email est déjà utilisé.",
+        "login_taken": "Ce nom d'utilisateur est déjà pris."
       },
       "token": {
-        "expired": "Ta session a expire, reconnecte-toi.",
+        "expired": "Ta session a expirée, reconnecte-toi.",
         "invalid": "Session invalide. Reconnecte-toi.",
-        "refresh_reused": "Anomalie de securite detectee. Toutes tes sessions ont ete deconnectees pour ta securite."
+        "refresh_reused": "Anomalie de sécurité détectée. Toutes tes sessions ont été déconnectées pour ta sécuritée."
       }
     },
     "validation": {
       "email": {
         "invalid": "Format d'email invalide.",
         "required": "L'email est obligatoire.",
-        "too_long": "L'email est trop long (max 254 caracteres)."
+        "too_long": "L'email est trop long (max 254 caractères)."
       },
       "password": {
         "required": "Le mot de passe est obligatoire.",
-        "too_short": "Le mot de passe doit faire au moins 12 caracteres.",
-        "too_long": "Le mot de passe est trop long (max 128 caracteres).",
-        "missing_complexity": "Le mot de passe doit contenir une minuscule, une majuscule, un chiffre et un caractere special."
+        "too_short": "Le mot de passe doit faire au moins 12 caractères.",
+        "too_long": "Le mot de passe est trop long (max 128 caractères).",
+        "missing_complexity": "Le mot de passe doit contenir une minuscule, une majuscule, un chiffre et un caractère spécial."
       },
       "login": {
         "required": "Le nom d'utilisateur est obligatoire.",
-        "too_short": "Le nom d'utilisateur doit faire au moins 3 caracteres.",
-        "too_long": "Le nom d'utilisateur est trop long (max 20 caracteres).",
+        "too_short": "Le nom d'utilisateur doit faire au moins 3 caractères.",
+        "too_long": "Le nom d'utilisateur est trop long (max 20 caractères).",
         "invalid_chars": "Le nom d'utilisateur ne peut contenir que des lettres, chiffres, _ et -."
       },
-      "failed": "Donnees invalides."
+      "failed": "Données invalides."
     },
     "two_fa": {
-      "not_enabled": "L'authentification a deux facteurs n'est pas activee.",
-      "already_enabled": "L'authentification a deux facteurs est deja active.",
+      "not_enabled": "L'authentification a deux facteurs n'est pas activée.",
+      "already_enabled": "L'authentification a deux facteurs est déjà active.",
       "invalid_code": "Code de verification invalide.",
       "invalid_backup_code": "Code de secours invalide.",
       "required": "L'authentification a deux facteurs est requise pour cette action."
     },
     "user": {
       "not_found": "Utilisateur introuvable.",
-      "profile_incomplete": "Profil incomplet, complete tes informations.",
-      "permission_denied": "Acces refuse."
+      "profile_incomplete": "Profil incomplet, complète tes informations.",
+      "permission_denied": "Accès refusé."
     },
     "game": {
       "not_found": "Partie introuvable.",
-      "full": "La partie est complete.",
-      "already_started": "La partie a deja commence."
+      "full": "La partie est complète.",
+      "already_started": "La partie a déjà commencé."
     },
     "rate_limit": {
-      "exceeded": "Trop de requetes, ralentis un peu.",
+      "exceeded": "Trop de requêtes, ralentis un peu.",
       "brute_force": "Trop de tentatives, attends quelques minutes."
     },
     "generic": {
-      "bad_request": "Requete invalide.",
+      "bad_request": "Requête invalide.",
       "unauthorized": "Authentification requise.",
-      "forbidden": "Action non autorisee.",
+      "forbidden": "Action non autorisée.",
       "not_found": "Ressource introuvable.",
-      "conflict": "Conflit avec l'etat actuel de la ressource.",
+      "conflict": "Conflit avec l'état actuel de la ressource.",
       "unknown": "Une erreur inattendue s'est produite."
+    }
+  },
+  "terms_of_service": {
+    "title": "Conditions générales d'utilisation",
+    "legal": "Légal",
+    "last_update": "Dernière modification : 16 mai 2026",
+    "acceptance_of_terms": {
+      "title": "1. Acceptation des conditions",
+      "content": "En créant un compte ou en accédant à MovieStar Paris 42 (la \" Plateforme \"), vous acceptez d'être lié par les présentes Conditions générales d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser la Plateforme. Ces conditions constituent un accord juridiquement contraignant entre vous et MovieStar Paris 42."
+    },
+    "eligibility": {
+      "title": "2. Éligibilité",
+      "content": "Vous devez avoir au moins 13 ans pour utiliser la Plateforme. En vous inscrivant, vous confirmez remplir cette condition. Si vous avez moins de 18 ans, vous devez obtenir le consentement d'un parent ou tuteur. Nous nous réservons le droit de supprimer les comptes des utilisateurs qui mentent sur leur âge."
+    },
+    "account_responsibilities": {
+      "title": "3. Responsabilités du compte",
+      "intro": "Vous êtes responsable de la confidentialité de vos identifiants et de toutes les activités effectuées depuis votre compte. Vous vous engagez à :",
+      "items": [
+      "Fournir des informations d'inscription exactes et complètes.",
+      "Ne pas partager votre compte avec un tiers.",
+      "Nous notifier immédiatement de tout accès non autorisé ou violation de sécurité.",
+      "N'utiliser qu'un seul compte par personne, sauf autorisation explicite."
+      ]
+    },
+    "user_conduct": {
+      "title": "4. Comportement des utilisateurs",
+      "intro": "Vous vous engagez à ne pas adopter de comportements nuisibles, perturbateurs ou illégaux. Les comportements interdits incluent notamment :",
+      "items": [
+      "Harcèlement, intimidation ou menaces envers d'autres utilisateurs.",
+      "Mise en ligne ou partage de contenus illégaux, obscènes ou offensants.",
+      "Tentative de piratage, d'exploitation ou de perturbation de la Plateforme ou de ses serveurs.",
+      "Utilisation de scripts automatisés, bots ou triches pour obtenir des avantages injustes.",
+      "Usurpation de l'identité d'une personne ou d'une entité.",
+      "Toute forme de fraude ou de pratiques trompeuses."
+      ],
+      "outro": "Tout manquement peut entraîner la suspension ou la résiliation définitive de votre compte sans préavis."
+    },
+    "virtual_items": {
+      "title": "5. Objets virtuels et monnaie de la Plateforme",
+      "content": "MovieStar Paris 42 peut proposer des objets virtuels et/ou des cosmétiques. Ces éléments n'ont aucune valeur monétaire réelle et ne peuvent pas être échangés contre de la monnaie réelle. Tous les objets virtuels vous sont concédés sous licence, non vendus, et peuvent être modifiés ou supprimés à tout moment. Nous ne sommes pas responsables de la perte d'objets virtuels suite à la résiliation d'un compte, à une inactivité ou à des problèmes techniques."
+    },
+    "intellectual_property": {
+      "title": "6. Propriété intellectuelle",
+      "content": "Tout le contenu de la Plateforme, y compris les graphismes, le code, les textes et les marques, sont la propriété de MovieStar Paris 42 ou de ses concédants et est protégé par les lois applicables en matière de propriété intellectuelle. Vous ne pouvez pas copier, reproduire, distribuer ou créer des œuvres dérivées sans notre autorisation écrite expresse. Le contenu généré par les utilisateurs reste votre propriété, mais en le mettant en ligne vous nous accordez une licence non exclusive et libre de redevances pour l'utiliser, l'afficher et le distribuer au sein de la Plateforme."
+    },
+    "termination": {
+      "title": "7. Résiliation",
+      "content": "Nous nous réservons le droit de suspendre ou de résilier votre accès à la Plateforme à tout moment, avec ou sans motif, et avec ou sans préavis. En cas de résiliation, votre droit d'utiliser la Plateforme cesse immédiatement."
+    },
+    "disclaimer_of_warranties": {
+      "title": "8. Exclusion de garanties",
+      "content": "La Plateforme est fournie « telle quelle » et « selon disponibilité », sans garantie d'aucune sorte, expresse ou implicite. Nous ne garantissons pas que la Plateforme sera ininterrompue, exempte d'erreurs ou de composants nuisibles. Vous utilisez la Plateforme à vos propres risques."
+    },
+    "limitation_of_liability": {
+      "title": "9. Limitation de responsabilité",
+      "content": "Dans toute la mesure permise par la loi, MovieStar Paris 42 ne pourra être tenu responsable de dommages indirects, accessoires, spéciaux ou consécutifs découlant de votre utilisation ou de votre impossibilité d'utiliser la Plateforme, même si nous avons été informés de la possibilité de tels dommages."
+    },
+    "changes_to_terms": {
+      "title": "10. Modifications des présentes conditions",
+      "content": "Nous pouvons mettre à jour les présentes Conditions générales d'utilisation de temps à autre. Le cas échéant, nous mettrons à jour la date de « Dernière modification » en haut de cette page. La poursuite de l'utilisation de la Plateforme après les modifications vaut acceptation des conditions révisées. Nous vous encourageons à consulter régulièrement ces conditions."
+    },
+    "contact": {
+      "title": "11. Contact",
+      "content": "Pour toute question concernant les présentes Conditions générales d'utilisation, veuillez nous contacter à l'adresse suivante :"
+    },
+    "footer": {
+      "copyright": "© 2026 MovieStar Paris 42. Tous droits réservés.",
+      "privacy_policy": "Politique de confidentialité →"
     }
   }
 }
