@@ -1,3 +1,4 @@
+import { Link } from '@/config/navigation';
 import { ROUTES } from '@/config/routes';
 import { useTranslations } from 'next-intl';
 
@@ -102,10 +103,10 @@ export default function TermsOfService() {
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-gray-400">
           <span>{t('footer.copyright')}</span>
-          <a href={ROUTES.PRIVACY_POLICY}
+          <Link href={ROUTES.PRIVACY_POLICY}
             className="hover:text-gray-600 transition-colors underline underline-offset-2">
             {t('footer.privacy_policy')}
-          </a>
+          </Link>
         </div>
 
       </div>

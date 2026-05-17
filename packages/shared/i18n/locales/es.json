@@ -10,6 +10,9 @@
     "subtitle": "Friends, Fun, code & Connect",
     "play_button": "Juega a MovieStarParis 42"
   },
+  "footer": {
+    "aria_label": "Enlaces legales"
+  },
   "auth": {
     "email": "Correo electrónico",
     "password": "Contraseña",

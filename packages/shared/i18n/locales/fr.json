@@ -11,23 +11,7 @@
     "play_button": "Joue à MovieStarParis 42"
   },
   "footer": {
-    "aria_label": "Liens legaux",
-    "policy": "Politique",
-    "privacy": "Confidentialite",
-    "pages": {
-      "policy": {
-        "title": "Politique d'utilisation",
-        "lead": "Voici un exemple de page Politique.",
-        "body": "Cette page est un placeholder. Le contenu reel decrira les conditions d'utilisation, les regles de la communaute et les responsabilites des joueurs.",
-        "back": "Retour a l'accueil"
-      },
-      "privacy": {
-        "title": "Politique de confidentialite",
-        "lead": "Voici un exemple de page Confidentialite.",
-        "body": "Cette page est un placeholder. Le contenu reel decrira les donnees collectees, leur utilisation et les droits des utilisateurs (RGPD).",
-        "back": "Retour a l'accueil"
-      }
-    }
+    "aria_label": "Liens légaux"
   },
   "auth": {
     "email": "Email",

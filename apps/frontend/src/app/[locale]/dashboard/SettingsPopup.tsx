@@ -1,4 +1,6 @@
 'use client';
+import { Link } from '@/config/navigation';
+import { ROUTES } from '@/config/routes';
 import { useState } from 'react';
 
 const teal = '#4dd9e8';
@@ -180,8 +182,8 @@ function HomePage({ onNavigate }: { onNavigate: (p: Page) => void }) {
             </button>
 
             <div style={{ textAlign: 'center', paddingBottom: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <a href="#" style={{ fontSize: 13, fontWeight: 700, color: teal, textDecoration: 'underline' }}>Conditions générales</a>
-                <a href="#" style={{ fontSize: 13, fontWeight: 700, color: teal, textDecoration: 'underline' }}>Politique de confidentialité</a>
+                <Link href={ROUTES.TERMS_OF_SERVICE} style={{ fontSize: 13, fontWeight: 700, color: teal, textDecoration: 'underline' }}>Conditions générales</Link>
+                <Link href={ROUTES.PRIVACY_POLICY} style={{ fontSize: 13, fontWeight: 700, color: teal, textDecoration: 'underline' }}>Politique de confidentialité</Link>
             </div>
         </div>
     );
