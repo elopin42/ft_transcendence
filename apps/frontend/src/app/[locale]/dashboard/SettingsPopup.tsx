@@ -1,5 +1,8 @@
 'use client';
 import { useState } from 'react';
+import { ROUTES } from '@/config/routes';
+import { useRouter } from '@/config/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 const teal = '#4dd9e8';
 const hotpink = '#e0358b';
@@ -121,6 +124,16 @@ function SecuritePage() {
 }
 
 function HomePage({ onNavigate }: { onNavigate: (p: Page) => void }) {
+    const router = useRouter();
+    const { logout } = useAuth();
+    const handleLogout = async () => {
+      try {
+        await logout();
+      } catch (e) {
+        // ignore — on redirige quand même
+      }
+      router.push(ROUTES.HOME);
+    };
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, flex: 1, alignContent: 'center' }}>
@@ -134,7 +147,7 @@ function HomePage({ onNavigate }: { onNavigate: (p: Page) => void }) {
                 </button>
             </div>
 
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', margin: '0 auto 8px', display: 'flex' }}>
+            <button style={{ background: 'none', border: 'none', cursor: 'pointer', margin: '0 auto 8px', display: 'flex' }} onClick={handleLogout}>
                 <img src="/btn_deconect.png" alt="Déconnexion" draggable={false} style={{ height: 52, width: 'auto' }} />
             </button>
 
