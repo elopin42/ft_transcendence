@@ -10,6 +10,25 @@
     "subtitle": "Friends, Fun, code & Connect",
     "play_button": "Play MovieStarParis 42"
   },
+  "footer": {
+    "aria_label": "Legal links",
+    "policy": "Policy",
+    "privacy": "Privacy",
+    "pages": {
+      "policy": {
+        "title": "Usage Policy",
+        "lead": "This is an example Policy page.",
+        "body": "This page is a placeholder. The real content will describe the terms of use, community rules and player responsibilities.",
+        "back": "Back to home"
+      },
+      "privacy": {
+        "title": "Privacy Policy",
+        "lead": "This is an example Privacy page.",
+        "body": "This page is a placeholder. The real content will describe data collection, usage and user rights (GDPR).",
+        "back": "Back to home"
+      }
+    }
+  },
   "auth": {
     "email": "Email",
     "password": "Password",

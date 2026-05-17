@@ -2,6 +2,7 @@ import '@/styles/landing.css';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/config/navigation';
 import { ROUTES } from '@/config/routes';
+import Footer from '@/components/layout/Footer';
 
 export default async function Home() {
   const t = await getTranslations('landing'); // charge les traductions de la section landing
@@ -24,6 +25,9 @@ export default async function Home() {
           <img className="logo" src="/logomsp.png" style={{ top: '-35%', right: '0%' }} alt="" />
         </div>
       </div>
+      {/* Footer monte uniquement sur la home (/), pas dans le layout
+          pour ne pas apparaitre dans /dashboard ou /game */}
+      <Footer />
     </div>
   );
 }
