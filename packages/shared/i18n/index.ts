@@ -6,8 +6,9 @@
 // `i18n-list` peut regenerer ce bloc d'imports automatiquement.
 import fr from './locales/fr.json' with { type: 'json' };
 import en from './locales/en.json' with { type: 'json' };
+import es from './locales/es.json' with { type: 'json' };
 
-export const messages = { fr, en } as const;
+export const messages = { fr, en, es } as const;
 export const LOCALES = Object.keys(messages) as ReadonlyArray<keyof typeof messages>;
 export type Locale = (typeof LOCALES)[number];
 

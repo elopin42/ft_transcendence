@@ -136,7 +136,8 @@ export default function RegisterPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
-                            </div>                            <div className="champ-bloc" style={{ marginTop: '16px' }}>
+                            </div>
+                            <div className="champ-bloc" style={{ marginTop: '16px' }}>
                                 <div className="label-champ">{t('password')}</div>
                                 <input
                                     type="password"

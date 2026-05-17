@@ -67,7 +67,10 @@ export async function proxy(req: NextRequest) {
     }
 
     // CAS C : Connecté tente d'aller sur Login/Register (sauf la home '/')
-    if (valid && isPublic && pathWithoutLocale !== '/') {
+    if (valid && isPublic
+        && pathWithoutLocale !== '/'
+        && pathWithoutLocale !== ROUTES.TERMS_OF_SERVICE
+        && pathWithoutLocale !== ROUTES.PRIVACY_POLICY) {
         const locale = req.cookies.get('NEXT_LOCALE')?.value || defaultLocale;
         return NextResponse.redirect(new URL(`/${locale}${ROUTES.DASHBOARD}`, req.url));
     }
