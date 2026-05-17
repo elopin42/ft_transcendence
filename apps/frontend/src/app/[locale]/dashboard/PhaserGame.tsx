@@ -3,6 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import * as Phaser from 'phaser';
 import { io, Socket } from 'socket.io-client';
 import { PLAYER_HEIGHT, PLAYER_WIDTH, PlayerBase } from '@ftt/shared/game';
+import ChatBar from './ChatBar';
+import FriendsPopup from './FriendsPopup';
+import ChatPopup from './ChatPopup';
+import SettingsPopup from './SettingsPopup';
 import { ROUTES } from '@/config/routes';
 import { useRouter } from '@/config/navigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -325,8 +329,12 @@ function DashboardOverlay({ onlinePlayers, onInvitePlayer }: DashboardOverlayPro
 
 export default function PhaserGame() {
     const ref = useRef<HTMLDivElement>(null);
+    const gRef = useRef<Phaser.Game | null>(null);
     const [onlinePlayers, setOnlinePlayers] = useState<PlayerBase[]>([]);
     const socketRef = useRef<Socket | null>(null);
+    const [friendsOpen, setFriendsOpen] = useState(false);
+    const [chatOpen, setChatOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     useEffect(() => {
         const game = new Phaser.Game({
@@ -341,6 +349,7 @@ export default function PhaserGame() {
             },
         });
 
+        gRef.current = game;
         game.registry.set('onPlayersUpdate', (players: PlayerBase[]) => {
             setOnlinePlayers(players);
         });
@@ -362,11 +371,42 @@ export default function PhaserGame() {
         socketRef.current?.emit('invite', { targetId: socketId });
     };
 
-    // return <div ref={ref} style={{ width: '100vw', height: '100vh' }} />;
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
             <div ref={ref} style={{ width: '100%', height: '100%' }} />
             <DashboardOverlay onlinePlayers={onlinePlayers} onInvitePlayer={handleInvitePlayer} />
+
+            {/* bandeau boutons nass */}
+            <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, height: 90,
+                background: 'rgba(0,0,0,0.38)', display: 'flex', alignItems: 'center',
+                padding: '0 18px', zIndex: 20, gap: 10, pointerEvents: 'none',
+            }}>
+                <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <button onClick={() => setChatOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')} onMouseUp={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+                        <img src="/btn_chat.png" alt="chat" draggable={false} style={{ height: 56, width: 'auto' }} />
+                    </button>
+                    <button onClick={() => setFriendsOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')} onMouseUp={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+                        <img src="/btn_friends.png" alt="amis" draggable={false} style={{ height: 56, width: 'auto' }} />
+                    </button>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')} onMouseUp={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+                        <img src="/btn_game.png" alt="jeu" draggable={false} style={{ height: 56, width: 'auto' }} />
+                    </button>
+                </div>
+                <div style={{ flex: 1 }} />
+                <button onClick={() => setSettingsOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, pointerEvents: 'auto' }}
+                    onMouseDown={e => (e.currentTarget.style.opacity = '0.5')} onMouseUp={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+                    <img src="/btn_settings.png" alt="settings" draggable={false} style={{ height: 56, width: 'auto' }} />
+                </button>
+            </div>
+
+            <ChatBar gRef={gRef} />
+            {friendsOpen && <FriendsPopup onClose={() => setFriendsOpen(false)} />}
+            {chatOpen && <ChatPopup onClose={() => setChatOpen(false)} />}
+            {settingsOpen && <SettingsPopup onClose={() => setSettingsOpen(false)} />}
         </div>
     );
 }
