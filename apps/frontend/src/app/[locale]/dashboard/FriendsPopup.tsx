@@ -1,5 +1,8 @@
 'use client';
 import { useState } from 'react';
+import { PlayerBase } from '@ftt/shared/game';
+import { ROUTES } from '@/config/routes';
+import { useRouter } from '@/config/navigation';
 
 type Friend = { id: number; login: string; avatar: string | null; online: boolean };
 type FriendRequest = { id: number; login: string; avatar: string | null; direction: 'in' | 'out' };
@@ -48,6 +51,42 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
         </button>
     );
 }
+
+function Players({ onlinePlayers }: { onlinePlayers: PlayerBase[] }) {
+    const router = useRouter();
+
+const [sub, setSub] = useState<'all' | 'online'>('all');
+
+return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, overflowY: 'auto' }}>
+            {onlinePlayers.map(f => (
+                <div key={f.id} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', background: babyblue, cursor: 'pointer', aspectRatio: '1' }}>
+                    {/* <UserAvatar login={f.pseudo}  size={90} /> */}
+                    <div style={{ position: 'absolute', top: 6, right: 6, width: 12, height: 12, borderRadius: '50%', background: '#4cce6e', border: '2px solid #fff'}} />
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 11, fontWeight: 700, textAlign: 'center', padding: '3px 2px', wordBreak: 'break-all' }}>
+                        {f.pseudo}
+                    </div>
+                    <button
+                        className="w-full text-left px-4 py-2 rounded-xl hover:bg-[rgb(241,16,255)] hover:text-white transition-all duration-150 text-gray-700 font-medium"
+                        style={{cursor: 'pointer'}}
+                        onClick={() => {
+                            localStorage.setItem('invite_player', f.pseudo);
+                            router.push(ROUTES.GAME);
+                            // onInvitePlayer(player.id);
+                            // setShowInviteModal(false);
+                        }}
+                    >
+                      invite
+                    </button>
+
+                </div>
+            ))}
+        </div>
+    </div>
+    );
+}
+
 
 function Amis() {
     const [sub, setSub] = useState<'all' | 'online'>('all');
@@ -134,12 +173,13 @@ function Recherche() {
     );
 }
 
-type Tab = 'amis' | 'demandes' | 'recherche';
+type Tab = 'Players' | 'amis' | 'demandes' | 'recherche';
 
-export default function FriendsPopup({ onClose }: { onClose: () => void }) {
+export default function FriendsPopup({ onClose, onlinePlayers }: { onClose: () => void; onlinePlayers: PlayerBase[] }) {
     const [tab, setTab] = useState<Tab>('amis');
 
     const tabs: { key: Tab; icon: string }[] = [
+        { key: 'Players', icon: '👥' },
         { key: 'amis', icon: '👥' },
         { key: 'demandes', icon: '🤝' },
         { key: 'recherche', icon: '🔎' },
@@ -186,6 +226,7 @@ export default function FriendsPopup({ onClose }: { onClose: () => void }) {
                     </button>
                 </div>
                 <div style={{ padding: '14px 14px', flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    {tab === 'Players' && <Players onlinePlayers={onlinePlayers}/>}
                     {tab === 'amis' && <Amis />}
                     {tab === 'demandes' && <Demandes />}
                     {tab === 'recherche' && <Recherche />}

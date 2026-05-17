@@ -312,13 +312,6 @@ function DashboardOverlay({ onlinePlayers, onInvitePlayer }: DashboardOverlayPro
                             </ul>
                         )}
 
-                        <button
-                            className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600 transition"
-                            style={{cursor: 'pointer'}}
-                            onClick={() => setShowInviteModal(false)}
-                        >
-                            Fermer
-                        </button>
                     </div>
                 </div>
             )}
@@ -335,6 +328,7 @@ export default function PhaserGame() {
     const [friendsOpen, setFriendsOpen] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         const game = new Phaser.Game({
@@ -374,7 +368,6 @@ export default function PhaserGame() {
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
             <div ref={ref} style={{ width: '100%', height: '100%' }} />
-            <DashboardOverlay onlinePlayers={onlinePlayers} onInvitePlayer={handleInvitePlayer} />
 
             {/* bandeau boutons nass */}
             <div style={{
@@ -392,7 +385,7 @@ export default function PhaserGame() {
                         <img src="/btn_friends.png" alt="amis" draggable={false} style={{ height: 56, width: 'auto' }} />
                     </button>
                     <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')} onMouseUp={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')} onClick={() => router.push(ROUTES.GAME)} onMouseUp={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
                         <img src="/btn_game.png" alt="jeu" draggable={false} style={{ height: 56, width: 'auto' }} />
                     </button>
                 </div>
@@ -404,7 +397,7 @@ export default function PhaserGame() {
             </div>
 
             <ChatBar gRef={gRef} />
-            {friendsOpen && <FriendsPopup onClose={() => setFriendsOpen(false)} />}
+            {friendsOpen && <FriendsPopup onClose={() => setFriendsOpen(false)} onlinePlayers={onlinePlayers}/>}
             {chatOpen && <ChatPopup onClose={() => setChatOpen(false)} />}
             {settingsOpen && <SettingsPopup onClose={() => setSettingsOpen(false)} />}
         </div>
