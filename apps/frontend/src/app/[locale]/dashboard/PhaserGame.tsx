@@ -230,7 +230,7 @@ export default function PhaserGame() {
                 <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                     <IconButton src="/btn_chat.png" alt="chat" onClick={() => setChatOpen(o => !o)} />
                     <IconButton src="/btn_friends.png" alt="amis" onClick={() => setFriendsOpen(o => !o)} />
-                    <IconButton src="/btn_game.png" alt="jeu" onClick={() => { console.log('click jeu'); router.push(ROUTES.GAME); }} />
+                    <IconButton src="/btn_game.png" alt="jeu" onClick={() => router.push(ROUTES.GAME)} />
                 </div>
                 <div style={{ flex: 1 }} />
                 <div style={{ pointerEvents: 'auto' }}>
