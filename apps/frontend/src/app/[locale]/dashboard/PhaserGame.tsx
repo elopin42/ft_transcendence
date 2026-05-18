@@ -7,9 +7,9 @@ import ChatBar from './ChatBar';
 import FriendsPopup from './FriendsPopup';
 import ChatPopup from './ChatPopup';
 import SettingsPopup from './SettingsPopup';
+import IconButton from '@/components/ui/IconButton';
 import { ROUTES } from '@/config/routes';
 import { useRouter } from '@/config/navigation';
-import { useAuth } from '@/hooks/useAuth';
 import {
     movePlayer,
     DESKTOPS,
@@ -174,157 +174,6 @@ class GameScene extends Phaser.Scene {
     }
 }
 
-interface DashboardOverlayProps {
-    onlinePlayers: PlayerBase[];
-    onInvitePlayer: (socketId: string) => void;
-}
-
-function DashboardOverlay({ onlinePlayers, onInvitePlayer }: DashboardOverlayProps) {
-    const [open, setOpen] = useState(false);
-    const [showInviteModal, setShowInviteModal] = useState(false);
-    const router = useRouter();
-    const { logout } = useAuth();
-    const handleLogout = async () => {
-      try {
-        await logout();
-      } catch (e) {
-        // ignore — on redirige quand même
-      }
-      router.push(ROUTES.HOME);
-    };
-
-    return (
-        <div className="absolute top-4 left-4 z-50 flex flex-col items-end gap-2">
-            {/* Toolbar pill */}
-            <div className="flex items-center justify-between bg-white bg-opacity-80 backdrop-blur-md rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:bg-opacity-90" style={{cursor: 'pointer'}} >
-
-                <button
-                    onClick={() => setOpen(!open)}
-                    className="relative w-9 h-9 flex items-center justify-center rounded-full text-black hover:text-[rgb(241,16,255)] transition"
-                    style={{cursor: 'pointer'}}
-                >
-                    <span
-                        className={`absolute text-xl transition-all duration-300 ${
-                            open
-                                ? "opacity-0 rotate-90 scale-0"
-                                : "opacity-100 rotate-0 scale-100"
-                        }`}
-                    >
-                        ☰
-                    </span>
-
-                    <span
-                        className={`absolute text-xl transition-all duration-300 ${
-                            open
-                                ? "opacity-100 rotate-0 scale-100"
-                                : "opacity-0 -rotate-90 scale-0"
-                        }`}
-                    >
-                        ✕
-                    </span>
-                </button>
-
-                <div
-                  className={`flex items-center overflow-hidden transition-all duration-300 ease-in-out ${
-                    open ? "max-w-[500px] opacity-100 ml-2" : "max-w-0 opacity-0"
-                  }`}
-                >
-                    {/* Bouton profile */}
-                    <button className="text-black hover:text-[rgb(241,16,255)] mx-2 transition-all duration-200 ease-in-out hover:rotate-12 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-full"style={{cursor: 'pointer'}}>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        </svg>
-                    </button>
-
-                    {/* Bouton chat */}
-                    <button className="text-black hover:text-[rgb(241,16,255)] mx-2 transition-all duration-200 ease-in-out hover:rotate-12 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-full"style={{cursor: 'pointer'}}>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                        </svg>
-                    </button>
-
-                    {/* Bouton classement */}
-                    <button className="text-black hover:text-[rgb(241,16,255)] mx-2 transition-all duration-200 ease-in-out hover:rotate-12 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-full"style={{cursor: 'pointer'}}>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-                        </svg>
-                    </button>
-
-                    {/* Bouton game */}
-                    <button className="text-black hover:text-[rgb(241,16,255)] mx-2 transition-all duration-200 ease-in-out hover:rotate-12 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-full" onClick={() => router.push(ROUTES.GAME)} style={{cursor: 'pointer'}}>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
-                        </svg>
-                    </button>
-
-                    {/* Bouton game private */}
-                    <button
-                        className="text-black hover:text-[rgb(241,16,255)] mx-2 transition-all duration-200 ease-in-out hover:rotate-12 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-full"
-                        onClick={() => setShowInviteModal(true)}
-                        style={{cursor: 'pointer'}}
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
-                        </svg>
-                    </button>
-
-                    {/* Bouton disconnect */}
-                    <button className="text-red-500 hover:text-red-600 mx-2 transition-transform duration-200 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full" onClick={handleLogout}style={{cursor: 'pointer'}}>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            {/* Modal invitation partie privée */}
-            {showInviteModal && (
-                <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50"
-                    onClick={() => setShowInviteModal(false)}
-                >
-                    <div
-                        className="bg-white rounded-2xl shadow-2xl p-6 min-w-[280px] max-w-sm w-full"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <h2 className="text-lg font-bold mb-4 text-gray-800">Inviter un joueur</h2>
-
-                        {onlinePlayers.length === 0 ? (
-                            <p className="text-gray-400 text-sm text-center py-4">Aucun joueur en ligne</p>
-                        ) : (
-                            <ul className="space-y-2 max-h-60 overflow-y-auto">
-                                {onlinePlayers.map(player => (
-                                    <li key={player.id}>
-                                        <button
-                                            className="w-full text-left px-4 py-2 rounded-xl hover:bg-[rgb(241,16,255)] hover:text-white transition-all duration-150 text-gray-700 font-medium"
-                                            style={{cursor: 'pointer'}}
-                                            onClick={() => {
-                                                localStorage.setItem('invite_player', player.pseudo);
-                                                router.push(ROUTES.GAME);
-                                                // onInvitePlayer(player.id);
-                                                // setShowInviteModal(false);
-                                            }}
-                                        >
-                                            {player.pseudo}
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-
-                        <button
-                            className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600 transition"
-                            style={{cursor: 'pointer'}}
-                            onClick={() => setShowInviteModal(false)}
-                        >
-                            Fermer
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
 
 
 export default function PhaserGame() {
@@ -367,40 +216,26 @@ export default function PhaserGame() {
         };
     }, []);
 
-    const handleInvitePlayer = (socketId: string) => {
-        socketRef.current?.emit('invite', { targetId: socketId });
-    };
+    const router = useRouter();
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
             <div ref={ref} style={{ width: '100%', height: '100%' }} />
-            <DashboardOverlay onlinePlayers={onlinePlayers} onInvitePlayer={handleInvitePlayer} />
 
-            {/* bandeau boutons nass */}
             <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0, height: 90,
                 background: 'rgba(0,0,0,0.38)', display: 'flex', alignItems: 'center',
                 padding: '0 18px', zIndex: 20, gap: 10, pointerEvents: 'none',
             }}>
                 <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <button onClick={() => setChatOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')} onMouseUp={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-                        <img src="/btn_chat.png" alt="chat" draggable={false} style={{ height: 56, width: 'auto' }} />
-                    </button>
-                    <button onClick={() => setFriendsOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')} onMouseUp={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-                        <img src="/btn_friends.png" alt="amis" draggable={false} style={{ height: 56, width: 'auto' }} />
-                    </button>
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')} onMouseUp={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-                        <img src="/btn_game.png" alt="jeu" draggable={false} style={{ height: 56, width: 'auto' }} />
-                    </button>
+                    <IconButton src="/btn_chat.png" alt="chat" onClick={() => setChatOpen(o => !o)} />
+                    <IconButton src="/btn_friends.png" alt="amis" onClick={() => setFriendsOpen(o => !o)} />
+                    <IconButton src="/btn_game.png" alt="jeu" onClick={() => { console.log('click jeu'); router.push(ROUTES.GAME); }} />
                 </div>
                 <div style={{ flex: 1 }} />
-                <button onClick={() => setSettingsOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, pointerEvents: 'auto' }}
-                    onMouseDown={e => (e.currentTarget.style.opacity = '0.5')} onMouseUp={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-                    <img src="/btn_settings.png" alt="settings" draggable={false} style={{ height: 56, width: 'auto' }} />
-                </button>
+                <div style={{ pointerEvents: 'auto' }}>
+                    <IconButton src="/btn_settings.png" alt="settings" onClick={() => setSettingsOpen(o => !o)} />
+                </div>
             </div>
 
             <ChatBar gRef={gRef} />
