@@ -1,19 +1,16 @@
 'use client';
 import { useState } from 'react';
-
-const teal = '#4dd9e8';
-const hotpink = '#e0358b';
-const babyblue = '#b8eef5';
+import { useTranslations } from 'next-intl';
+import { useAuth } from '@/hooks/useAuth';
+import PopupShell from '@/components/ui/PopupShell';
+import IconButton from '@/components/ui/IconButton';
+import { hotpink, babyblue } from '@/lib/colors';
 
 type Page = 'home' | 'compte' | 'securite' | 'langue';
 
-const avatars = [
-    '/avatars/av1.png',
-    '/avatars/av2.png',
-    '/avatars/av3.png',
-    '/avatars/av4.png',
-    '/avatars/av5.png',
-    '/avatars/av6.png',
+const LANGUES = [
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'en', label: 'English', flag: '🇬🇧' },
 ];
 
 function InputField({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
@@ -34,29 +31,20 @@ function InputField({ label, value, onChange, type = 'text' }: { label: string; 
     );
 }
 
-function SaveBtn({ onClick }: { onClick: () => void }) {
-    return (
-        <button onClick={onClick} style={{
-            marginTop: 'auto', borderRadius: 999, border: 'none',
-            background: hotpink, color: '#fff', fontWeight: 800,
-            fontSize: 14, padding: '10px 0', cursor: 'pointer', width: '100%',
-        }}>
-            Sauvegarder
-        </button>
-    );
-}
-
 function ComptePage() {
-    const [login, setLogin] = useState('nass42');
-    const [email, setEmail] = useState('nass@42.fr');
+    const t = useTranslations('settings');
+    const tAuth = useTranslations('auth');
+    const { user } = useAuth();
+    const [login, setLogin] = useState(user?.login ?? '');
+    const [email, setEmail] = useState(user?.email ?? '');
     const [selected, setSelected] = useState(0);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, height: '100%' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>Avatar</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('avatar')}</span>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
-                    {avatars.map((_av, i) => (
+                    {['🐱', '🐸', '🦊', '🐼', '🐧', '🦁'].map((emoji, i) => (
                         <div
                             key={i}
                             onClick={() => setSelected(i)}
@@ -68,19 +56,26 @@ function ComptePage() {
                                 fontSize: 22,
                             }}
                         >
-                            {['🐱', '🐸', '🦊', '🐼', '🐧', '🦁'][i]}
+                            {emoji}
                         </div>
                     ))}
                 </div>
             </div>
-            <InputField label="Nom d'utilisateur" value={login} onChange={setLogin} />
-            <InputField label="Email" value={email} onChange={setEmail} />
-            <SaveBtn onClick={() => {}} />
+            <InputField label={tAuth('username')} value={login} onChange={setLogin} />
+            <InputField label={tAuth('email')} value={email} onChange={setEmail} />
+            <button onClick={() => {}} style={{
+                marginTop: 'auto', borderRadius: 999, border: 'none',
+                background: hotpink, color: '#fff', fontWeight: 800,
+                fontSize: 14, padding: '10px 0', cursor: 'pointer', width: '100%',
+            }}>
+                {t('save')}
+            </button>
         </div>
     );
 }
 
 function SecuritePage() {
+    const t = useTranslations('settings');
     const [oldPwd, setOldPwd] = useState('');
     const [newPwd, setNewPwd] = useState('');
     const [confirmPwd, setConfirmPwd] = useState('');
@@ -88,14 +83,14 @@ function SecuritePage() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, height: '100%' }}>
-            <InputField label="Mot de passe actuel" value={oldPwd} onChange={setOldPwd} type="password" />
-            <InputField label="Nouveau mot de passe" value={newPwd} onChange={setNewPwd} type="password" />
-            <InputField label="Confirmer" value={confirmPwd} onChange={setConfirmPwd} type="password" />
+            <InputField label={t('current_password')} value={oldPwd} onChange={setOldPwd} type="password" />
+            <InputField label={t('new_password')} value={newPwd} onChange={setNewPwd} type="password" />
+            <InputField label={t('confirm_password')} value={confirmPwd} onChange={setConfirmPwd} type="password" />
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, background: babyblue }}>
                 <div>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#333' }}>Double authentification</div>
-                    <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>2FA par application TOTP</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#333' }}>{t('two_fa')}</div>
+                    <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{t('two_fa_desc')}</div>
                 </div>
                 <div
                     onClick={() => setTwofa(v => !v)}
@@ -115,17 +110,19 @@ function SecuritePage() {
                 </div>
             </div>
 
-            <SaveBtn onClick={() => {}} />
+            <button onClick={() => {}} style={{
+                marginTop: 'auto', borderRadius: 999, border: 'none',
+                background: hotpink, color: '#fff', fontWeight: 800,
+                fontSize: 14, padding: '10px 0', cursor: 'pointer', width: '100%',
+            }}>
+                {t('save')}
+            </button>
         </div>
     );
 }
 
-const LANGUES = [
-    { code: 'fr', label: 'Français', flag: '🇫🇷' },
-    { code: 'en', label: 'English', flag: '🇬🇧' },
-];
-
 function LanguePage() {
+    const t = useTranslations('settings');
     const [selected, setSelected] = useState('fr');
 
     return (
@@ -148,103 +145,75 @@ function LanguePage() {
                     )}
                 </div>
             ))}
-            <SaveBtn onClick={() => {}} />
+            <button onClick={() => {}} style={{
+                marginTop: 'auto', borderRadius: 999, border: 'none',
+                background: hotpink, color: '#fff', fontWeight: 800,
+                fontSize: 14, padding: '10px 0', cursor: 'pointer', width: '100%',
+            }}>
+                {t('save')}
+            </button>
         </div>
     );
 }
 
 function HomePage({ onNavigate }: { onNavigate: (p: Page) => void }) {
+    const t = useTranslations('settings');
+    const tFooter = useTranslations('footer');
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, flex: 1, justifyContent: 'center' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
                     <button onClick={() => onNavigate('compte')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                        <img src="/btn_compte.png" alt="Mon compte" draggable={false} style={{ height: 90, width: 'auto' }} />
-                        <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Mon compte</span>
+                        <img src="/btn_compte.png" alt={t('account')} draggable={false} style={{ height: 90, width: 'auto' }} />
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>{t('account')}</span>
                     </button>
                     <button onClick={() => onNavigate('securite')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                        <img src="/btn_securite.png" alt="Sécurité" draggable={false} style={{ height: 90, width: 'auto' }} />
-                        <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Sécurité</span>
+                        <img src="/btn_securite.png" alt={t('security')} draggable={false} style={{ height: 90, width: 'auto' }} />
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>{t('security')}</span>
                     </button>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                     <button onClick={() => onNavigate('langue')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                        <img src="/btn_langue.png" alt="Langue" draggable={false} style={{ height: 90, width: 'auto' }} />
-                        <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Langue</span>
+                        <img src="/btn_langue.png" alt={t('language')} draggable={false} style={{ height: 90, width: 'auto' }} />
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>{t('language')}</span>
                     </button>
                 </div>
             </div>
 
             <button style={{ background: 'none', border: 'none', cursor: 'pointer', margin: '0 auto 8px', display: 'flex' }}>
-                <img src="/btn_deconect.png" alt="Déconnexion" draggable={false} style={{ height: 52, width: 'auto' }} />
+                <img src="/btn_deconect.png" alt="logout" draggable={false} style={{ height: 52, width: 'auto' }} />
             </button>
 
             <div style={{ textAlign: 'center', paddingBottom: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <a href="#" style={{ fontSize: 13, fontWeight: 700, color: teal, textDecoration: 'underline' }}>Conditions générales</a>
-                <a href="#" style={{ fontSize: 13, fontWeight: 700, color: teal, textDecoration: 'underline' }}>Politique de confidentialité</a>
+                <a href="#" style={{ fontSize: 13, fontWeight: 700, color: '#4dd9e8', textDecoration: 'underline' }}>{tFooter('policy')}</a>
+                <a href="#" style={{ fontSize: 13, fontWeight: 700, color: '#4dd9e8', textDecoration: 'underline' }}>{tFooter('privacy')}</a>
             </div>
         </div>
     );
 }
 
 export default function SettingsPopup({ onClose }: { onClose: () => void }) {
+    const t = useTranslations('settings');
     const [page, setPage] = useState<Page>('home');
 
     const titles: Record<Page, string> = {
-        home: 'Options de jeu',
-        compte: 'Mon compte',
-        securite: 'Sécurité',
-        langue: 'Langue',
+        home: t('title'),
+        compte: t('account'),
+        securite: t('security'),
+        langue: t('language'),
     };
 
-    return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000 }} onClick={onClose}>
-            <div
-                style={{
-                    position: 'absolute',
-                    top: '22%',
-                    right: '2%',
-                    width: 340,
-                    height: 480,
-                    borderRadius: 20,
-                    overflow: 'hidden',
-                    boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    background: '#fff',
-                }}
-                onClick={e => e.stopPropagation()}
-            >
-                <div style={{ background: teal, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                    {page !== 'home' && (
-                        <button
-                            onClick={() => setPage('home')}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
-                        >
-                            <img src="/btn_retour.png" alt="retour" draggable={false} style={{ height: 44, width: 'auto', display: 'block' }} />
-                        </button>
-                    )}
-                    <span style={{ fontWeight: 800, fontSize: 18, color: '#fff', flex: 1, textAlign: 'center', fontFamily: '"Segoe UI", sans-serif' }}>
-                        {titles[page]}
-                    </span>
-                    <button
-                        onClick={onClose}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
-                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')}
-                        onMouseUp={e => (e.currentTarget.style.opacity = '1')}
-                        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                    >
-                        <img src="/btn_cross.png" alt="fermer" draggable={false} style={{ height: 44, width: 'auto', display: 'block' }} />
-                    </button>
-                </div>
+    const backBtn = page !== 'home' ? (
+        <IconButton src="/btn_retour.png" alt="retour" onClick={() => setPage('home')} height={44} />
+    ) : undefined;
 
-                <div style={{ padding: '14px', flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-                    {page === 'home' && <HomePage onNavigate={setPage} />}
-                    {page === 'compte' && <ComptePage />}
-                    {page === 'securite' && <SecuritePage />}
-                    {page === 'langue' && <LanguePage />}
-                </div>
-            </div>
-        </div>
+    return (
+        <PopupShell title={titles[page]} onClose={onClose} header={backBtn}>
+            {page === 'home' && <HomePage onNavigate={setPage} />}
+            {page === 'compte' && <ComptePage />}
+            {page === 'securite' && <SecuritePage />}
+            {page === 'langue' && <LanguePage />}
+        </PopupShell>
     );
 }
