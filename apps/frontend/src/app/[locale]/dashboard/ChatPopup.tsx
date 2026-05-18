@@ -1,40 +1,16 @@
 'use client';
 import { useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useAuth } from '@/hooks/useAuth';
+import PopupShell from '@/components/ui/PopupShell';
+import IconButton from '@/components/ui/IconButton';
+import { hotpink, babyblue, teal } from '@/lib/colors';
 
-type Msg = { id: number; who: string; txt: string };
+type Msg = { id: number; who: string; txt: string; ts: string };
 type Conv = { id: number; login: string; avatar: string | null; lastMsg: string; online: boolean };
 
-const teal = '#4dd9e8';
-const hotpink = '#e0358b';
-const babyblue = '#b8eef5';
-
-const convs: Conv[] = [
-    { id: 1, login: 'nass42', avatar: null, lastMsg: 'gg wp !', online: true },
-    { id: 2, login: 'mouna', avatar: null, lastMsg: 'tu joues ce soir ?', online: true },
-    { id: 3, login: 'alex', avatar: null, lastMsg: 'rip le tournoi lol', online: false },
-    { id: 4, login: 'julia', avatar: null, lastMsg: 'viens sur ma map', online: true },
-    { id: 5, login: 'marco', avatar: null, lastMsg: '...', online: false },
-];
-
-const fakeHistory: Record<number, Msg[]> = {
-    1: [
-        { id: 1, who: 'nass42', txt: 'alors ce match ?' },
-        { id: 2, who: 'Moi', txt: 'gg wp !' },
-    ],
-    2: [
-        { id: 1, who: 'mouna', txt: 'tu joues ce soir ?' },
-    ],
-    3: [
-        { id: 1, who: 'alex', txt: 'rip le tournoi lol' },
-        { id: 2, who: 'Moi', txt: 'ouais grave...' },
-    ],
-    4: [
-        { id: 1, who: 'julia', txt: 'viens sur ma map' },
-    ],
-    5: [
-        { id: 1, who: 'marco', txt: '...' },
-    ],
-};
+// TODO: brancher sur l'API chat quand le backend sera pret
+const convs: Conv[] = [];
 
 function Avatar({ login, avatar, size = 48 }: { login: string; avatar: string | null; size?: number }) {
     return (
@@ -69,7 +45,7 @@ function ConvList({ onSelect }: { onSelect: (c: Conv) => void }) {
                         <div style={{ flex: 1, overflow: 'hidden' }}>
                             <div style={{ fontWeight: 800, fontSize: 14, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.login}</div>
                             <div style={{ fontSize: 13, color: '#555', marginTop: 2 }}>{truncated}</div>
-                            <div style={{ fontSize: 11, color: teal, marginTop: 2, fontWeight: 600 }}>18:27</div>
+                            <div style={{ fontSize: 11, color: teal, marginTop: 2, fontWeight: 600 }}>{c.online ? '●' : ''}</div>
                         </div>
                         <span style={{ color: '#b0b8c1', fontSize: 18, fontWeight: 700, flexShrink: 0 }}>›</span>
                     </div>
@@ -80,29 +56,30 @@ function ConvList({ onSelect }: { onSelect: (c: Conv) => void }) {
 }
 
 function ConvChat({ conv }: { conv: Conv }) {
-    const [msgs, setMsgs] = useState<Msg[]>(fakeHistory[conv.id] ?? []);
+    const t = useTranslations('chat');
+    const { user } = useAuth();
+    const me = user?.login ?? t('me');
+    const [msgs, setMsgs] = useState<Msg[]>([]);
     const [val, setVal] = useState('');
-    const idRef = useRef(100);
+    const idRef = useRef(0);
     const bottomRef = useRef<HTMLDivElement>(null);
 
     const send = () => {
-        const t = val.trim();
-        if (!t) return;
-        setMsgs(prev => [...prev, { id: idRef.current++, who: 'Moi', txt: t }]);
+        const txt = val.trim();
+        if (!txt) return;
+        const ts = new Date().toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' });
+        setMsgs(prev => [...prev, { id: idRef.current++, who: me, txt, ts }]);
         setVal('');
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-
-            {/* messages */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 4 }}>
                 {msgs.map(m => {
-                    const isMe = m.who === 'Moi';
+                    const isMe = m.who === me;
                     return (
                         <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', gap: 2 }}>
-                            {/* pas de nom en DM, on sait déjà avec qui on parle */}
                             <div style={{
                                 background: isMe ? hotpink : '#f0f0f0',
                                 borderRadius: isMe ? '12px 12px 0 12px' : '0 12px 12px 12px',
@@ -117,19 +94,19 @@ function ConvChat({ conv }: { conv: Conv }) {
                             }}>
                                 {m.txt}
                             </div>
+                            <span style={{ fontSize: 10, color: '#aaa' }}>{m.ts}</span>
                         </div>
                     );
                 })}
                 <div ref={bottomRef} />
             </div>
 
-            {/* input */}
             <div style={{ marginTop: 10, flexShrink: 0 }}>
                 <input
                     value={val}
                     onChange={e => setVal(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') send(); }}
-                    placeholder="Dis quelque chose..."
+                    placeholder={t('placeholder')}
                     style={{
                         width: '100%', borderRadius: 999, border: 'none',
                         padding: '10px 16px', background: babyblue,
@@ -143,64 +120,16 @@ function ConvChat({ conv }: { conv: Conv }) {
 }
 
 export default function ChatPopup({ onClose }: { onClose: () => void }) {
+    const t = useTranslations('chat');
     const [selected, setSelected] = useState<Conv | null>(null);
 
-    return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000 }} onClick={onClose}>
-            <div
-                style={{
-                    position: 'absolute',
-                    top: '22%',
-                    right: '2%',
-                    width: 340,
-                    height: 480,
-                    borderRadius: 20,
-                    overflow: 'hidden',
-                    boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    background: '#fff',
-                }}
-                onClick={e => e.stopPropagation()}
-            >
-                {/* header */}
-                <div style={{ background: teal, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                    {selected ? (
-                        <>
-                            <button
-                                onClick={() => setSelected(null)}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
-                            >
-                                <img src="/btn_retour.png" alt="retour" draggable={false} style={{ height: 44, width: 'auto', display: 'block' }} />
-                            </button>
-                            <span style={{ fontWeight: 800, fontSize: 17, color: '#fff', flex: 1, textAlign: 'center', fontFamily: '"Segoe UI", sans-serif' }}>
-                                {selected.login}
-                            </span>
-                        </>
-                    ) : (
-                        <span style={{ fontWeight: 800, fontSize: 18, color: '#fff', flex: 1, textAlign: 'center', fontFamily: '"Segoe UI", sans-serif' }}>
-                            Conversations
-                        </span>
-                    )}
-                    <button
-                        onClick={onClose}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', marginLeft: 'auto' }}
-                        onMouseDown={e => (e.currentTarget.style.opacity = '0.5')}
-                        onMouseUp={e => (e.currentTarget.style.opacity = '1')}
-                        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                    >
-                        <img src="/btn_cross.png" alt="fermer" draggable={false} style={{ height: 44, width: 'auto', display: 'block' }} />
-                    </button>
-                </div>
+    const backBtn = selected ? (
+        <IconButton src="/btn_retour.png" alt="retour" onClick={() => setSelected(null)} height={44} />
+    ) : undefined;
 
-                {/* contenu */}
-                <div style={{ padding: '14px', flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                    {selected
-                        ? <ConvChat conv={selected} />
-                        : <ConvList onSelect={setSelected} />
-                    }
-                </div>
-            </div>
-        </div>
+    return (
+        <PopupShell title={selected ? selected.login : t('title')} onClose={onClose} header={backBtn}>
+            {selected ? <ConvChat conv={selected} /> : <ConvList onSelect={setSelected} />}
+        </PopupShell>
     );
 }

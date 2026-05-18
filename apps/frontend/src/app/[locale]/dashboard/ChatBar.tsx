@@ -1,11 +1,15 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import * as Phaser from 'phaser';
+import { useTranslations } from 'next-intl';
 import { GameScene } from './GameScene';
+import { useAuth } from '@/hooks/useAuth';
 
 type Msg = { id: number; who: string; txt: string };
 
 export default function ChatBar({ gRef }: { gRef: React.RefObject<Phaser.Game | null> }) {
+    const t = useTranslations('chat');
+    const { user } = useAuth();
     const iRef = useRef<HTMLInputElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const wrapRef = useRef<HTMLDivElement>(null);
@@ -30,13 +34,14 @@ export default function ChatBar({ gRef }: { gRef: React.RefObject<Phaser.Game | 
     }, [msgs, open]);
 
     const send = () => {
-        const t = inputValue.trim();
-        if (!t) return;
-        setMsgs(prev => [...prev, { id: idRef.current++, who: 'Moi', txt: t }]);
+        const txt = inputValue.trim();
+        if (!txt) return;
+        // TODO: brancher sur le socket world quand le back exposera un event chat global
+        setMsgs(prev => [...prev, { id: idRef.current++, who: user?.login ?? t('me'), txt }]);
         setInputValue('');
         iRef.current?.focus();
         const scene = gRef.current?.scene.scenes[0] as GameScene | undefined;
-        scene?.popChat(t);
+        scene?.popChat(txt);
     };
 
     return (
@@ -46,7 +51,7 @@ export default function ChatBar({ gRef }: { gRef: React.RefObject<Phaser.Game | 
                 bottom: '3.5%',
                 left: '2%',
                 width: '28%',
-                fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
+                fontFamily: 'inherit',
                 isolation: 'isolate' as const,
             }}
         >
@@ -171,7 +176,7 @@ export default function ChatBar({ gRef }: { gRef: React.RefObject<Phaser.Game | 
                                             animation: 'blink-cursor 1s step-start infinite',
                                         }} />
                                     )}
-                                    {'Dis quelque chose...'}
+                                    {t('placeholder')}
                                 </span>
                             ) : (
                                 <span ref={spanRef} style={{ color: '#000', position: 'relative', whiteSpace: 'nowrap', flexShrink: 0 }}>
