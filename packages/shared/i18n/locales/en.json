@@ -4,7 +4,8 @@
     "register": "Sign up",
     "logout": "Logout",
     "play": "Play",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "close": "Close"
   },
   "landing": {
     "subtitle": "Friends, Fun, code & Connect",
@@ -50,6 +51,49 @@
     "choose_name": "Choose your star name!",
     "create_account": "Create your account!",
     "what_name": "What will your name be?"
+  },
+  "settings": {
+    "title": "Game options",
+    "save": "Save",
+    "account": "My account",
+    "security": "Security",
+    "language": "Language",
+    "avatar": "Avatar",
+    "current_password": "Current password",
+    "new_password": "New password",
+    "confirm_password": "Confirm",
+    "two_fa": "Two-factor authentication",
+    "two_fa_desc": "2FA via TOTP app"
+  },
+  "chat": {
+    "title": "Conversations",
+    "placeholder": "Say something...",
+    "me": "Me"
+  },
+  "friends": {
+    "my_friends": "My friends",
+    "online": "Online",
+    "received": "Received",
+    "sent": "Sent",
+    "no_requests": "No requests",
+    "add": "+ Friend",
+    "search_placeholder": "Search a user",
+    "pending": "Pending"
+  },
+  "dashboard": {
+    "invite_title": "Invite a player",
+    "no_players": "No players online"
+  },
+  "game": {
+    "two_players_local": "2 players (local)",
+    "player1": "Player 1",
+    "player2": "Player 2",
+    "starting": "Starting in {countdown}s",
+    "start": "Start match",
+    "finished": "Match finished",
+    "winner": "{winner} won",
+    "draw": "Match finished",
+    "go_dashboard": "Back to dashboard"
   },
   "errors": {
     "auth": {
